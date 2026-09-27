@@ -1,4 +1,5 @@
-export type ReferenceStyle = "default" | "number" | "title" | "external";
+import { referenceStyles } from "./contract.ts";
+export type ReferenceStyle = typeof referenceStyles[number];
 export interface Target {
   namespace: string;
   id: string;
@@ -26,15 +27,9 @@ export interface Catalog {
   publication?: { title: string };
   targets: Record<string, Target>;
 }
-export interface Member { namespace: string; path: string; mount: string; format: "html" | "revealjs" }
 export interface Import {
   namespace: string; source: string; sourceNamespace: string; baseUrl: string;
   title?: string; style?: ReferenceStyle;
 }
 /** Публикуются только явно выбранные цели; отсутствие настройки означает пустой каталог. */
 export type Exports = Record<string, "*" | string[]>;
-export interface Workspace {
-  root: string; output: string; members: Member[]; imports: Import[];
-  extension: string; profiles: string[]; outputs: string[]; home?: string;
-  exports?: Exports; publication?: { title: string };
-}

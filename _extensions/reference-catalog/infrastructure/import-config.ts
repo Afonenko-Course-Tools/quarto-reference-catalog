@@ -1,8 +1,8 @@
 import type { Import, ReferenceStyle } from "../domain/model.ts";
 import { normalizeCatalogSource } from "./catalog-source.ts";
 
-const namespacePattern = /^[A-Za-z][A-Za-z0-9_-]*$/;
-export const referenceStyles: readonly ReferenceStyle[] = ["default", "number", "title", "external"];
+import { referenceStyles, namespacePattern, importKeys } from "../domain/contract.ts";
+export { referenceStyles };
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -26,7 +26,7 @@ export function parseImports(raw: unknown, root: string, memberNamespaces: strin
     if (!namespacePattern.test(namespace) || memberNamespaces.includes(namespace)) throw new Error(`QRC некорректное пространство имён импорта ${namespace}`);
     if (!isRecord(item)) throw new Error(`QRC настройки импорта ${namespace} должны быть отображением`);
     for (const key of Object.keys(item)) {
-      if (!["source", "namespace", "base-url", "title", "style"].includes(key)) throw new Error(`QRC неизвестное свойство импорта ${namespace}.${key}`);
+      if (!(importKeys as readonly string[]).includes(key)) throw new Error(`QRC неизвестное свойство импорта ${namespace}.${key}`);
     }
     const source = item.source;
     if (typeof source !== "string" || !source.trim()) throw new Error(`QRC import ${namespace} требуется source`);

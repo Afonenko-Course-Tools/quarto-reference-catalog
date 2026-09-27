@@ -1,12 +1,13 @@
 -- Адаптер использует публичные узлы Pandoc/Quarto, не обращаясь к внутреннему индексу.
 local M = {}
+local constants = require("./constants")
 local types = {}
 local ids = {}
 local titles = {}
 local heading_titles = {}
 local function str(v) return v and pandoc.utils.stringify(v) or "" end
 function M.init(meta)
-  for name in ("fig tbl lst eq sec thm lem cor prp cnj def exm exr sol rem alg nte tip wrn imp cau"):gmatch("%S+") do
+  for _, name in ipairs(constants.target_types) do
     types[name] = true
   end
   local crossref = meta.crossref

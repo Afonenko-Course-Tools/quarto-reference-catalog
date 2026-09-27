@@ -1,8 +1,9 @@
+import { targetKeys, catalogKeys } from "../domain/contract.ts";
 import type { Catalog, Target } from "../domain/model.ts";
 import { isRecord } from "./import-config.ts";
 
 function nonempty(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }
-function keys(item: Record<string, unknown>, allowed: string[], context: string): void {
+function keys(item: Record<string, unknown>, allowed: readonly string[], context: string): void {
   for (const key of Object.keys(item)) if (!allowed.includes(key)) throw new Error(`QRC ${context}: недопустимое поле ${key}`);
 }
 function target(value: unknown, key: string, source: string): Target {
@@ -12,7 +13,7 @@ function target(value: unknown, key: string, source: string): Target {
   for (const field of ["baseUrl", "sourceTitle", "defaultStyle"]) {
     if (Object.hasOwn(item, field)) invalid(`${field} недопустимо в каталоге публикации`);
   }
-  keys(item, ["namespace", "id", "page", "fragment", "labelHtml", "numberHtml", "label", "number", "slide", "title"], `цель ${key}`);
+  keys(item, targetKeys, `цель ${key}`);
   for (const field of ["namespace", "id", "page", "fragment", "labelHtml", "label"] as const) if (!nonempty(item[field])) invalid(field);
   for (const field of ["numberHtml", "number"] as const) if (typeof item[field] !== "string") invalid(field);
   if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(item.namespace as string)) invalid("namespace");
@@ -35,7 +36,7 @@ export function validateImportedCatalog(value: unknown, source: string): Catalog
   if (!isRecord(value) || value.schema !== "quarto-reference-catalog") {
     throw new Error(`QRC неподдерживаемая схема импортированного каталога в ${source}; ожидается quarto-reference-catalog`);
   }
-  keys(value, ["schema", "generator", "publication", "targets"], `каталог ${source}`);
+  keys(value, catalogKeys, `каталог ${source}`);
   if (!isRecord(value.generator) || typeof value.generator.quarto !== "string") {
     throw new Error(`QRC некорректное поле generator каталога в ${source}`);
   }

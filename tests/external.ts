@@ -21,9 +21,9 @@ async function write(workspace: string, path: string, value: string) {
   await Deno.mkdir(dirname(destination), { recursive: true });
   await Deno.writeTextFile(destination, value);
 }
-async function render(workspace: string, expectedError?: string) {
+async function render(workspace: string, expectedError?: string, outputDir?: string) {
   const result = await new Deno.Command(quarto, {
-    args: ["render", "--fail-if-warnings"], cwd: workspace,
+    args: ["render", "--fail-if-warnings", ...(outputDir ? ["--output-dir", outputDir] : [])], cwd: workspace,
     env: { QUARTO: quarto }, stdout: "piped", stderr: "piped",
   }).output();
   const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
@@ -41,7 +41,7 @@ async function rejects(action: () => unknown | Promise<unknown>, message: string
 async function initialize(workspace: string) {
   await Deno.mkdir(workspace, { recursive: true });
   await copy(join(repo, "_extensions"), join(workspace, "_extensions"));
-  await write(workspace, "book/_quarto.yml", `project:
+  await write(workspace, "_quarto.yml", `project:
   type: website
   output-dir: _site
   render: [index.qmd]
@@ -53,14 +53,17 @@ lang: ru
 }
 function config(extra: string) {
   return `project:
-  type: website
+  type: book
   output-dir: _site
-  render: []
+  post-render: _extensions/reference-catalog/entrypoints/post.ts
+book:
+  title: Материалы курса
+  chapters: [index.qmd${extra.includes("exports:") ? ", memory.qmd" : ""}]
+format: html
+lang: ru
 filters: [reference-catalog]
 reference-catalog:
-  home: book
-  projects:
-    book: {path: book, format: html}
+  namespace: book
 ${extra}`;
 }
 async function catalog(workspace: string): Promise<Catalog> {
@@ -83,7 +86,7 @@ function content(node: Node): string {
 try {
   await initialize(os);
   await initialize(java);
-  await write(os, "book/_quarto.yml", `project:
+  await write(os, "_quarto.yml", `project:
   type: book
   output-dir: _book
 book:
@@ -96,8 +99,8 @@ lang: ru
   exports:
     book: [sec-memory, sec-addressing]
 `));
-  await write(os, "book/index.qmd", "# Введение {.unnumbered}\n\nМатериалы курса операционных систем.\n");
-  await write(os, "book/memory.qmd", `# Управление памятью {#sec-memory}
+  await write(os, "index.qmd", "# Введение {.unnumbered}\n\nМатериалы курса операционных систем.\n");
+  await write(os, "memory.qmd", `# Управление памятью {#sec-memory}
 
 См. @book:sec-implementation.
 
@@ -155,7 +158,7 @@ lang: ru
       base-url: https://example.test/OS/
 `);
   await write(java, "_quarto.yml", javaConfig);
-  await write(java, "book/index.qmd", `# Java {#sec-memory}
+  await write(java, "index.qmd", `# Java {#sec-memory}
 
 Собственная цель с тем же ID: @book:sec-memory.
 
@@ -212,6 +215,8 @@ lang: ru
     sourceNamespace: "not-exported", baseUrl: "https://example.test/OS/",
   }]), "not-exported");
 
+  await render(java, undefined, "_alternate");
+  assert((await Deno.readTextFile(join(java, "_alternate/index.html"))).includes("https://example.test/OS/memory.html#sec-memory"), "Самостоятельный QRC проигнорировал CLI output-dir");
   await write(java, "_quarto.yml", javaConfig + "  version: 1\n");
   await render(java, "неизвестное свойство reference-catalog.version");
 

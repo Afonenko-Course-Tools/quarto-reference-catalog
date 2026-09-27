@@ -12,26 +12,3 @@ export async function files(root: string): Promise<string[]> {
   }
   return out.sort();
 }
-export function within(root: string, path: string): string {
-  const result = resolve(root, path), rel = relative(root, result);
-  if (!rel || rel === ".." || rel.startsWith("../") || rel.startsWith("..\\") || isAbsolute(rel)) throw new Error(`QRC ожидается путь к вложенному каталогу: ${path}`);
-  return result;
-}
-export async function copyTree(from: string, to: string): Promise<void> {
-  for (const path of await files(from)) {
-    const dest = join(to, relative(from, path));
-    await Deno.mkdir(dirname(dest), { recursive: true });
-    await Deno.copyFile(path, dest);
-  }
-}
-/** Копируем исходники, сохраняя относительные включения и общие ресурсы. */
-export async function copySources(from: string, to: string, excluded: Set<string>): Promise<void> {
-  await Deno.mkdir(to, { recursive: true });
-  for await (const item of Deno.readDir(from)) {
-    if (excluded.has(item.name) || item.name.endsWith("_files") || item.name === "__pycache__") continue;
-    const source = join(from, item.name), destination = join(to, item.name);
-    if (item.isSymlink) throw new Error(`QRC символические ссылки в исходниках не поддерживаются: ${source}`);
-    if (item.isDirectory) await copySources(source, destination, excluded);
-    else if (item.isFile) await Deno.copyFile(source, destination);
-  }
-}
