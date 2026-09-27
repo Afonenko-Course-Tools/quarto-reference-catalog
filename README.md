@@ -8,6 +8,8 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 quarto add Afonenko-Course-Tools/quarto-reference-catalog
 ```
 
+Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/project-publish/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
+
 Установка не добавляет обработчики сборки, ресурсов или предпросмотра. Подключение фильтра активирует только разметку ссылок текущего документа.
 
 ## Самостоятельная книга или сайт
@@ -16,7 +18,7 @@ quarto add Afonenko-Course-Tools/quarto-reference-catalog
 project:
   type: website
   output-dir: _site
-  post-render: _extensions/reference-catalog/entrypoints/post.ts
+  post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
@@ -30,7 +32,7 @@ reference-catalog:
 
 ## Составная публикация
 
-Книгу, лекции, практику и PDF собирает независимый [project-publish](https://github.com/Afonenko-Course-Tools/quarto-project-publish). Подключите там `integrations: [_extensions/reference-catalog/entrypoints/publication.ts]`. Координатор передаст фильтры каждому HTML-проекту и вызовет QRC после объединения результатов. QRC не нужен проектам, в которых нет межпроектных ссылок. Пример — `examples/course`.
+Книгу, лекции, практику и PDF собирает независимый [project-publish](https://github.com/Afonenko-Course-Tools/quarto-project-publish). Подключите там `integrations: [_extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/publication.ts]`. Координатор передаст фильтры каждому HTML-проекту и вызовет QRC после объединения результатов. QRC не нужен проектам, в которых нет межпроектных ссылок. Пример — `examples/course`.
 
 ## Импорт каталога
 
@@ -63,6 +65,8 @@ quarto run tests/import-safety.ts
 
 Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `PROJECT_PUBLISH_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
 
-Структурная спецификация конфигурации: `spec/config.cue`; графовые ограничения проверяются при связывании готовых страниц.
+Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом), Lua и CUE. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
+
+Структурная спецификация конфигурации: каталог `spec/` (`cue vet ./spec`); графовые ограничения проверяются при связывании готовых страниц.
 
 Документация: [контракт](docs/contract.md), [архитектура](docs/architecture.md).

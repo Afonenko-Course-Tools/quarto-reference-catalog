@@ -1,5 +1,6 @@
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { referenceStyles } from "../_extensions/reference-catalog/domain/contract.ts";
+import { referenceStyleVocabulary, vocabularyProjections } from "../tools/vocabulary.ts";
 const root = dirname(dirname(fromFileUrl(import.meta.url)));
 const extension = join(root, "_extensions/reference-catalog");
 for (const file of ["infrastructure/render.ts", "infrastructure/runtime.ts", "infrastructure/profiles.ts", "entrypoints/pre.ts", "entrypoints/preview.ts", "application/workflow.ts"]) {
@@ -8,7 +9,9 @@ for (const file of ["infrastructure/render.ts", "infrastructure/runtime.ts", "in
 }
 const manifest = await Deno.readTextFile(join(extension, "_extension.yml"));
 if (/\b(pre-render|post-render|resources|preview):/.test(manifest)) throw new Error("Установка QRC не должна включать обработчики проекта");
-const lua = await Deno.readTextFile(join(extension, "lua/constants.lua"));
-const luaStyleKeys = [...(lua.match(/reference_styles\s*=\s*\{([^}]+)\}/)?.[1] ?? "").matchAll(/([a-z]+)=true/g)].map(match => match[1]).sort();
-if (luaStyleKeys.join() !== [...referenceStyles].sort().join()) throw new Error("Словари стилей Lua и TypeScript расходятся");
+const styles = referenceStyleVocabulary(JSON.parse(await Deno.readTextFile(join(extension, "vocabulary/reference-styles.json"))));
+for (const [path, expected] of vocabularyProjections(styles)) {
+  if (await Deno.readTextFile(join(root, path)) !== expected) throw new Error(`Проекция словаря устарела: ${path}`);
+}
+if (JSON.stringify(referenceStyles) !== JSON.stringify(styles)) throw new Error("TypeScript использует другой словарь стилей");
 console.log("Успех: QRC отделён от сборки, профилей, размещения и предпросмотра");

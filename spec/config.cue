@@ -8,7 +8,7 @@ import "list"
   namespace: #Namespace
   "base-url": string & =~"^https?://.*/$"
   title?: string & !=""
-  style?: "default" | "number" | "title" | "external"
+  style?: #ReferenceStyle
 }
 // Локальные пространства имён доступны только после чтения публикации;
 // их пересечения с импортом и принадлежность экспорта проверяет runtime.

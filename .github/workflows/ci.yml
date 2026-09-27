@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: d1a6bb92d82b58988a914b4f881a29c312db05a0
+          ref: d9cc5ee0f810c91c38e4bb6d1dc0093b085d016d
           path: .ci/project-publish
           persist-credentials: false
       - name: Путь к координатору
