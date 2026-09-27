@@ -1,3 +1,4 @@
+import { referenceStyles } from "../domain/contract.ts";
 import type { Target } from "../domain/model.ts";
 import { assemble, resolve } from "../domain/catalog.ts";
 import { href } from "../domain/urls.ts";
@@ -16,13 +17,17 @@ export function linkPages(pages: Page[], navigationScript: string, imports: Targ
       if (node.tagName !== "a") throw new Error(`QRC некорректная разметка ссылки в ${page.path}`);
       const target = resolve(targets, key, page.path);
       const requestedStyle = attr(node, "data-qrc-style");
-      if (requestedStyle !== "default" && requestedStyle !== "number" && requestedStyle !== "title" && requestedStyle !== "external") throw new Error(`QRC некорректный стиль ссылки в ${page.path}`);
+      if (!(referenceStyles as readonly string[]).includes(requestedStyle)) throw new Error(`QRC некорректный стиль ссылки в ${page.path}`);
       const style = requestedStyle === "default" ? target.defaultStyle ?? "default" : requestedStyle;
       if (style === "external" && !target.baseUrl) throw new Error(`QRC стиль external требует импортированной цели: ${key}`);
       const custom = attr(node, "data-qrc-custom") === "true";
-      if (style === "number" && !custom && !target.numberHtml) throw new Error(`QRC ${key} не имеет номера; используйте название или задайте текст ссылки`);
-      let label = custom ? inner(page.html, node) : style === "number" ? target.numberHtml
-        : style === "title" || style === "external" ? escape(target.title ?? target.label) : target.labelHtml;
+      // Внешний каталог предоставляет данные, а не выполняемую разметку.
+      // Локальные подписи Quarto и явно написанный автором текст сохраняют HTML.
+      const number = target.baseUrl ? escape(target.number) : target.numberHtml;
+      const caption = target.baseUrl ? escape(target.label) : target.labelHtml;
+      if (style === "number" && !custom && !number) throw new Error(`QRC ${key} не имеет номера; используйте название или задайте текст ссылки`);
+      let label = custom ? inner(page.html, node) : style === "number" ? number
+        : style === "title" || style === "external" ? escape(target.title ?? target.label) : caption;
       const classes = new Set((attr(node, "class") ?? "").split(/\s+/).filter(Boolean));
       const rel = new Set((attr(node, "rel") ?? "").split(/\s+/).filter(Boolean));
       if (target.baseUrl) rel.add("external");

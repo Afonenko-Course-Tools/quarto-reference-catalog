@@ -31,6 +31,7 @@ try {
   await copy(join(repo, "examples/course"), root, { overwrite: true });
   // Exercise the actual installation command with the extension under test.
   await run(quarto, ["add", repo, "--no-prompt"]);
+  await run(quarto, ["add", Deno.env.get("PROJECT_PUBLISH_REPO") ?? join(repo, "../quarto-project-publish"), "--no-prompt"]);
   await run(quarto, ["render", "--fail-if-warnings"]);
   const output = join(root, "_site");
   const catalogPath = join(output, "reference-catalog.json");

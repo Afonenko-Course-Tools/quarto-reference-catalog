@@ -1,12 +1,13 @@
 local targets = require("./targets")
+local constants = require("./constants")
 local function finish(doc)
   if not quarto.doc.is_format("html") then return doc end
   local config = doc.meta["reference-catalog"]
   local ns = os.getenv("QRC_NAMESPACE") or (config and pandoc.utils.stringify(config.namespace))
-  assert(ns and ns ~= "", "QRC запустите сборку из корня составного проекта: не задано пространство имён")
+  assert(ns and ns ~= "", "QRC задайте reference-catalog.namespace или подключите интеграцию project-publish")
   local rows = pandoc.Blocks({})
   for _, id in ipairs(targets.sorted()) do
-    for _, style in ipairs({"default", "number"}) do
+    for _, style in ipairs(constants.probe_styles) do
       local mode = style == "number" and "SuppressAuthor" or "NormalCitation"
       local ref = pandoc.Cite({pandoc.Str("@" .. id)}, {pandoc.Citation(id, mode)})
       if targets.title(id) then

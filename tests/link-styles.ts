@@ -57,7 +57,7 @@ const uncaptioned: Target = { ...imported, title: undefined, sourceTitle: undefi
 const fallback = render(link("external"), uncaptioned);
 assert(fallback.includes('class="qrc-title">Chapter 7</span>') && fallback.includes('class="qrc-source"> — os</span>'), "Uncaptioned target and publication alias fallback failed");
 const native = render(link("default"), { ...imported, defaultStyle: undefined });
-assert(native.includes("Chapter&nbsp;7") && !native.includes('class="qrc-source"'), "The existing default label behavior changed");
+assert(native.includes("Chapter 7") && !native.includes('class="qrc-source"'), "Внешняя подпись должна использовать текстовое поле каталога");
 
 const reveal = render(link("external"), { ...imported, page: "lectures/memory.html", fragment: "fig-layout", slide: "sec-memory" });
 assert(reveal.includes('href="https://example.edu/courses/os/lectures/memory.html?qrc-target=fig-layout#/sec-memory"'), "External Revealjs destination lost its object/slide navigation");
