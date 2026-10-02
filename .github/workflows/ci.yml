@@ -53,6 +53,8 @@ jobs:
           quarto run tests/imports.ts
           quarto run tests/link-styles.ts
           quarto run tests/exports.ts
+          quarto run tests/portal.ts
+          quarto run tests/portal-configured.ts
       - name: Независимые публикации с импортом по HTTP
         run: quarto run tests/external.ts
       - name: Навигация к целям в HTML
