@@ -34,6 +34,8 @@ reference-catalog:
 
 Книгу, лекции, практику и PDF собирает независимый [project-publish](https://github.com/Afonenko-Course-Tools/quarto-project-publish). Подключите там `integrations: [_extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/publication.ts]`. Координатор передаст фильтры каждому HTML-проекту и вызовет QRC после объединения результатов. QRC не нужен проектам, в которых нет межпроектных ссылок. Пример — `examples/course`.
 
+В управляемом режиме `project-publish.portal: index.qmd` корневую страницу собирает координатор в отдельный результат текущей попытки. Её пространство имён задаётся авторской конфигурацией `reference-catalog.namespace`, например `site`; оно не должно совпадать с пространством имён участника или псевдонимом импорта. При подключённом портале `exports.site: [sec-introduction]` может явно публиковать цели корневой страницы наряду с целями HTML-участников. Без фактического портала эта настройка не добавляет локальное пространство имён в составную публикацию. Произвольные HTML-файлы результата тоже не расширяют список разрешённых пространств имён.
+
 ## Импорт каталога
 
 ```yaml
@@ -61,6 +63,7 @@ quarto run tests/exports.ts
 quarto run tests/external.ts
 quarto run tests/navigation.ts
 quarto run tests/import-safety.ts
+quarto run tests/portal.ts
 ```
 
 Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `PROJECT_PUBLISH_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
