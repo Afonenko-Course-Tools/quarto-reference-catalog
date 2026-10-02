@@ -64,6 +64,7 @@ quarto run tests/external.ts
 quarto run tests/navigation.ts
 quarto run tests/import-safety.ts
 quarto run tests/portal.ts
+quarto run tests/portal-configured.ts
 ```
 
 Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `PROJECT_PUBLISH_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
