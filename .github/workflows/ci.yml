@@ -49,6 +49,9 @@ jobs:
       - name: Источники каталогов и оформление ссылок
         run: |
           quarto run tests/boundaries.ts
+          quarto run tests/process-trace.ts
+          quarto run tests/search.ts
+          quarto run tests/publication-scan.ts
           quarto run tests/import-safety.ts
           quarto run tests/imports.ts
           quarto run tests/link-styles.ts

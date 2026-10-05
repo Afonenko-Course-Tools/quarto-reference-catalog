@@ -33,7 +33,8 @@ export async function publish(context: CatalogPublication): Promise<void> {
   }
   const config = catalogConfig(context.config["reference-catalog"], root, namespaces);
   const imports = await importTargets(config.imports);
-  const paths = (await files(stage)).filter(path => path.endsWith(".html"));
+  const stageFiles = await files(stage);
+  const paths = stageFiles.filter(path => path.endsWith(".html"));
   const pages = await Promise.all(paths.map(async path => readPage(relative(stage, path).replaceAll("\\", "/"), await Deno.readTextFile(path))));
   const script = await Deno.readTextFile(join(extension, "browser/navigation.js"));
   const css = await Deno.readTextFile(join(extension, "browser/external.css"));
@@ -41,7 +42,7 @@ export async function publish(context: CatalogPublication): Promise<void> {
   const linked = linkPages(pages, script, imports, css);
   // Сначала вычисляется полный результат: ошибка ссылки не оставляет половину страниц обновлёнными.
   for (const [path, html] of linked.pages) await Deno.writeTextFile(join(stage, path), html);
-  await updateSearch(stage, (await files(stage)).filter(path => path.endsWith("/search.json")), linked.pages);
+  await updateSearch(stage, stageFiles.filter(path => path.endsWith("/search.json")), linked.pages);
   const catalog: Catalog = { schema: "quarto-reference-catalog", generator: { quarto }, publication: config.publication, targets: exported };
   await Deno.writeTextFile(join(stage, "reference-catalog.json"), JSON.stringify(catalog, null, 2) + "\n");
   console.log(`QRC разрешено ссылок: ${linked.links}; целей: ${linked.targets.size}; страниц: ${pages.length}`);

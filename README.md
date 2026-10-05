@@ -68,8 +68,20 @@ JSON сообщает адреса, но сам по себе не подтве�
 
 ## Проверка
 
+Одна публикация обходит stage один раз. Обновление поиска разбирает итоговый
+связанный HTML каждой нужной страницы один раз; при повторном вызове читаются
+новые bytes. При повторяющемся ID текст берётся из первого HTML-элемента.
+
+`COURSE_BUILD_TRACE` принимает абсолютный путь к JSONL-файлу native вызовов.
+QRC дописывает `inspect` и `render` с полями `kind`, `executable`, `cwd`, `args`
+(только target и `--profile`), `elapsedMs`, `exitCode`. Stdout, stderr и остальные
+аргументы не записываются; отказ необязательного журнала не меняет результат.
+
 ```sh
 quarto run tests/boundaries.ts
+quarto run tests/process-trace.ts
+quarto run tests/search.ts
+quarto run tests/publication-scan.ts
 quarto run tests/imports.ts
 quarto run tests/link-styles.ts
 quarto run tests/exports.ts
