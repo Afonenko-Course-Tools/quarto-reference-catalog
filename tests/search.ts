@@ -1,6 +1,7 @@
 import { join } from "stdlib/path";
 import { Parser } from "../_extensions/reference-catalog/vendor/parse5/dist/index.js";
 import { updateSearch } from "../_extensions/reference-catalog/infrastructure/search.ts";
+import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
 
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
@@ -39,13 +40,13 @@ try {
   const pages = new Map([
     [
       "index.html",
-      '<html><body><main>Final <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span></main><main>later main</main></body></html>',
+      '<html><body><main>Final <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" hidden aria-hidden="true">omit retained target probes</div></main><main>later main</main></body></html>',
     ],
     [
       "nested/other.html",
       '<html><body><main><section id="encoded id">Other text</section><button>omit button</button><style>omit style</style></main></body></html>',
     ],
-  ]);
+  ].map(([path, html]) => [path, readPage(path, html)]));
   await updateSearch(root, files, pages);
   assert(parses === 2, `Expected one final HTML parse per page, got ${parses}`);
   const first = JSON.parse(await Deno.readTextFile(files[0])).map((
@@ -73,11 +74,11 @@ try {
   );
   pages.set(
     "index.html",
-    '<html><body><main><section id="same">changed linked caption</section></main></body></html>',
+    readPage("index.html", '<html><body><main><section id="same">changed linked caption</section></main></body></html>'),
   );
   parses = 0;
   await updateSearch(root, files, pages);
-  assert(parses === 2, "A later search operation reused prior parsed pages");
+  assert(parses === 0, "Search reparsed already supplied current pages");
   assert(
     JSON.parse(await Deno.readTextFile(files[0]))[1].text ===
       "changed linked caption",

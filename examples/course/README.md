@@ -1,13 +1,21 @@
 # Книга и две презентации
 
-Этот пример проверяет локальные checkout двух пакетов и использует короткие пути `_extensions/reference-catalog/…` и `_extensions/project-publish/…`.
+Пример использует native root website и опциональный course-site, поставляемый
+репозиторием quarto-project-publish. Локальные установки используют короткие
+пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`.
 
 ```sh
 quarto add /path/to/quarto-reference-catalog --no-prompt
 quarto add /path/to/quarto-project-publish --no-prompt
+(cd book && quarto add /path/to/quarto-reference-catalog --no-prompt)
+(cd lectures && quarto add /path/to/quarto-reference-catalog --no-prompt)
+(cd practice && quarto add /path/to/quarto-reference-catalog --no-prompt)
 quarto render
 ```
 
-Замените `/path/to` на каталог с подготовленными репозиториями. При установке опубликованных пакетов командами `quarto add Afonenko-Course-Tools/…` измените пути обработчиков и интеграции в `_quarto.yml` на `_extensions/Afonenko-Course-Tools/…`, как показано в основных README.
-
-`book` размещается в корне сайта; `lectures` и `practice` — в собственных каталогах. Ссылки работают в обе стороны. Все проектные обработчики указаны явно в `_quarto.yml`.
+При установке из GitHub адаптируйте пути hooks под
+`_extensions/Afonenko-Course-Tools/…`. Каждая часть явно подключает QRC и свой
+namespace. Root index.qmd остаётся обычной главной страницей; книга, лекции и
+практика размещаются в mounts `book`, `lectures`, `practice`. Двусторонние ссылки
+строго разрешаются после успешной полной native сборки. Самостоятельный
+`quarto render chapter.qmd` внутри части использует local связывание.

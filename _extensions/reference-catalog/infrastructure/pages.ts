@@ -1,8 +1,8 @@
 import type { Target } from "../domain/model.ts";
-import { attr, content, elements, hasClass, inner, parseHtml, type Element } from "./html.ts";
+import { attr, content, elements, hasClass, inner, parseHtml, type Element, type Node } from "./html.ts";
 export interface Page {
   path: string; html: string; nodes: Element[]; targets: Target[];
-  probes: Element[]; ids: Map<string, Element[]>; reveal: boolean;
+  probes: Element[]; ids: Map<string, Element[]>; reveal: boolean; root: Node;
 }
 function slideOf(node: Element): string | undefined {
   let current: Element | undefined = node;
@@ -16,7 +16,8 @@ function slideOf(node: Element): string | undefined {
   }
 }
 export function readPage(path: string, html: string): Page {
-  const nodes = elements(parseHtml(html));
+  const root = parseHtml(html);
+  const nodes = elements(root);
   const probes = nodes.filter((n) => hasClass(n, "qrc-probes"));
   const reveal = nodes.some((n) => hasClass(n, "reveal"));
   const ids = new Map<string, Element[]>();
@@ -63,5 +64,5 @@ export function readPage(path: string, html: string): Page {
         ...(titles.has(id) ? { title: titles.get(id)! } : {}) });
     }
   }
-  return { path, html, nodes, targets, probes, ids, reveal };
+  return { path, html, nodes, targets, probes, ids, reveal, root };
 }

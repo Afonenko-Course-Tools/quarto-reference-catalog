@@ -46,6 +46,10 @@ assert(attr(anchors[1], "rel") === "author external", "Existing rel tokens were 
 assert(external.includes("Memory &amp; &lt;storage&gt;") && external.includes("Operating systems &lt;2026&gt;"), "Title/source metadata was not escaped");
 assert(external.includes("<em>Read more &amp; compare</em>"), "Custom rich link text was changed");
 assert(externalNodes.filter(n => n.tagName === "style" && attr(n, "data-qrc-external-style") !== undefined).length === 1, "External CSS was not injected once");
+const finalized = linkPages([readPage("book/index.html", external)], "", [{ ...imported, sourceTitle: "Current source" }], ".qrc-source{opacity:.8}").pages.get("book/index.html")!;
+const finalizedAnchors = elements(parseHtml(finalized)).filter(node => node.tagName === "a");
+assert(content(finalizedAnchors[1]) === "Read more & compare — Current source ↗", "Repeated finalization nested the generated source label inside custom text");
+assert(finalized.includes("<em>Read more &amp; compare</em>"), "Repeated finalization lost rich custom text");
 
 const number = render(link("number"));
 assert(content(elements(parseHtml(number)).find(n => n.tagName === "a")!) === "7", "Explicit number did not override import style");

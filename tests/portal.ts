@@ -1,6 +1,5 @@
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { copy } from "stdlib/fs";
-import integration from "../_extensions/reference-catalog/entrypoints/publication.ts";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
 function assert(value: unknown, message: string): asserts value {
@@ -36,6 +35,7 @@ const context = {
   config,
   members: [{ namespace: "book", format: "html" }],
   portal,
+  outputs: [join(stage, "index.html"), join(stage, "book/index.html")],
 };
 async function render(
   input: string,
@@ -49,15 +49,7 @@ async function render(
       namespace === "site" ? "book:sec-book" : "site:sec-portal"
     }\n`,
   );
-  const metadata = portalMetadata
-    ? integration.metadata({ format: "html" })
-    : integration.metadata({ namespace, format: "html" });
-  if (portalMetadata) {
-    assert(
-      !("reference-catalog" in metadata),
-      "Portal metadata must preserve the configured namespace without an override",
-    );
-  }
+  const metadata = { "reference-catalog": { namespace }, filters: ["reference-catalog"] };
   await Deno.writeTextFile(
     join(root, "metadata.json"),
     JSON.stringify(metadata),

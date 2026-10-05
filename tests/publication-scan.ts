@@ -23,6 +23,8 @@ const context = {
   quarto: "fixture",
   config: {},
   members: [{ namespace: "book", format: "html" }],
+  outputs: [join(stage, "index.html")],
+  searchIndexes: [{ path: join(stage, "nested/search.json") }],
 };
 try {
   await Deno.mkdir(join(stage, "nested"), { recursive: true });
@@ -36,8 +38,8 @@ try {
   );
   await publish(context);
   assert(
-    visits.size === 2 && [...visits.values()].every((count) => count === 1),
-    `Stage directories were listed repeatedly: ${JSON.stringify([...visits])}`,
+    visits.size === 0,
+    `Explicit publication scanned stage directories: ${JSON.stringify([...visits])}`,
   );
   assert(
     JSON.parse(await Deno.readTextFile(join(stage, "nested/search.json")))[0]
@@ -51,8 +53,8 @@ try {
   );
   await publish(context);
   assert(
-    [...visits.values()].every((count) => count === 1),
-    "Later publication repeated its stage scan",
+    visits.size === 0,
+    "Later publication scanned its retained stage",
   );
   assert(
     JSON.parse(await Deno.readTextFile(join(stage, "nested/search.json")))[0]
@@ -62,13 +64,13 @@ try {
   await Deno.symlink(join(stage, "index.html"), join(stage, "linked.html"));
   let refused = false;
   try {
-    await publish(context);
+    await publish({ ...context, outputs: [join(stage, "linked.html")] });
   } catch (error) {
-    refused = String(error).includes("символические ссылки");
+    refused = true;
   }
-  assert(refused, "Publication stage scan accepted a symlink");
+  assert(refused, "Publication accepted a current symlink output");
   console.log(
-    "PASS publication scan: one directory walk, final search bytes, later-call freshness and symlink refusal",
+    "PASS explicit publication: no stage walk, final search, later-call freshness and symlink refusal",
   );
 } finally {
   Deno.readDir = readDir;
