@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: d9cc5ee0f810c91c38e4bb6d1dc0093b085d016d
+          ref: ab481838a92bbe1d7705a3df7dc3194fb97b334c
           path: .ci/project-publish
           persist-credentials: false
       - name: Путь к координатору
@@ -53,6 +53,8 @@ jobs:
           quarto run tests/imports.ts
           quarto run tests/link-styles.ts
           quarto run tests/exports.ts
+          quarto run tests/portal.ts
+          quarto run tests/portal-configured.ts
       - name: Независимые публикации с импортом по HTTP
         run: quarto run tests/external.ts
       - name: Навигация к целям в HTML
