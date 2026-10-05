@@ -6,7 +6,7 @@ export function searchIndexBase(root: string, index: SearchIndex): string {
   if (index.mount === undefined) return relative(root, index.path).replaceAll("\\", "/");
   const mount = index.mount.replaceAll("\\", "/");
   if (isAbsolute(mount) || /^[a-z][a-z0-9+.-]*:/i.test(mount) || mount.split("/").includes("..")) throw new Error(`QRC некорректный mount поискового индекса: ${index.mount}`);
-  return `${mount.replace(/\/$/, "")}/search.json`;
+  return mount === "" ? "search.json" : `${mount.replace(/\/$/, "")}/search.json`;
 }
 export function readable(node: Node): string {
   if ("tagName" in node && (["script", "style", "nav", "button"].includes(node.tagName) || hasClass(node, "anchorjs-link") || hasClass(node, "qrc-probes"))) return "";

@@ -20,7 +20,7 @@ try {
   await Deno.writeTextFile(join(stage, "index.html"), '<html><body><main>Landing</main></body></html>');
   await Deno.writeTextFile(join(stage, "book/search.json"), JSON.stringify([{ href: "chapter.html", text: "old chapter" }, { href: "chapter.html#sec-target", text: "old section" }]));
   await Deno.writeTextFile(join(stage, "search.json"), JSON.stringify([{ href: "index.html", text: "landing" }, { href: "stale.html", text: "private retained content" }]));
-  await publish({ root, stage, quarto: "fixture", config: {}, members: [{ namespace: "book", format: "html" }], outputs: ["stage/index.html", "stage/book/chapter.html"], searchIndexes: [{ path: "stage/search.json" }, { path: "stage/book/search.json" }] });
+  await publish({ root, stage, quarto: "fixture", config: {}, members: [{ namespace: "book", format: "html" }], outputs: ["stage/index.html", "stage/book/chapter.html"], searchIndexes: [{ path: "stage/search.json", mount: "" }, { path: "stage/book/search.json", mount: "book" }] });
   assert(parses === 2, `Combined linking/search reparsed current HTML: ${parses}`);
   const rows = JSON.parse(await Deno.readTextFile(join(stage, "search.json")));
   assert(rows.find((row: any) => row.href === "book/chapter.html")?.text === "Heading Native caption Custom & exact", "Mounted search lost its final link captions or URL prefix");
