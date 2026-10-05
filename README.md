@@ -8,7 +8,7 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 quarto add Afonenko-Course-Tools/quarto-reference-catalog
 ```
 
-Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/project-publish/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
+Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
 
 Установка не добавляет обработчики сборки, ресурсов или предпросмотра. Подключение фильтра активирует только разметку ссылок текущего документа.
 
@@ -30,11 +30,56 @@ reference-catalog:
 
 Ссылку записывают как `@book:sec-introduction` или `{{< xref book sec-introduction >}}`. Для собственной подписи: `{{< xref book sec-introduction "Открыть раздел" >}}`. Идентификаторы целей задаются обычной разметкой Quarto.
 
+Обычные `quarto render chapter.qmd --fail-if-warnings`, `quarto render` и
+`quarto preview` используют локальное связывание. `post.ts` получает список
+текущих outputs через публичный `QUARTO_PROJECT_OUTPUT_FILES`; поддерживается
+и `QUARTO_USE_FILE_FOR_PROJECT_OUTPUT_FILES` для длинного списка. Связываются
+только страницы этого запуска. Полный render самостоятельной части также
+остаётся локальным: он не подтверждает весь составной курс.
+
+Известные цели текущих страниц и явно импортированных каталогов получают URL.
+Для цели без доступных фактов сохраняются подпись и `data-qrc-ref`, добавляется
+`data-qrc-deferred="true"`; ссылка пока не имеет `href`. Это относится и к
+ссылке на ещё не собранную главу собственного пространства имён. Итог сообщает
+количество отложенных ссылок без warning. При следующем вызове каталоги читаются
+заново. Сохранённые страницы других глав автоматически не используются для
+поиска целей; их факты можно предоставить явным импортом каталога.
+
+Если локальный файл импортируемого каталога ещё не создан или в корректном
+сохранённом каталоге пока нет выбранного пространства имён, local откладывает
+ссылки. Повреждённый JSON, неверная схема, ошибки конфигурации и HTTP остаются
+ошибками. Строгий full отклоняет и отсутствующий файл или пространство имён.
+
+Локальный каталог текущих доступных экспортируемых целей записывается отдельно
+в `reference-catalog-local.json`. Он может быть неполным; прежний публичный
+`reference-catalog.json` сохраняется. Скрытые пробы целей остаются в локальном
+HTML для последующей полной финализации и не попадают в текст поиска.
+
+После сборки полного текущего набора страниц вызывающий код использует
+`publish({root, stage, quarto, config, members, outputs, searchIndexes, scope: "full"})`
+из `_extensions/reference-catalog/infrastructure/publish.ts`. `outputs` —
+обязательные текущие файлы относительно `root` либо абсолютные пути внутри
+`stage`, в обоих режимах. API по умолчанию строгий: неизвестная цель или
+отсутствующий объявленный экспорт — ошибка. Полная финализация удаляет пробы
+и записывает публичный `reference-catalog.json`; сохранённые HTML вне списка
+не участвуют в проверке.
+
 ## Составная публикация
 
-Книгу, лекции, практику и PDF собирает независимый [project-publish](https://github.com/Afonenko-Course-Tools/quarto-project-publish). Подключите там `integrations: [_extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/publication.ts]`. Координатор передаст фильтры каждому HTML-проекту и вызовет QRC после объединения результатов. QRC не нужен проектам, в которых нет межпроектных ссылок. Пример — `examples/course`.
+Опциональное [course-site](https://github.com/Afonenko-Course-Tools/quarto-project-publish)
+собирает обычные native проекты и передаёт QRC явные текущие outputs и поисковые
+индексы после размещения частей. Репозиторий расширения сохраняет историческое
+имя `quarto-project-publish`; установленный payload называется `course-site`.
+Установите QRC и явно подключите `filters: [reference-catalog]` с собственным
+`reference-catalog.namespace` в каждой части и в корневом проекте. Root и
+component hooks указаны в `examples/course`: у частей local `post.ts`, затем
+`course-site/entrypoints/collect.ts`; у root — native `course-site` pre/post.
 
-В управляемом режиме `project-publish.portal: index.qmd` корневую страницу собирает координатор в отдельный результат текущей попытки. Её пространство имён задаётся авторской конфигурацией `reference-catalog.namespace`, например `site`; оно не должно совпадать с пространством имён участника или псевдонимом импорта. При подключённом портале `exports.site: [sec-introduction]` может явно публиковать цели корневой страницы наряду с целями HTML-участников. Без фактического портала эта настройка не добавляет локальное пространство имён в составную публикацию. Произвольные HTML-файлы результата тоже не расширяют список разрешённых пространств имён.
+Части размещаются в отдельных mount, например `book`, `lectures`, `practice`.
+Полный финализатор получает их пространства имён явно; произвольный HTML не
+добавляет новый namespace. Если непосредственный caller использует `portal`,
+пространство имён портала берётся из авторской root-конфигурации и проверяется
+на конфликт с частями и импортами. QRC не добавляет фильтры в чужую конфигурацию.
 
 ## Импорт каталога
 
@@ -49,7 +94,7 @@ reference-catalog:
       style: external
 ```
 
-`source` принимает HTTP(S) URL или путь к JSON относительно корня проекта; `base-url` задаёт адрес опубликованных страниц. Ссылка `@os:sec-memory` использует импортированную цель. Для `source` и опубликованных страниц допустимы разные серверы. В одной сборке каждый источник загружается один раз. Подписи импортированных целей вставляются как текст: HTML из внешнего JSON не исполняется. Стили: `default`, `number`, `title`, `external`. Название внешней публикации берётся из каталога или из `title` импорта.
+`source` принимает HTTP(S) URL или путь к JSON относительно корня проекта; `base-url` задаёт адрес опубликованных страниц. Ссылка `@os:sec-memory` использует импортированную цель. Для `source` и опубликованных страниц допустимы разные серверы. В одном вызове финализатора каждый источник загружается один раз. Подписи импортированных целей вставляются как текст: HTML из внешнего JSON не исполняется. Стили: `default`, `number`, `title`, `external`. Название внешней публикации берётся из каталога или из `title` импорта.
 
 Без `exports` внешний каталог пуст. Выбор целей для экспорта не скрывает уже
 опубликованные страницы и не заменяет правила student/full владельца курса. `exports.book: "*"` разрешает экспорт всех собственных целей пространства `book`. Импортированные цели никогда не переэкспортируются. Каталог — `reference-catalog.json` в выходном каталоге.
@@ -68,8 +113,28 @@ JSON сообщает адреса, но сам по себе не подтве�
 
 ## Проверка
 
+Оба режима читают только явные текущие outputs. Каждая HTML-страница
+разбирается один раз; linking и поиск используют одно дерево с итоговыми
+подписями ссылок. При повторном вызове читаются новые bytes. В full режиме
+`searchIndexes: [{path, mount?}]` задаёт текущие индексы; относительные href
+переносятся под mount, записи невыбранных HTML удаляются, root search объединяется. При повторяющемся ID текст берётся из первого HTML-элемента.
+
+`COURSE_BUILD_TRACE` принимает абсолютный путь к JSONL-файлу native вызовов.
+QRC дописывает `inspect` и `render` с полями `kind`, `executable`, `cwd`, `args`
+(только target и `--profile`), `elapsedMs`, `exitCode`. Stdout, stderr и остальные
+аргументы не записываются; отказ необязательного журнала не меняет результат.
+
 ```sh
+quarto run tests/local-linking.ts
+quarto run tests/local-outputs.ts
+quarto run tests/local-imports.ts
+quarto run tests/native-local.ts
+quarto run tests/full-outputs.ts
+quarto run tests/search-publication.ts
 quarto run tests/boundaries.ts
+quarto run tests/process-trace.ts
+quarto run tests/search.ts
+quarto run tests/publication-scan.ts
 quarto run tests/imports.ts
 quarto run tests/link-styles.ts
 quarto run tests/exports.ts
@@ -80,7 +145,7 @@ quarto run tests/portal.ts
 quarto run tests/portal-configured.ts
 ```
 
-Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `PROJECT_PUBLISH_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
+Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
 
 Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом), Lua и CUE. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 

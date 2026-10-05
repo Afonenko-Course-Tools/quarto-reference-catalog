@@ -1,9 +1,9 @@
 project:
   type: website
   output-dir: _site
-  render: []
-  pre-render: _extensions/project-publish/entrypoints/pre.ts
-  post-render: _extensions/project-publish/entrypoints/post.ts
+  render: [index.qmd]
+  pre-render: _extensions/course-site/entrypoints/pre.ts
+  post-render: _extensions/course-site/entrypoints/post.ts
 website:
   title: Материалы курса
 format:
@@ -11,20 +11,23 @@ format:
     theme: cosmo
 lang: ru
 reference-catalog:
+  namespace: site
   exports:
     book: "*"
     lectures: "*"
     practice: "*"
-project-publish:
-  home: book
-  integrations: [_extensions/reference-catalog/entrypoints/publication.ts]
+filters: [reference-catalog]
+course-site:
   projects:
-    book:
+    - id: book
       path: book
       format: html
-    lectures:
+      mount: book
+    - id: lectures
       path: lectures
       format: revealjs
-    practice:
+      mount: lectures
+    - id: practice
       path: practice
       format: revealjs
+      mount: practice

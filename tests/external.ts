@@ -5,6 +5,7 @@ import { exportedTargets } from "../_extensions/reference-catalog/domain/exports
 import { parseExports } from "../_extensions/reference-catalog/infrastructure/export-config.ts";
 import { attr, elements, hasClass, parseHtml, type Element, type Node } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import { importTargets } from "../_extensions/reference-catalog/infrastructure/imports.ts";
+import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
 const root = await Deno.makeTempDir({ prefix: "qrc-external-" });
@@ -29,6 +30,11 @@ async function render(workspace: string, expectedError?: string, outputDir?: str
   const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
   assert(expectedError ? !result.success && output.includes(expectedError) : result.success,
     `${workspace}: ${expectedError ? `expected failure containing ${expectedError}\n` : ""}${output}`);
+  if (expectedError) return;
+  // A standalone native hook is local; exporting a public catalog is explicit full work.
+  const inspected = await new Deno.Command(quarto, { args: ["inspect", workspace], cwd: workspace, stdout: "piped", stderr: "piped" }).output();
+  assert(inspected.success, new TextDecoder().decode(inspected.stderr));
+  await publish({ root: workspace, stage: join(workspace, outputDir ?? "_site"), quarto: "native-integration", config: JSON.parse(new TextDecoder().decode(inspected.stdout)).config, members: [{ namespace: "book", format: "html" }], scope: "full", outputs: JSON.parse(await Deno.readTextFile(join(workspace, "current-outputs.json"))) });
 }
 async function rejects(action: () => unknown | Promise<unknown>, message: string) {
   try { await action(); }
@@ -41,6 +47,11 @@ async function rejects(action: () => unknown | Promise<unknown>, message: string
 async function initialize(workspace: string) {
   await Deno.mkdir(workspace, { recursive: true });
   await copy(join(repo, "_extensions"), join(workspace, "_extensions"));
+  await write(workspace, "capture.ts", `const file=Deno.env.get("QUARTO_USE_FILE_FOR_PROJECT_OUTPUT_FILES");
+const text=file ? await Deno.readTextFile(file) : Deno.env.get("QUARTO_PROJECT_OUTPUT_FILES");
+if(text===undefined) throw new Error("Missing current native output list");
+await Deno.writeTextFile("current-outputs.json",JSON.stringify(text.split(/\\r?\\n/).filter(Boolean)));
+`);
   await write(workspace, "_quarto.yml", `project:
   type: website
   output-dir: _site
@@ -55,7 +66,9 @@ function config(extra: string) {
   return `project:
   type: book
   output-dir: _site
-  post-render: _extensions/reference-catalog/entrypoints/post.ts
+  post-render:
+    - _extensions/reference-catalog/entrypoints/post.ts
+    - capture.ts
 book:
   title: Материалы курса
   chapters: [index.qmd${extra.includes("exports:") ? ", memory.qmd" : ""}]
@@ -179,7 +192,7 @@ lang: ru
 Авторский текст: {{< xref os sec-memory "Читать о памяти" style="external" >}}.
 `);
   await render(java);
-  expectRequests(1);
+  expectRequests(2); // One source read in each of the native local and explicit full finalizers.
   let nodes = await page(java);
   const defaultLink = link(nodes, "os:sec-memory");
   const ownLink = link(nodes, "book:sec-memory");
@@ -200,7 +213,7 @@ lang: ru
   // Each build chooses a fresh snapshot; repeated references and aliases within it share that snapshot.
   remoteCatalog = JSON.stringify({ ...published, publication: { title: "ОС: новая редакция" } });
   await render(java);
-  expectRequests(2);
+  expectRequests(4);
   nodes = await page(java);
   assert(content(link(nodes, "os:sec-memory")) === "Управление памятью — ОС: новая редакция", "A new build reused an old external catalog");
   assert(content(link(nodes, "os-second:sec-memory")) === content(link(nodes, "os:sec-memory")), "Aliases disagree on their build snapshot");
@@ -220,7 +233,7 @@ lang: ru
   await write(java, "_quarto.yml", javaConfig + "  version: 1\n");
   await render(java, "неизвестное свойство reference-catalog.version");
 
-  console.log("PASS external catalogs: selective own exports, HTTP and sibling files, штатные подписи локального импорта, external/title/number styles, one fetch per build, fresh build snapshot, no reexports, invalid export/import rejection");
+  console.log("PASS external catalogs: selective own exports, HTTP and sibling files, штатные подписи локального импорта, external/title/number styles, one fetch per finalizer, fresh catalog facts, no reexports, invalid export/import rejection");
 } finally {
   if (server) await server.shutdown();
   await Deno.remove(root, { recursive: true });

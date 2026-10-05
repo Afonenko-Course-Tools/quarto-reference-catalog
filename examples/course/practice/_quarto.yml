@@ -1,5 +1,8 @@
 project:
   type: default
+  post-render:
+    - _extensions/reference-catalog/entrypoints/post.ts
+    - ../_extensions/course-site/entrypoints/collect.ts
   output-dir: _output
   render:
     - "**/*.qmd"
@@ -9,3 +12,9 @@ format:
     hash: true
 lang: ru
 number-sections: false
+
+filters: [reference-catalog]
+reference-catalog:
+  namespace: practice
+  exports:
+    practice: "*"

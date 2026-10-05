@@ -4,7 +4,7 @@ local function finish(doc)
   if not quarto.doc.is_format("html") then return doc end
   local config = doc.meta["reference-catalog"]
   local ns = os.getenv("QRC_NAMESPACE") or (config and pandoc.utils.stringify(config.namespace))
-  assert(ns and ns ~= "", "QRC задайте reference-catalog.namespace или подключите интеграцию project-publish")
+  assert(ns and ns ~= "", "QRC задайте reference-catalog.namespace в конфигурации native проекта")
   local rows = pandoc.Blocks({})
   for _, id in ipairs(targets.sorted()) do
     for _, style in ipairs(constants.probe_styles) do

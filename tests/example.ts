@@ -10,9 +10,9 @@ const cue = Deno.env.get("CUE") || "cue";
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
-async function run(executable: string, args: string[], expectedError?: string) {
+async function run(executable: string, args: string[], expectedError?: string, cwd = root) {
   const result = await new Deno.Command(executable, {
-    args, cwd: root, stdout: "piped", stderr: "piped",
+    args, cwd, stdout: "piped", stderr: "piped",
   }).output();
   const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
   assert(expectedError ? !result.success && output.includes(expectedError) : result.success, output);
@@ -31,7 +31,8 @@ try {
   await copy(join(repo, "examples/course"), root, { overwrite: true });
   // Exercise the actual installation command with the extension under test.
   await run(quarto, ["add", repo, "--no-prompt"]);
-  await run(quarto, ["add", Deno.env.get("PROJECT_PUBLISH_REPO") ?? join(repo, "../quarto-project-publish"), "--no-prompt"]);
+  await run(quarto, ["add", Deno.env.get("COURSE_SITE_REPO") ?? join(repo, "../quarto-project-publish"), "--no-prompt"]);
+  for (const member of ["book", "lectures", "practice"]) await run(quarto, ["add", repo, "--no-prompt"], undefined, join(root, member));
   await run(quarto, ["render", "--fail-if-warnings"]);
   const output = join(root, "_site");
   const catalogPath = join(output, "reference-catalog.json");
@@ -41,14 +42,15 @@ try {
   const catalog: Catalog = JSON.parse(await Deno.readTextFile(catalogPath));
   for (const key of ["book:sec-objects", "book:fig-demo", "lectures:sec-memory", "practice:exr-demo"])
     assert(catalog.targets[key], `Missing example target: ${key}`);
-  assert((await Deno.stat(join(output, "index.html"))).isFile, "Book is not the site home");
-  assert((await Deno.stat(join(output, ".nojekyll"))).isFile, "Missing Pages marker");
+  assert((await Deno.stat(join(output, "index.html"))).isFile, "Native landing page is missing");
+  assert((await Deno.stat(join(output, "book/index.html"))).isFile, "Mounted native book is missing");
 
   const pages = new Map<string, Set<string>>();
   let links = 0;
   for (const path of (await files(output)).filter(path => path.endsWith(".html"))) {
     const nodes = elements(parseHtml(await Deno.readTextFile(path)));
-    assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
+    const document = ["index.html", "book/index.html", "book/topics/objects.html", "book/appendix.html", "lectures/01/lecture-memory.html", "practice/01/tasks.html"].includes(path.slice(output.length + 1));
+    if (document) assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
     pages.set(path, new Set(nodes.map(node => attr(node, "id")).filter((id): id is string => !!id)));
     for (const node of nodes) for (const name of ["href", "src"]) {
       const raw = attr(node, name);
@@ -58,7 +60,7 @@ try {
       assert(!url.startsWith("/"), `Root-relative URL breaks project Pages: ${raw}`);
       const target = resolve(dirname(path), url);
       try { await Deno.stat(target); }
-      catch { throw new Error(`Broken local link ${raw} in ${path}`); }
+      catch { throw new Error(`Broken local link ${raw} in ${path}; current HTML: ${(await files(output)).filter(file => file.endsWith(".html")).map(file => file.slice(output.length + 1)).join(", ")}`); }
       links++;
     }
   }

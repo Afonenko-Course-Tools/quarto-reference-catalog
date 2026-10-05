@@ -11,12 +11,17 @@ async function readCatalog(source: string): Promise<Catalog> {
 }
 
 /** Каждый источник читается один раз, в том числе при импорте нескольких пространств имён. */
-export async function importTargets(imports: Import[]): Promise<Target[]> {
-  const snapshots = new Map<string, Promise<Catalog>>();
+export async function importTargets(imports: Import[], options: { allowMissingLocal?: boolean } = {}): Promise<Target[]> {
+  const snapshots = new Map<string, Promise<Catalog | undefined>>();
   const result: Target[] = [];
   for (const spec of imports) {
-    if (!snapshots.has(spec.source)) snapshots.set(spec.source, readCatalog(spec.source));
+    const local = !/^https?:\/\//.test(spec.source);
+    if (!snapshots.has(spec.source)) snapshots.set(spec.source, readCatalog(spec.source).catch(error => {
+      if (options.allowMissingLocal && local && error instanceof Error && error.cause instanceof Deno.errors.NotFound) return undefined;
+      throw error;
+    }));
     const catalog = await snapshots.get(spec.source)!;
+    if (!catalog) continue;
     let count = 0;
     for (const item of Object.values(catalog.targets)) {
       if (item.namespace !== spec.sourceNamespace) continue;
@@ -29,7 +34,7 @@ export async function importTargets(imports: Import[]): Promise<Target[]> {
       });
       count++;
     }
-    if (!count) throw new Error(`QRC импорт не содержит пространство имён ${spec.sourceNamespace}: ${spec.source}`);
+    if (!count && !(options.allowMissingLocal && local)) throw new Error(`QRC импорт не содержит пространство имён ${spec.sourceNamespace}: ${spec.source}`);
   }
   return result;
 }

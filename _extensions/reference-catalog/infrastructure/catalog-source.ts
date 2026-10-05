@@ -23,7 +23,7 @@ export function normalizeCatalogSource(value: string, root: string): string {
 export async function readCatalogSource(source: string): Promise<string> {
   if (!/^https?:\/\//.test(source)) {
     try { return await Deno.readTextFile(source); }
-    catch (error) { throw new Error(`QRC не удалось прочитать импортированный каталог ${source}: ${error instanceof Error ? error.message : error}`); }
+    catch (error) { throw new Error(`QRC не удалось прочитать импортированный каталог ${source}: ${error instanceof Error ? error.message : error}`, { cause: error }); }
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);

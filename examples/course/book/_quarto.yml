@@ -1,5 +1,8 @@
 project:
   type: book
+  post-render:
+    - _extensions/reference-catalog/entrypoints/post.ts
+    - ../_extensions/course-site/entrypoints/collect.ts
   output-dir: _book
 book:
   title: Программирование
@@ -18,3 +21,9 @@ crossref:
     - key: vid
       kind: float
       reference-prefix: Видео
+
+filters: [reference-catalog]
+reference-catalog:
+  namespace: book
+  exports:
+    book: "*"
