@@ -16,7 +16,7 @@ async function rejects(action: () => Promise<unknown>, message: string) {
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
 const root = await Deno.makeTempDir({ prefix: "qrc-native-local-" });
 const stage = join(root, "_site");
-const quarto = Deno.env.get("QUARTO") || "/usr/bin/quarto";
+const quarto = Deno.env.get("QUARTO") || "quarto";
 async function render(target: string, extra: Record<string, string> = {}) {
   const result = await new Deno.Command(quarto, {
     args: ["render", target, "--fail-if-warnings"], cwd: root,
