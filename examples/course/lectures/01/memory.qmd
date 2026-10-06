@@ -8,7 +8,7 @@ output-file: lecture-memory.html
 Книга: @book:sec-objects. Практика: @practice:sec-exercise.
 
 ::: {.fragment}
-![Один объект](../../assets/dot.svg){#fig-demo width=120}
+![Один объект](../assets/dot.svg){#fig-demo width=120}
 :::
 
 ## Контракт программы {#sec-contracts}
@@ -19,4 +19,4 @@ output-file: lecture-memory.html
 
 {{< xref practice exr-demo "Решить задачу" >}}
 
-[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/lectures/01/memory.qmd)
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/course/lectures/01/memory.qmd)

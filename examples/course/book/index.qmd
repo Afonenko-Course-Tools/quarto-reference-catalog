@@ -8,4 +8,4 @@
 
 Локальная ссылка остаётся штатной: @sec-objects.
 
-[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/book/index.qmd)
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/course/book/index.qmd)

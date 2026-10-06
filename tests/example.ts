@@ -52,6 +52,18 @@ try {
     assert(catalog.targets[key], `Missing example target: ${key}`);
   assert((await Deno.stat(join(output, "index.html"))).isFile, "Native landing page is missing");
   assert((await Deno.stat(join(output, "book/index.html"))).isFile, "Mounted native book is missing");
+  // Each native project must own the media it renders; a root resource can
+  // accidentally hide a broken child-relative URL in the composed output.
+  for (const stage of [join(root, "lectures/_site"), join(output, "lectures")]) {
+    const page = join(stage, "01/lecture-memory.html");
+    const image = elements(parseHtml(await Deno.readTextFile(page))).find(node =>
+      node.tagName === "img" && (attr(node, "src") ?? attr(node, "data-src"))?.endsWith("dot.svg")
+    );
+    assert(image, `Missing lecture demonstration image: ${page}`);
+    const target = resolve(dirname(page), (attr(image, "src") ?? attr(image, "data-src"))!);
+    assert(target.startsWith(stage + "/"), `Lecture image escapes its native project output: ${target}`);
+    assert((await Deno.stat(target)).isFile, `Missing native lecture resource: ${target}`);
+  }
 
   const pages = new Map<string, Set<string>>();
   let links = 0;
@@ -60,7 +72,7 @@ try {
     const document = ["index.html", "book/index.html", "book/topics/objects.html", "book/appendix.html", "lectures/01/lecture-memory.html", "practice/01/tasks.html"].includes(path.slice(output.length + 1));
     if (document) assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
     pages.set(path, new Set(nodes.map(node => attr(node, "id")).filter((id): id is string => !!id)));
-    for (const node of nodes) for (const name of ["href", "src"]) {
+    for (const node of nodes) for (const name of ["href", "src", "data-src"]) {
       const raw = attr(node, name);
       if (!raw || /^(?:[A-Za-z][A-Za-z0-9+.-]*:|\/\/|#)/.test(raw)) continue;
       const url = decodeURIComponent(raw.split(/[?#]/)[0]);
@@ -75,7 +87,7 @@ try {
   for (const [key, target] of Object.entries(catalog.targets)) {
     const ids = pages.get(join(output, target.page));
     assert(ids?.has(target.fragment), `Missing catalog destination: ${key}`);
-    if (target.slide) assert(ids.has(target.slide), `Missing Revealjs slide: ${key}`);
+    if (target.slide) assert(ids?.has(target.slide), `Missing Revealjs slide: ${key}`);
   }
   // A success-only test could miss an accidentally disabled schema check.
   const invalid = join(root, "invalid-catalog.json");
