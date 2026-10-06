@@ -1,8 +1,8 @@
 project:
   type: default
   post-render:
-    - _extensions/reference-catalog/entrypoints/post.ts
-    - ../_extensions/course-site/entrypoints/collect.ts
+    - _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
+    - ../_extensions/Afonenko-Course-Tools/course-site/entrypoints/collect.ts
   output-dir: _output
   render:
     - "**/*.qmd"

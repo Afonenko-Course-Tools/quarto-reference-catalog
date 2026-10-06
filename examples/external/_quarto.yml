@@ -2,7 +2,7 @@ project:
   type: website
   output-dir: _site
   render: [index.qmd]
-  post-render: _extensions/reference-catalog/entrypoints/post.ts
+  post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
 profile:
   default: full
 format: html

@@ -8,11 +8,14 @@
 quarto-docs отличается от локального псевдонима docs.
 
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0
-quarto render
+task install
+task render
 ```
 
-При GitHub установке адаптируйте путь post-hook к фактическому namespace.
-При локальной установке из checkout используется указанный короткий путь.
+Hook уже использует GitHub namespace; отдельная адаптация не нужна.
 По умолчанию full. Готовый результат — `external-catalog.tar.gz`; его внутренние
 ресурсы локальны, три явно внешние ссылки ведут на https://quarto.org/.
+
+`task render` записывает `_site/BUILD.json`: точная ревизия производителя,
+закреплённые зависимости и версия Quarto. Архив `external-catalog.tar.gz` выпускается
+в отдельном неизменяемом Release `demo-20261007` из той же ревизии.
