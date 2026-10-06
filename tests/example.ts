@@ -87,7 +87,7 @@ try {
   for (const [key, target] of Object.entries(catalog.targets)) {
     const ids = pages.get(join(output, target.page));
     assert(ids?.has(target.fragment), `Missing catalog destination: ${key}`);
-    if (target.slide) assert(ids.has(target.slide), `Missing Revealjs slide: ${key}`);
+    if (target.slide) assert(ids?.has(target.slide), `Missing Revealjs slide: ${key}`);
   }
   // A success-only test could miss an accidentally disabled schema check.
   const invalid = join(root, "invalid-catalog.json");
