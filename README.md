@@ -5,7 +5,7 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 ## Установка
 
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog
+quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.1.0
 ```
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
@@ -171,3 +171,7 @@ quarto run tests/portal-configured.ts
 ## Лицензия
 
 [MIT](LICENSE).
+
+## Версии и обновление
+
+Релиз `v2.1.0` соответствует версии в `_extension.yml`. Устанавливайте явный тег, как в команде выше, и сохраняйте установленные файлы `_extensions` в Git курса. Для обновления установите следующий опубликованный тег через `quarto add`, проверьте diff и выполните проверки курса. Опубликованные теги неизменяемы: исправления получают новую версию и новый тег.
