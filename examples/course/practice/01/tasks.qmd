@@ -17,3 +17,5 @@ title: Практика — контракты
 Сопоставьте [@book:fig-demo; @lectures:fig-demo].
 
 {{< xref book eq-appendix "Формула в приложении" >}}
+
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/practice/01/tasks.qmd)

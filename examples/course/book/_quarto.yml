@@ -25,3 +25,5 @@ crossref:
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
+profile:
+  default: full

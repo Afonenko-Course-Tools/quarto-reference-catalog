@@ -16,3 +16,5 @@ number-sections: false
 filters: [reference-catalog]
 reference-catalog:
   namespace: practice
+profile:
+  default: full

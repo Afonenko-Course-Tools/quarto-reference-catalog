@@ -13,17 +13,6 @@ lang: ru
 reference-catalog:
   namespace: site
 filters: [reference-catalog]
-course-site:
-  projects:
-    - id: book
-      path: book
-      format: html
-      mount: book
-    - id: lectures
-      path: lectures
-      format: revealjs
-      mount: lectures
-    - id: practice
-      path: practice
-      format: revealjs
-      mount: practice
+subprojects: [book, lectures, practice]
+profile:
+  default: full

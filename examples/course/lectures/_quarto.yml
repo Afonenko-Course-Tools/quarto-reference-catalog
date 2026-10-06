@@ -17,3 +17,5 @@ number-sections: false
 filters: [reference-catalog]
 reference-catalog:
   namespace: lectures
+profile:
+  default: full

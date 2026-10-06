@@ -16,7 +16,7 @@ quarto render
 При установке из GitHub адаптируйте пути hooks под
 `_extensions/Afonenko-Course-Tools/…`. Каждая часть явно подключает QRC и свой
 namespace. Root index.qmd остаётся обычной главной страницей; книга, лекции и
-практика размещаются в mounts `book`, `lectures`, `practice`. Двусторонние ссылки
+практика перечисляются в `subprojects` и размещаются по путям `book`, `lectures`, `practice`. Двусторонние ссылки
 строго разрешаются после успешной полной native сборки. Самостоятельный
 `quarto render chapter.qmd` внутри части использует local связывание.
 

@@ -3,3 +3,5 @@
 [Книга](book/index.html), [лекции](lectures/01/lecture-memory.html) и [практика](practice/01/tasks.html).
 
 Тема книги: @book:sec-objects.
+
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/index.qmd)
