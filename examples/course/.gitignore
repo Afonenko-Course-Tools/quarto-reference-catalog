@@ -18,3 +18,4 @@
 
 # This example reconstructs its installed dependencies with quarto add.
 **/_extensions/
+.task/
