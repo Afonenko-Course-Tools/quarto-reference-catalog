@@ -1,0 +1,18 @@
+---
+title: Внешний адресный каталог
+---
+
+# Внешняя ссылка
+
+Этот пример использует **вручную составленный снимок адресного каталога**
+официальной документации Quarto. Снимок JSON хранится рядом с исходником и
+закрепляется выпуском QRC; внешний сайт остаётся самостоятельным живым сайтом.
+Номера или учебные данные внешнего сайта не выдумываются.
+
+@docs:sec-inspect
+
+{{< xref docs sec-inspect "Открыть API inspect" style="title" >}}
+
+{{< xref docs sec-inspect "Выбранная подпись автора" >}}
+
+[Исходники группы](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/tree/v2.2.0/examples/external) · [Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/external/index.qmd)

@@ -18,3 +18,5 @@ output-file: lecture-memory.html
 Только номер: [-@book:fig-demo].
 
 {{< xref practice exr-demo "Решить задачу" >}}
+
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/lectures/01/memory.qmd)

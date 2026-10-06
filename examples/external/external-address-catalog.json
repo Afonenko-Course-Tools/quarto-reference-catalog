@@ -1,0 +1,22 @@
+{
+  "schema": "quarto-reference-catalog",
+  "generator": {
+    "quarto": "manually authored address snapshot"
+  },
+  "publication": {
+    "title": "Официальная документация Quarto"
+  },
+  "targets": {
+    "quarto-docs:sec-inspect": {
+      "namespace": "quarto-docs",
+      "id": "sec-inspect",
+      "page": "docs/advanced/inspect/index.html",
+      "fragment": "overview",
+      "labelHtml": "Quarto Inspect",
+      "label": "Quarto Inspect",
+      "numberHtml": "",
+      "number": "",
+      "title": "Quarto Inspect"
+    }
+  }
+}

@@ -113,3 +113,5 @@ $$x^2 + y^2 = 1$$ {#eq-demo}
 :::
 
 Лекция: @lectures:sec-memory. Практика: @practice:exr-demo.
+
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/book/topics/objects.qmd)

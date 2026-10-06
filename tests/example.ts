@@ -33,6 +33,14 @@ try {
   await run(quarto, ["add", repo, "--no-prompt"]);
   await run(quarto, ["add", Deno.env.get("COURSE_SITE_REPO") ?? join(repo, "../quarto-project-publish"), "--no-prompt"]);
   for (const member of ["book", "lectures", "practice"]) await run(quarto, ["add", repo, "--no-prompt"], undefined, join(root, member));
+  for (const project of [root, ...["book", "lectures", "practice"].map(member => join(root, member))]) {
+    await Deno.mkdir(join(project, "_extensions/Afonenko-Course-Tools"), { recursive: true });
+    for (const extension of ["reference-catalog", "course-site"]) {
+      const old = join(project, "_extensions", extension);
+      try { await Deno.rename(old, join(project, "_extensions/Afonenko-Course-Tools", extension)); }
+      catch (error) { if (!(error instanceof Deno.errors.NotFound)) throw error; }
+    }
+  }
   await run(quarto, ["render", "--fail-if-warnings"]);
   const output = join(root, "_site");
   const catalogPath = join(output, "reference-catalog.json");

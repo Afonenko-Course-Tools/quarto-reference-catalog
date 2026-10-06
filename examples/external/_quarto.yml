@@ -1,0 +1,17 @@
+project:
+  type: website
+  output-dir: _site
+  render: [index.qmd]
+  post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
+profile:
+  default: full
+format: html
+filters: [reference-catalog]
+reference-catalog:
+  namespace: external-demo
+  imports:
+    docs:
+      source: external-address-catalog.json
+      namespace: quarto-docs
+      base-url: https://quarto.org/
+      style: external

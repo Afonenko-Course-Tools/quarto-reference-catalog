@@ -10,7 +10,7 @@ async function render(profile:string,success=true){const result=await new Deno.C
 try {
  await copy(join(repo,"_extensions"),join(root,"_extensions"));
  await copy(join(Deno.env.get("COURSE_SITE_REPO") ?? join(repo,"../quarto-project-publish"),"_extensions/course-site"),join(root,"_extensions/course-site"));
- await write("_quarto.yml",'project:\n  type: website\n  output-dir: _site\n  render: [index.qmd]\n  pre-render: _extensions/course-site/entrypoints/pre.ts\n  post-render: _extensions/course-site/entrypoints/post.ts\nformat: html\nfilters: [reference-catalog]\nreference-catalog:\n  namespace: site\ncourse-site:\n  projects:\n    - {id: book, path: book, format: html, mount: book}\n    - {id: lectures, path: lectures, format: html, mount: lectures}\n    - {id: practice, path: practice, format: html, mount: practice}\n');
+ await write("_quarto.yml",'project:\n  type: website\n  output-dir: _site\n  render: [index.qmd]\n  pre-render: _extensions/course-site/entrypoints/pre.ts\n  post-render: _extensions/course-site/entrypoints/post.ts\nformat: html\nfilters: [reference-catalog]\nreference-catalog:\n  namespace: site\nsubprojects: [book, lectures, practice]\n');
  await write("index.qmd",'# Landing\n\n@book:sec-main\n');
  for(const profile of ["student","full"])await write(`_quarto-${profile}.yml`,`project:\n  output-dir: _site-${profile}\n`);
  for(const member of ["book","lectures","practice"]){
