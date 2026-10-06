@@ -22,9 +22,11 @@ const local = [target("book", "sec-private"), target("book", "sec-memory"), targ
 const selected = exportedTargets(local, parseExports({ book: ["sec-memory"] }, ["book", "lectures"]));
 assert(Object.keys(selected).join() === "book:sec-memory", "Explicit exports exposed another target");
 assert(resolve(assemble(local), "book:sec-private", "index.html"), "Export selection removed a local reference");
-assert(Object.keys(exportedTargets(local)).length === 0, "Без явного exports публичных целей быть не должно");
+assert(Object.keys(exportedTargets(local, parseExports(undefined, ["book", "lectures"]))).join() === "book:sec-memory,book:sec-private,lectures:sec-memory", "Без exports должны публиковаться все собственные цели в стабильном порядке");
+assert(Object.keys(exportedTargets([])).length === 0, "Empty publication must export no targets");
 assert(Object.keys(exportedTargets(local, { book: "*", lectures: "*" })).length === 3, "Явный выбор всех пространств имён должен экспортировать все собственные цели");
 assert(Object.keys(exportedTargets(local, {})).length === 0, "Empty selection must export nothing");
+assert(Object.keys(exportedTargets(local, { book: [] })).length === 0, "Empty namespace selection must export nothing");
 assert(Object.keys(exportedTargets(local, { lectures: "*" })).join() === "lectures:sec-memory", "Wildcard leaked another namespace");
 assert(JSON.stringify(local.map(t => t.id)) === '["sec-private","sec-memory","sec-memory"]', "Export mutated local targets");
 rejects(() => parseExports({ os: "*" }, ["book"]), "не относится к локальному проекту");
@@ -35,4 +37,4 @@ rejects(() => exportedTargets(local, { book: ["sec-removed"] }), "book:sec-remov
 assert(parsePublication({ title: "  Operating systems  " })?.title === "Operating systems", "Publication title normalization failed");
 rejects(() => parsePublication({ title: " " }), "непустое название title");
 rejects(() => parsePublication({ title: "OS", typo: "value" }), "непустое название title");
-console.log("PASS explicit exports: namespace/ID selection, local scope, empty/default export and invalid selections");
+console.log("PASS exports: all own targets by default, explicit namespace/ID selection, empty opt-out and invalid selections");

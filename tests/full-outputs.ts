@@ -12,7 +12,7 @@ async function rejects(action: () => Promise<void>, message: string) {
 const root = await Deno.makeTempDir({ prefix: "qrc-full-outputs-" });
 const stage = join(root, "stage");
 const html = `<html><body><main><h1 id="sec-current">Current</h1><a data-qrc-ref="book:sec-current" data-qrc-style="default">placeholder</a></main><div class="qrc-probes" data-qrc-namespace="book"><div class="qrc-probe" data-qrc-id="sec-current" data-qrc-style="default"><a class="qrc-anchor" href="#sec-current">Current caption</a></div><div class="qrc-probe" data-qrc-id="sec-current" data-qrc-style="number"><span class="qrc-unavailable"></span></div></div></body></html>`;
-const context = { root, stage, quarto: "fixture", config: { "reference-catalog": { exports: { book: "*" } } }, members: [{ namespace: "book", format: "html" }], outputs: ["stage/current.html"] };
+const context = { root, stage, quarto: "fixture", config: {}, members: [{ namespace: "book", format: "html" }], outputs: ["stage/current.html"] };
 try {
   await Deno.mkdir(stage);
   await Deno.writeTextFile(join(stage, "current.html"), html);

@@ -25,5 +25,3 @@ crossref:
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
-  exports:
-    book: "*"

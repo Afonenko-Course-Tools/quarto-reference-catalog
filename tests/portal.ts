@@ -126,7 +126,7 @@ try {
   );
   await resetStage();
   await publish(withConfig({
-    ...config["reference-catalog"],
+    namespace: "site",
     imports: {
       os: {
         source: "producer.json",
@@ -140,7 +140,7 @@ try {
   );
   assert(
     Object.keys(imported.targets).join() === "book:sec-book,site:sec-portal",
-    "Portal publication must preserve external import without reexport",
+    "Default export must publish portal/member targets without reexporting imports",
   );
   await resetStage();
   const initial = await Deno.readTextFile(join(stage, "index.html"));
