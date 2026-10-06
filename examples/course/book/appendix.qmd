@@ -4,4 +4,4 @@ $$ E = mc^2 $$ {#eq-appendix}
 
 Проверка обозначений: @practice:sec-exercise.
 
-[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/course/book/appendix.qmd)
+[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/course/book/appendix.qmd)

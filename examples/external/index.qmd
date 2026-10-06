@@ -15,4 +15,4 @@ title: Внешний адресный каталог
 
 {{< xref docs sec-inspect "Выбранная подпись автора" >}}
 
-[Исходники группы](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/tree/v2.2.0/examples/external) · [Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v2.2.0/examples/external/index.qmd)
+[Исходники группы](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/tree/demo-20261007/examples/external) · [Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/external/index.qmd)
