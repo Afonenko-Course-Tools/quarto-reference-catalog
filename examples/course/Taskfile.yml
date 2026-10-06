@@ -4,13 +4,25 @@ tasks:
     cmds:
       - quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
       - quarto add Afonenko-Course-Tools/quarto-project-publish@v4.0.0 --no-prompt
-      - cmd: quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
-        dir: book
-      - cmd: quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
-        dir: lectures
-      - cmd: quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
-        dir: practice
+      - task: install:book
+      - task: install:lectures
+      - task: install:practice
   render:
     cmds:
       - quarto render
       - quarto run build-info.ts
+  install:book:
+    internal: true
+    dir: book
+    cmds:
+      - quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
+  install:lectures:
+    internal: true
+    dir: lectures
+    cmds:
+      - quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
+  install:practice:
+    internal: true
+    dir: practice
+    cmds:
+      - quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0 --no-prompt
