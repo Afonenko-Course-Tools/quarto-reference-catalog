@@ -16,5 +16,3 @@ number-sections: false
 filters: [reference-catalog]
 reference-catalog:
   namespace: practice
-  exports:
-    practice: "*"

@@ -12,10 +12,6 @@ format:
 lang: ru
 reference-catalog:
   namespace: site
-  exports:
-    book: "*"
-    lectures: "*"
-    practice: "*"
 filters: [reference-catalog]
 course-site:
   projects:

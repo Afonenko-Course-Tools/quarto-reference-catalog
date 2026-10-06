@@ -42,8 +42,6 @@ format: html
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
-  exports:
-    book: [sec-current, sec-later]
   imports:
     practice:
       source: external.json
@@ -109,6 +107,8 @@ Known local target: @book:sec-current.
   imported.targets["practice:sec-external"].page = "current.html";
   await Deno.writeTextFile(join(root, "external.json"), JSON.stringify(imported));
   await publish({ ...current, scope: "full" });
+  const publicCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog.json")));
+  assert(Object.keys(publicCatalog.targets).join() === "book:sec-current,book:sec-later", "Native default full export must publish current own chapters without imported targets");
   nodes = await links();
   const finalExternal = nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!;
   assert(content(finalExternal) === "Current external section" && attr(finalExternal, "href") === "https://example.test/practice/current.html#sec-external", "Full finalization reused stale catalog bytes");
