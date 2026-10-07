@@ -7,9 +7,10 @@ function assert(value: unknown, message: string): asserts value { if (!value) th
 function equal(actual: unknown, expected: unknown, message: string) {
   assert(JSON.stringify(actual) === JSON.stringify(expected), `${message}: ${JSON.stringify(actual)} != ${JSON.stringify(expected)}`);
 }
-async function rejects(action: () => unknown | Promise<unknown>, message: string) {
+async function rejects(action: () => unknown | Promise<unknown>, message: string, code = "QRC.IMPORT_INVALID") {
   try { await action(); }
   catch (error) {
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), `Expected error containing ${message}; got ${error}`);
     return;
   }
@@ -63,11 +64,11 @@ try {
   equal(remoteTargets[1].slide, "memory", "Slide anchor preserved");
   const redirected = await importTargets(parse(`${url}/redirect`));
   equal(redirected[0].page, "chapters/memory.html", "HTTP redirect preserves catalog");
-  await rejects(() => importTargets(parse(`${url}/missing`)), "HTTP 404");
+  await rejects(() => importTargets(parse(`${url}/missing`)), "HTTP 404", "ExternalToolFailure");
   await rejects(() => importTargets(parse(`${url}/invalid-json`)), "некорректный JSON импортированного каталога");
   await rejects(() => importTargets(parse(`${url}/invalid-schema`)), "неподдерживаемая схема импортированного каталога");
   await rejects(() => importTargets([{ ...local, sourceNamespace: "absent" }]), "не содержит пространство имён absent");
-  await rejects(() => importTargets(parse("../absent.json")), "не удалось прочитать импортированный каталог");
+  await rejects(() => importTargets(parse("../absent.json")), "не удалось прочитать импортированный каталог", "ExternalToolFailure");
 
   for (const schema of ["quarto-reference-catalog/2", "quarto-reference-catalog/3"]) {
     await Deno.writeTextFile(sibling, JSON.stringify({ ...fixture, schema }));

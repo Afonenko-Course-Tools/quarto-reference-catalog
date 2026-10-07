@@ -18,6 +18,9 @@ async function rejects(action: () => unknown, code: string, fragments: string[])
 const target = { namespace: "book", id: "sec-one", page: "first.html", fragment: "sec-one", labelHtml: "Раздел", label: "Раздел", numberHtml: "", number: "" };
 await rejects(() => catalogConfig({ unknown: true }, "/tmp", ["book"]), "QRC.CONFIG_INVALID", ["reference-catalog.unknown"]);
 await rejects(() => parseImports({ external: { source: "chosen.json", namespace: "book", "base-url": "file:///tmp/" } }, "/tmp", []), "QRC.IMPORT_INVALID", ["chosen.json", "external", "base-url"]);
+await rejects(() => parseImports({ external: { source: "ftp://selected.test/catalog.json", namespace: "book", "base-url": "https://selected.test/" } }, "/tmp", []), "QRC.IMPORT_INVALID", ["ftp://selected.test/catalog.json", "ID=external", "поле=source"]);
+const invalidUrl = await rejects(() => parseImports({ external: { source: "https://[", namespace: "book", "base-url": "https://selected.test/" } }, "/tmp", []), "QRC.IMPORT_INVALID", ["https://[", "ID=external", "поле=source"]);
+assert(invalidUrl.cause instanceof Error, "Invalid source URL lost the parser cause");
 await rejects(() => assemble([target, { ...target, page: "second.html" }]), "QRC.TARGET_DUPLICATE", ["book:sec-one", "first.html", "second.html", "связано"]);
 await rejects(() => resolve(new Map(), "book:sec-absent", "chapter.html"), "QRC.TARGET_UNKNOWN", ["book:sec-absent", "chapter.html"]);
 await rejects(() => exportedTargets([target], { book: ["sec-absent"] }), "QRC.TARGET_UNKNOWN", ["book:sec-absent", "exports.book"]);

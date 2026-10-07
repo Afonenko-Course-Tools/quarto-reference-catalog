@@ -4,9 +4,12 @@ import { publish } from "../_extensions/reference-catalog/infrastructure/publish
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
-async function rejects(action: () => Promise<void>, message: string) {
+async function rejects(action: () => Promise<void>, message: string, code = "QRC.OUTPUT_INVALID") {
   let failed = false;
-  try { await action(); } catch { failed = true; }
+  try { await action(); } catch (error) {
+    assert(error instanceof Error && (error as Error & { code?: string }).code === code, `Expected ${code}: ${error}`);
+    failed = true;
+  }
   assert(failed, message);
 }
 const root = await Deno.makeTempDir({ prefix: "qrc-full-outputs-" });
@@ -26,7 +29,7 @@ try {
   await rejects(() => publish({ ...context, outputs: ["stage/missing.html"] }), "Full finalization accepted a missing current output");
   await rejects(() => publish({ ...context, outputs: undefined } as any), "Full finalization accepted no explicit outputs");
   await Deno.writeTextFile(join(stage, "current.html"), html.replace('book:sec-current" data-qrc-style', 'book:sec-missing" data-qrc-style'));
-  await rejects(() => publish(context), "Explicit current full finalization deferred a missing target");
+  await rejects(() => publish(context), "Explicit current full finalization deferred a missing target", "QRC.TARGET_UNKNOWN");
   await Deno.mkdir(join(root, "outside"));
   await Deno.writeTextFile(join(root, "outside/other.html"), html);
   await Deno.symlink(join(root, "outside"), join(stage, "escape"));
