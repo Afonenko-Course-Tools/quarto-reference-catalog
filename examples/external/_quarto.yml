@@ -5,6 +5,13 @@ project:
   post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
 profile:
   default: full
+website:
+  title: Внешний адресный каталог
+  repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
+  repo-branch: demo-20261007
+  repo-subdir: examples/external
+  repo-actions: [source]
+lang: ru
 format: html
 filters: [reference-catalog]
 reference-catalog:

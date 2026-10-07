@@ -19,6 +19,7 @@ project:
   type: website
   output-dir: _site
   post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
+lang: ru
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
@@ -123,11 +124,25 @@ JSON сообщает адреса, но сам по себе не подтве�
 условия между книгами и не служит транспортом для Print или LMS. Полные правила
 местных и внешних целей описаны в [контракте](docs/contract.md).
 
+## Ошибки и исправления
+
+Собственные ошибки имеют стабильные ID `QRC.CONFIG_INVALID`,
+`QRC.IMPORT_INVALID`, `QRC.TARGET_DUPLICATE`, `QRC.TARGET_UNKNOWN`,
+`QRC.OUTPUT_INVALID`, `QRC.REFERENCE_INVALID`. Сообщение показывает доступные
+namespace/ID, выбранный источник, поле и связанные страницы. Страница HTML
+обозначается как результат; её позиции не выдаются за строки QMD.
+[Справочник диагностики](docs/diagnostics.md) объясняет каждое условие и действие.
+
+Local сообщает отсрочку обычным информационным итогом. Внешний отказ сохраняет
+Quarto, exit code, оба потока и исходную причину; HTTP и файл сохраняют выбранный
+источник и причину. Успешный процесс с предупреждением в stderr остаётся
+успехом. При необходимости автор задаёт `--fail-if-warnings` самому Quarto.
+
 ## Проверка
 
 Оба режима читают только явные текущие outputs. Каждая HTML-страница
 разбирается один раз; linking и поиск используют одно дерево с итоговыми
-подписями ссылок. При повторном вызове читаются новые bytes. В full режиме
+подписями ссылок. При повторном вызове читаются новые данные. В full режиме
 `searchIndexes: [{path, mount?}]` задаёт текущие индексы; относительные href
 переносятся под mount, записи невыбранных HTML удаляются, root search объединяется. При повторяющемся ID текст берётся из первого HTML-элемента.
 
@@ -137,6 +152,8 @@ QRC дописывает `inspect` и `render` с полями `kind`, `executab
 аргументы не записываются; отказ необязательного журнала не меняет результат.
 
 ```sh
+quarto run tests/demo-external.ts
+quarto run tests/diagnostics.ts
 quarto run tests/local-linking.ts
 quarto run tests/local-outputs.ts
 quarto run tests/local-imports.ts
@@ -167,7 +184,7 @@ quarto run tests/portal-configured.ts
 Эти проверки адресации не определяют учебные зависимости, циклы prerequisites
 или тематическую карту курса.
 
-Документация: [контракт](docs/contract.md), [архитектура](docs/architecture.md).
+Документация: [контракт](docs/contract.md), [архитектура](docs/architecture.md), [диагностика](docs/diagnostics.md).
 
 ## Лицензия
 

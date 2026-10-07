@@ -52,7 +52,8 @@ esac
   assert(baseline[1] === "PRIVATE_STDOUT\n", "Exit zero plus WARNING must remain success");
   let failure: any;
   try { await quarto(["render", "."], root, { MODE: "failure" }); } catch (error) { failure = error; }
-  assert(failure instanceof Error && failure.name === "ExternalToolFailure" && failure.tool === fake && failure.exitCode === 23 && failure.stdout === "PRIVATE_STDOUT\n" && failure.stderr === "WARNING: PRIVATE_FAILURE\n" && failure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
+  const nativeFailure = failure as Error & { tool: string; exitCode: number; stdout: string; stderr: string };
+  assert(failure instanceof Error && nativeFailure.name === "ExternalToolFailure" && nativeFailure.tool === fake && nativeFailure.exitCode === 23 && nativeFailure.stdout === "PRIVATE_STDOUT\n" && nativeFailure.stderr === "WARNING: PRIVATE_FAILURE\n" && nativeFailure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
   const probe = join(root, "probe.ts");
   await Deno.writeTextFile(probe, `import { quarto } from ${JSON.stringify(new URL("../_extensions/reference-catalog/infrastructure/process.ts", import.meta.url).href)}; await quarto(["render", "."], Deno.cwd(), { MODE: "warning" });`);
   const nativeQuarto = saved.get("QUARTO") || "quarto";

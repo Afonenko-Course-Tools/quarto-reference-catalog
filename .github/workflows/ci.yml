@@ -48,6 +48,9 @@ jobs:
           cue version
       - name: Источники каталогов и оформление ссылок
         run: |
+          quarto run tests/demo-external.ts
+          quarto run tests/diagnostics.ts
+          quarto run tests/export-context.ts
           quarto run tests/local-linking.ts
           quarto run tests/local-outputs.ts
           quarto run tests/local-imports.ts

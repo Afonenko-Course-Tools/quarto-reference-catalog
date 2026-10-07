@@ -1,6 +1,6 @@
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join, resolve } from "stdlib/path";
-import { attr, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
+import { attr, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import type { Catalog } from "../_extensions/reference-catalog/domain/model.ts";
 
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
@@ -70,6 +70,24 @@ try {
   for (const path of (await files(output)).filter(path => path.endsWith(".html"))) {
     const nodes = elements(parseHtml(await Deno.readTextFile(path)));
     const document = ["index.html", "book/index.html", "book/topics/objects.html", "book/appendix.html", "lectures/01/lecture-memory.html", "practice/01/tasks.html"].includes(path.slice(output.length + 1));
+    if (document) {
+      assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), `Independent native project lost lang ru: ${path}`);
+      const qmd = path.slice(output.length + 1).replace(/\.html$/, ".qmd").replace("lectures/01/lecture-memory.qmd", "lectures/01/memory.qmd");
+      const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/course/${qmd}`;
+      const sourceLinks = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
+      // Quarto 1.10 renders one desktop action and a hidden mobile counterpart.
+      // Count authored duplicates separately from that native responsive placement.
+      const mobile = (node: (typeof sourceLinks)[number]) => {
+        let ancestor = node.parentNode;
+        while (ancestor && "tagName" in ancestor) {
+          if (hasClass(ancestor, "d-md-none")) return true;
+          ancestor = ancestor.parentNode;
+        }
+        return false;
+      };
+      assert(sourceLinks.length >= 1 && sourceLinks.length <= 2 && sourceLinks.filter(node => !mobile(node)).length === 1, `Expected one source QMD action plus optional native mobile counterpart: ${path}; got ${sourceLinks.length}`);
+      if (!qmd.startsWith("lectures/") && !qmd.startsWith("practice/")) assert(sourceLinks[0].attrs.some(attribute => attribute.name === "class" && attribute.value.split(/\s+/).includes("toc-action")), `HTML source link is not a native action: ${path}`);
+    }
     if (document) assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
     pages.set(path, new Set(nodes.map(node => attr(node, "id")).filter((id): id is string => !!id)));
     for (const node of nodes) for (const name of ["href", "src", "data-src"]) {
