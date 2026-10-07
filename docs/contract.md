@@ -1,3 +1,9 @@
+---
+type: contract
+component: reference-catalog
+status: current
+---
+
 # Контракт каталога ссылок
 
 Авторская конфигурация `reference-catalog` содержит `namespace`, `imports`, `exports`, `publication`. Неизвестные поля отклоняются. Состав native проектов задаётся отдельно в корневом `subprojects: [paths]`.
