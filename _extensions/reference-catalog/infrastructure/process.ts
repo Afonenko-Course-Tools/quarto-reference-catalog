@@ -20,6 +20,7 @@ export async function quarto(args: string[], cwd: string, extra: Record<string, 
     result = await new Deno.Command(command, { args, cwd, env: extra, stdout: "piped", stderr: "piped" }).output();
     exitCode = result.code;
   } catch (cause) {
+    if (!Object.values(Deno.errors).some(kind => cause instanceof kind)) throw cause;
     const error = new Error(`Не удалось запустить Quarto (${command}): ${cause instanceof Error ? cause.message : cause}`, { cause });
     error.name = "ExternalToolFailure";
     throw Object.assign(error, { tool: command, exitCode: null, stdout: "", stderr: cause instanceof Error ? cause.message : String(cause) });

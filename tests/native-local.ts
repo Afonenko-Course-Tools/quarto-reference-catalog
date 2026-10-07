@@ -50,6 +50,16 @@ esac
     else if (mode === "foreign") assert(stderr.split("FOREIGN.QUARTO_ID").length === 2 && stderr.includes("17") && !stderr.includes("at main"), `Foreign failure must retain native ID/exit once: ${stderr}`);
     else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${stderr}`);
   }
+  const bootstrap = join(root, "unknown-process.ts");
+  await Deno.writeTextFile(bootstrap, `const NativeCommand = Deno.Command;
+Deno.Command = class extends NativeCommand {
+  output() { return Promise.reject(new TypeError("INTERNAL.STARTUP_INVARIANT")); }
+};
+await import("./_extensions/reference-catalog/entrypoints/post.ts");
+`);
+  const unknownProcess = await new Deno.Command(quarto, { args: ["run", bootstrap], cwd: root, env: { QUARTO: fake }, stdout: "piped", stderr: "piped" }).output();
+  const unknownStderr = new TextDecoder().decode(unknownProcess.stderr);
+  assert(!unknownProcess.success && unknownStderr.includes("TypeError: INTERNAL.STARTUP_INVARIANT") && unknownStderr.includes("unknown-process.ts") && unknownStderr.includes("at main") && !unknownStderr.includes("Не удалось запустить Quarto"), `Hook must retain original unknown process stack: ${unknownStderr}`);
   await Deno.writeTextFile(join(root, "_quarto.yml"), `project:
   type: website
   output-dir: _site

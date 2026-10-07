@@ -44,6 +44,27 @@ esac
   await Deno.chmod(fake, 0o700);
   Deno.env.set("QUARTO", fake);
   Deno.env.delete("COURSE_BUILD_TRACE");
+  let invalidArguments: unknown;
+  try { await quarto(null as unknown as string[], root); } catch (error) { invalidArguments = error; }
+  assert(invalidArguments instanceof TypeError && invalidArguments.stack?.includes("process.ts"), `Internal argument failure must retain native TypeError/stack: ${invalidArguments}`);
+  const originalCommand = Deno.Command;
+  const invariant = new TypeError("INTERNAL.INVARIANT: command fixture");
+  const originalStack = invariant.stack;
+  try {
+    Deno.Command = class extends originalCommand {
+      override output(): Promise<Deno.CommandOutput> { return Promise.reject(invariant); }
+    };
+    let failure: unknown;
+    try { await quarto(["inspect", root], root); } catch (error) { failure = error; }
+    assert(failure === invariant && invariant.stack === originalStack, "Unknown command exception identity/stack must survive unchanged");
+  } finally { Deno.Command = originalCommand; }
+  const missing = join(root, "missing-quarto");
+  Deno.env.set("QUARTO", missing);
+  let startup: unknown;
+  try { await quarto(["inspect", root], root); } catch (error) { startup = error; }
+  const metadata = startup as Error & { tool: string; exitCode: null; stdout: string; stderr: string };
+  assert(startup instanceof Error && startup.name === "ExternalToolFailure" && startup.cause instanceof Deno.errors.NotFound && metadata.tool === missing && metadata.exitCode === null && metadata.stdout === "" && metadata.stderr === startup.cause.message, `Operational startup refusal must preserve tool/cause: ${startup}`);
+  Deno.env.set("QUARTO", fake);
   const baseline = await Promise.all([
     outcome("success"),
     outcome("warning"),
