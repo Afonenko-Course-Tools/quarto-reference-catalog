@@ -20,23 +20,28 @@ export function normalizeCatalogSource(value: string, root: string): string {
   return url.href;
 }
 
+function refusal(source: string, message: string, cause: unknown): Error {
+  const error = new Error(`QRC ${message} ${source}: ${cause instanceof Error ? cause.message : cause}`, { cause });
+  error.name = "ExternalToolFailure";
+  return Object.assign(error, { tool: /^https?:\/\//.test(source) ? "HTTP" : "filesystem", source, exitCode: null, stdout: "", stderr: cause instanceof Error ? cause.message : String(cause) });
+}
+
 /** Каталог загружается на этапе подготовки общей сборки. */
 export async function readCatalogSource(source: string): Promise<string> {
   if (!/^https?:\/\//.test(source)) {
     try { return await Deno.readTextFile(source); }
-    catch (error) { throw new Error(`QRC не удалось прочитать импортированный каталог ${source}: ${error instanceof Error ? error.message : error}`, { cause: error }); }
+    catch (error) { throw refusal(source, "не удалось прочитать импортированный каталог", error); }
   }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
     const response = await fetch(source, { signal: controller.signal });
     if (!response.ok) {
-      await response.body?.cancel();
-      throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      const body = await response.text();
+      throw new Error(`HTTP ${response.status} ${response.statusText}${body ? `\n${body}` : ""}`);
     }
     return await response.text();
   } catch (error) {
-    const message = controller.signal.aborted ? "сервер не ответил за 30 секунд" : error instanceof Error ? error.message : String(error);
-    throw new Error(`QRC не удалось загрузить импортированный каталог ${source}: ${message}`);
+    throw refusal(source, controller.signal.aborted ? "не удалось загрузить импортированный каталог (сервер не ответил за 30 секунд)" : "не удалось загрузить импортированный каталог", error);
   } finally { clearTimeout(timeout); }
 }

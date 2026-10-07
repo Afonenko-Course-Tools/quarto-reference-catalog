@@ -33,6 +33,23 @@ async function links() {
 }
 try {
   await copy(join(repo, "_extensions"), join(root, "_extensions"));
+  const fake = join(root, "native-refusal.sh");
+  await Deno.writeTextFile(fake, `#!/bin/sh
+case "$REFUSAL" in
+  known) printf '%s' '{"config":{}}' ;;
+  foreign) printf 'FOREIGN.QUARTO_ID: failure\\n' >&2; exit 17 ;;
+  *) printf '%s' 'invalid JSON' ;;
+esac
+`);
+  await Deno.chmod(fake, 0o700);
+  for (const mode of ["known", "foreign", "unknown"]) {
+    const result = await new Deno.Command(quarto, { args: ["run", "_extensions/reference-catalog/entrypoints/post.ts"], cwd: root, env: { QUARTO: fake, REFUSAL: mode }, stdout: "piped", stderr: "piped" }).output();
+    const stderr = new TextDecoder().decode(result.stderr);
+    assert(!result.success, `Hook accepted ${mode} refusal`);
+    if (mode === "known") assert(stderr.split("QRC.CONFIG_INVALID").length === 2 && !stderr.includes("at main"), `Named error must print once without stack: ${stderr}`);
+    else if (mode === "foreign") assert(stderr.split("FOREIGN.QUARTO_ID").length === 2 && stderr.includes("17") && !stderr.includes("at main"), `Foreign failure must retain native ID/exit once: ${stderr}`);
+    else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${stderr}`);
+  }
   await Deno.writeTextFile(join(root, "_quarto.yml"), `project:
   type: website
   output-dir: _site

@@ -49,6 +49,15 @@ esac
     outcome("warning"),
     outcome("failure"),
   ]);
+  assert(baseline[1] === "PRIVATE_STDOUT\n", "Exit zero plus WARNING must remain success");
+  let failure: any;
+  try { await quarto(["render", "."], root, { MODE: "failure" }); } catch (error) { failure = error; }
+  assert(failure instanceof Error && failure.name === "ExternalToolFailure" && failure.tool === fake && failure.exitCode === 23 && failure.stdout === "PRIVATE_STDOUT\n" && failure.stderr === "WARNING: PRIVATE_FAILURE\n" && failure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
+  const probe = join(root, "probe.ts");
+  await Deno.writeTextFile(probe, `import { quarto } from ${JSON.stringify(new URL("../_extensions/reference-catalog/infrastructure/process.ts", import.meta.url).href)}; await quarto(["render", "."], Deno.cwd(), { MODE: "warning" });`);
+  const nativeQuarto = saved.get("QUARTO") || "quarto";
+  const visible = await new Deno.Command(nativeQuarto, { args: ["run", probe], cwd: root, stdout: "piped", stderr: "piped" }).output();
+  assert(visible.success && new TextDecoder().decode(visible.stderr).includes("WARNING: PRIVATE_WARNING"), "Successful native stderr was hidden");
   Deno.env.set("COURSE_BUILD_TRACE", trace);
   assert(
     await quarto([
