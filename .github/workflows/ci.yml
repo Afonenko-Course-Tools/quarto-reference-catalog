@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: v4.0.0
+          ref: 8664b18fb2fc4b5f184bba66821645e628b04cde # checked coordinated 4.0.1 candidate
           path: .ci/course-site
           persist-credentials: false
       - name: Путь к native композиции
