@@ -6,6 +6,10 @@ import { publish } from "../_extensions/reference-catalog/infrastructure/publish
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
+// Deno can color stack frame names in CI. Strip presentation only for assertions.
+function plainStderr(value: string): string {
+  return value.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
+}
 async function rejects(action: () => Promise<unknown>, message: string) {
   try { await action(); } catch (error) {
     assert(error instanceof Error && error.message.includes(message), String(error));
@@ -44,11 +48,12 @@ esac
   await Deno.chmod(fake, 0o700);
   for (const mode of ["known", "foreign", "unknown"]) {
     const result = await new Deno.Command(quarto, { args: ["run", "_extensions/reference-catalog/entrypoints/post.ts"], cwd: root, env: { QUARTO: fake, REFUSAL: mode }, stdout: "piped", stderr: "piped" }).output();
-    const stderr = new TextDecoder().decode(result.stderr);
+    const rawStderr = new TextDecoder().decode(result.stderr);
+    const stderr = plainStderr(rawStderr);
     assert(!result.success, `Hook accepted ${mode} refusal`);
-    if (mode === "known") assert(stderr.split("QRC.CONFIG_INVALID").length === 2 && !stderr.includes("at main"), `Named error must print once without stack: ${stderr}`);
-    else if (mode === "foreign") assert(stderr.split("FOREIGN.QUARTO_ID").length === 2 && stderr.includes("17") && !stderr.includes("at main"), `Foreign failure must retain native ID/exit once: ${stderr}`);
-    else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${stderr}`);
+    if (mode === "known") assert(stderr.split("QRC.CONFIG_INVALID").length === 2 && !stderr.includes("at main"), `Named error must print once without stack: ${rawStderr}`);
+    else if (mode === "foreign") assert(stderr.split("FOREIGN.QUARTO_ID").length === 2 && stderr.includes("17") && !stderr.includes("at main"), `Foreign failure must retain native ID/exit once: ${rawStderr}`);
+    else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${rawStderr}`);
   }
   const bootstrap = join(root, "unknown-process.ts");
   await Deno.writeTextFile(bootstrap, `const NativeCommand = Deno.Command;
@@ -58,8 +63,9 @@ Deno.Command = class extends NativeCommand {
 await import("./_extensions/reference-catalog/entrypoints/post.ts");
 `);
   const unknownProcess = await new Deno.Command(quarto, { args: ["run", bootstrap], cwd: root, env: { QUARTO: fake }, stdout: "piped", stderr: "piped" }).output();
-  const unknownStderr = new TextDecoder().decode(unknownProcess.stderr);
-  assert(!unknownProcess.success && unknownStderr.includes("TypeError: INTERNAL.STARTUP_INVARIANT") && unknownStderr.includes("unknown-process.ts") && unknownStderr.includes("at main") && !unknownStderr.includes("Не удалось запустить Quarto"), `Hook must retain original unknown process stack: ${unknownStderr}`);
+  const rawUnknownStderr = new TextDecoder().decode(unknownProcess.stderr);
+  const unknownStderr = plainStderr(rawUnknownStderr);
+  assert(!unknownProcess.success && unknownStderr.includes("TypeError: INTERNAL.STARTUP_INVARIANT") && unknownStderr.includes("unknown-process.ts") && unknownStderr.includes("at main") && !unknownStderr.includes("Не удалось запустить Quarto"), `Hook must retain original unknown process stack: ${rawUnknownStderr}`);
   await Deno.writeTextFile(join(root, "_quarto.yml"), `project:
   type: website
   output-dir: _site
