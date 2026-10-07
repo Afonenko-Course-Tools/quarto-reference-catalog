@@ -21,9 +21,10 @@ Deno.writeTextFileSync(
       sourceDirty: Deno.env.get("DEMO_SOURCE_DIRTY") === "true" ||
         run(["status", "--porcelain"]).length > 0,
       dependencies: {
-        ...{ "quarto-reference-catalog": "v2.2.0" },
+        ...{ "quarto-reference-catalog": "v2.2.1" },
         quarto: new TextDecoder().decode(version.stdout).trim(),
       },
+      projection: "full",
       commands: ["task install", "task render"],
     },
     null,

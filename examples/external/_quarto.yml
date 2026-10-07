@@ -8,7 +8,7 @@ profile:
 website:
   title: Внешний адресный каталог
   repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
-  repo-branch: demo-20261007
+  repo-branch: demo-20261007-ru1
   repo-subdir: examples/external
   repo-actions: [source]
 lang: ru
