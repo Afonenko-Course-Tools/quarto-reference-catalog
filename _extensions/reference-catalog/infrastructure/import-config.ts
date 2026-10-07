@@ -21,7 +21,7 @@ export function publicationBaseUrl(value: unknown, context: string, location: Di
 /** Проверка публичной конфигурации не зависит от inspect и render Quarto. */
 export function parseImports(raw: unknown, root: string, memberNamespaces: string[]): Import[] {
   if (raw === undefined) return [];
-  if (!isRecord(raw)) throw diagnostic("QRC.IMPORT_INVALID", "imports должен сопоставлять пространствам имён настройки импорта", { field: "reference-catalog.imports" });
+  if (!isRecord(raw)) throw diagnostic("QRC.IMPORT_INVALID", "imports должен сопоставлять пространствам имён настройки импорта", { source: root, field: "reference-catalog.imports" });
   const result: Import[] = [];
   for (const [namespace, item] of Object.entries(raw)) {
     const invalid = (message: string, field: string) => diagnostic("QRC.IMPORT_INVALID", message, { source: isRecord(item) && typeof item.source === "string" ? item.source : root, id: namespace, field: `reference-catalog.imports.${namespace}.${field}` });
