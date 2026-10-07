@@ -6,8 +6,9 @@ import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
-function rejects(action: () => unknown, message: string) {
+function rejects(action: () => unknown, message: string, code = "QRC.TARGET_UNKNOWN") {
   try { action(); } catch (error) {
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), String(error));
     return;
   }
@@ -50,8 +51,8 @@ rejects(() => linkPages([page], "", [], "", "full"), "неизвестная с�
 rejects(() => linkPages([page], ""), "неизвестная ссылка os:sec-memory");
 const sameNamespace = linkPages([readPage("index.html", html.replaceAll("os:sec-memory", "book:sec-missing"))], "", [], "", "local");
 assert(sameNamespace.deferred === 2, "A namespace spanning documents incorrectly made missing facts a local error");
-rejects(() => linkPages([readPage("index.html", html.replaceAll('data-qrc-style="default"', 'data-qrc-style="invalid"'))], "", [], "", "local"), "некорректный стиль ссылки");
+rejects(() => linkPages([readPage("index.html", html.replaceAll('data-qrc-style="default"', 'data-qrc-style="invalid"'))], "", [], "", "local"), "некорректный стиль ссылки", "QRC.REFERENCE_INVALID");
 for (const key of ["bad namespace:sec-memory", "os:", "os:sec memory", "os:sec:memory", "os:sec#memory"]) {
-  rejects(() => linkPages([readPage("index.html", html.replaceAll("os:sec-memory", key))], "", [], "", "local"), "некорректная ссылка");
+  rejects(() => linkPages([readPage("index.html", html.replaceAll("os:sec-memory", key))], "", [], "", "local"), "некорректная ссылка", "QRC.REFERENCE_INVALID");
 }
 console.log("PASS local linking: deferred labels and identity, known targets, current facts, same namespace, strict full/default and malformed request failures");

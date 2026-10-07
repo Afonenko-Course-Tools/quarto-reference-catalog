@@ -5,6 +5,10 @@ project:
   pre-render: _extensions/Afonenko-Course-Tools/course-site/entrypoints/pre.ts
   post-render: _extensions/Afonenko-Course-Tools/course-site/entrypoints/post.ts
 website:
+  repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
+  repo-branch: demo-20261007-ru1
+  repo-subdir: examples/course
+  repo-actions: [source]
   title: Материалы курса
 format:
   html:

@@ -55,6 +55,10 @@ try {
     !JSON.stringify(document).includes('"t":"Link"'),
     "export inserted a fake QRC href",
   );
+  await Deno.writeTextFile(join(root, "invalid.qmd"), '---\nfilters: [reference-catalog]\nreference-catalog: {namespace: bank}\ncourse-export-context: true\n---\n\n{{< xref other sec-target style="invalid" >}}\n');
+  const invalid = await new Deno.Command(quarto, { args: ["render", "invalid.qmd", "--to", "json"], cwd: root, stdout: "piped", stderr: "piped" }).output();
+  const refusal = new TextDecoder().decode(invalid.stderr);
+  assert(!invalid.success && refusal.includes("QRC.REFERENCE_INVALID") && refusal.includes("other:sec-target") && refusal.includes("invalid.qmd") && refusal.includes("style"), `Native reference diagnostics lost source/target/style: ${refusal}`);
   console.log(
     "PASS explicit source export captures neutral QRC AST markers without fake links",
   );
