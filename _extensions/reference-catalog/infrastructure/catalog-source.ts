@@ -1,21 +1,22 @@
+import { diagnostic } from "../diagnostics.ts";
 import { fromFileUrl, isAbsolute, resolve } from "./files.ts";
 
 /** Путь разрешается однократно; источник может находиться за пределами проекта. */
 export function normalizeCatalogSource(value: string, root: string): string {
-  if (!value.trim()) throw new Error("QRC source должен содержать непустой путь или HTTP(S) URL");
+  if (!value.trim()) throw diagnostic("QRC.IMPORT_INVALID", "source должен содержать непустой путь или HTTP(S) URL", { source: value, field: "source" });
   // Платформенная библиотека путей учитывает буквы дисков Windows.
   if (isAbsolute(value)) return resolve(value);
   if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(value)) return resolve(root, value);
   let url: URL;
   try { url = new URL(value); }
-  catch { throw new Error(`QRC некорректный URL источника импорта: ${value}`); }
+  catch { throw diagnostic("QRC.IMPORT_INVALID", `некорректный URL источника импорта: ${value}`, { source: value, field: "source" }); }
   if (url.protocol === "file:") {
-    if (url.search || url.hash) throw new Error("QRC источник file: не должен содержать параметры запроса или фрагмент");
+    if (url.search || url.hash) throw diagnostic("QRC.IMPORT_INVALID", "источник file: не должен содержать параметры запроса или фрагмент", { source: value, field: "source" });
     try { return fromFileUrl(url); }
-    catch { throw new Error(`QRC некорректный URL источника file:: ${value}`); }
+    catch { throw diagnostic("QRC.IMPORT_INVALID", `некорректный URL источника file:: ${value}`, { source: value, field: "source" }); }
   }
-  if (!["http:", "https:"].includes(url.protocol)) throw new Error(`QRC неподдерживаемый протокол источника импорта ${url.protocol} ; используйте файл или HTTP(S)`);
-  if (url.hash || url.username || url.password) throw new Error("QRC источник HTTP(S) не должен содержать фрагмент или учётные данные");
+  if (!["http:", "https:"].includes(url.protocol)) throw diagnostic("QRC.IMPORT_INVALID", `неподдерживаемый протокол источника импорта ${url.protocol} ; используйте файл или HTTP(S)`, { source: value, field: "source" });
+  if (url.hash || url.username || url.password) throw diagnostic("QRC.IMPORT_INVALID", "источник HTTP(S) не должен содержать фрагмент или учётные данные", { source: value, field: "source" });
   return url.href;
 }
 
