@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: v4.0.0
+          ref: f2b302e75cd764520ab118894bfb024e787abd31 # checked coordinated 4.0.1 candidate
           path: .ci/course-site
           persist-credentials: false
       - name: Путь к native композиции
@@ -48,6 +48,9 @@ jobs:
           cue version
       - name: Источники каталогов и оформление ссылок
         run: |
+          quarto run tests/demo-external.ts
+          quarto run tests/diagnostics.ts
+          quarto run tests/export-context.ts
           quarto run tests/local-linking.ts
           quarto run tests/local-outputs.ts
           quarto run tests/local-imports.ts

@@ -7,5 +7,3 @@
 Рисунок на слайде: @lectures:fig-demo.
 
 Локальная ссылка остаётся штатной: @sec-objects.
-
-[Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/course/book/index.qmd)

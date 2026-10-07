@@ -124,5 +124,29 @@
     "bytes": 836,
     "sha256": "e26deed35bf68cdd469ef86f332175a5cc31f8e22fa07f43fac3346dfd40145c",
     "status": "historical-ignored"
+  },
+  {
+    "sourcePath": "/home/tolya/course-tools/quarto-reference-catalog/docs/plans/course-reference-plan.md",
+    "sourceRef": "6aa9d3936d113ae5390cc5f680d57cf859a56ccb",
+    "snapshot": "docs/history/2026-10-08-preflight/owner-snapshot/before-origin-update/docs/plans/course-reference-plan.md",
+    "bytes": 16320,
+    "sha256": "77b5600652042197b840e8b77a11717b369e65c75aff6173a1fda3252fd0ee2e",
+    "status": "historical-owner"
+  },
+  {
+    "sourcePath": "/home/tolya/course-tools/quarto-reference-catalog/docs/plans/course-reference-plan.md",
+    "sourceRef": "d06adf5a30f01eec834dd5f2a34f4e6bd9ec99b7",
+    "snapshot": "docs/history/2026-10-08-preflight/owner-snapshot/origin-main/docs/plans/course-reference-plan.md",
+    "bytes": 17156,
+    "sha256": "3300990d41010c431aee53ca2724a15a70e753c97e898214866ea0c7d90d650f",
+    "status": "historical-owner"
+  },
+  {
+    "sourcePath": "/home/tolya/course-tools/quarto-reference-catalog/docs/plans/2026-10-08-implementation.md",
+    "sourceRef": "6aa9d3936d113ae5390cc5f680d57cf859a56ccb",
+    "snapshot": "docs/history/2026-10-08-preflight/owner-snapshot/before-origin-update/docs/plans/2026-10-08-implementation.md",
+    "bytes": 4539,
+    "sha256": "b1225cc855a819842e0fd744501a619db4c66871838f148ca7b40df0414bc72d",
+    "status": "historical-owner"
   }
 ]

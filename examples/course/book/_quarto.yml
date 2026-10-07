@@ -5,6 +5,10 @@ project:
     - ../_extensions/Afonenko-Course-Tools/course-site/entrypoints/collect.ts
   output-dir: _book
 book:
+  repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
+  repo-branch: demo-20261007-ru1
+  repo-subdir: examples/course/book
+  repo-actions: [source]
   title: Программирование
   chapters:
     - index.qmd

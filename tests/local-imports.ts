@@ -5,8 +5,9 @@ import { attr, content, elements, parseHtml } from "../_extensions/reference-cat
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
-async function rejects(action: () => Promise<unknown>, message: string) {
+async function rejects(action: () => Promise<unknown>, message: string, code = "QRC.IMPORT_INVALID") {
   try { await action(); } catch (error) {
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), String(error));
     return;
   }
@@ -28,8 +29,8 @@ try {
   // An absent sibling's catalog is unavailable local data, not invalid markup.
   await publish({ ...context, scope: "local" });
   assert(attr(await anchor(), "data-qrc-deferred") === "true", "An absent configured sibling catalog was not deferred locally");
-  await rejects(() => publish({ ...context, scope: "full" }), "не удалось прочитать импортированный каталог");
-  await rejects(() => publish(context), "не удалось прочитать импортированный каталог");
+  await rejects(() => publish({ ...context, scope: "full" }), "не удалось прочитать импортированный каталог", "ExternalToolFailure");
+  await rejects(() => publish(context), "не удалось прочитать импортированный каталог", "ExternalToolFailure");
 
   await Deno.writeTextFile(source, JSON.stringify({ schema: "quarto-reference-catalog", generator: { quarto: "fixture" }, targets: {} }));
   await publish({ ...context, scope: "local" });

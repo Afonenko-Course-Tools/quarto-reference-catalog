@@ -5,7 +5,7 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 ## Установка
 
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.0
+quarto add Afonenko-Course-Tools/quarto-reference-catalog@v2.2.1
 ```
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
@@ -19,6 +19,7 @@ project:
   type: website
   output-dir: _site
   post-render: _extensions/Afonenko-Course-Tools/reference-catalog/entrypoints/post.ts
+lang: ru
 filters: [reference-catalog]
 reference-catalog:
   namespace: book
@@ -123,11 +124,25 @@ JSON сообщает адреса, но сам по себе не подтве�
 условия между книгами и не служит транспортом для Print или LMS. Полные правила
 местных и внешних целей описаны в [контракте](docs/contract.md).
 
+## Ошибки и исправления
+
+Собственные ошибки имеют стабильные ID `QRC.CONFIG_INVALID`,
+`QRC.IMPORT_INVALID`, `QRC.TARGET_DUPLICATE`, `QRC.TARGET_UNKNOWN`,
+`QRC.OUTPUT_INVALID`, `QRC.REFERENCE_INVALID`. Сообщение показывает доступные
+namespace/ID, выбранный источник, поле и связанные страницы. Страница HTML
+обозначается как результат; её позиции не выдаются за строки QMD.
+[Справочник диагностики](docs/diagnostics.md) объясняет каждое условие и действие.
+
+Local сообщает отсрочку обычным информационным итогом. Внешний отказ сохраняет
+Quarto, exit code, оба потока и исходную причину; HTTP и файл сохраняют выбранный
+источник и причину. Успешный процесс с предупреждением в stderr остаётся
+успехом. При необходимости автор задаёт `--fail-if-warnings` самому Quarto.
+
 ## Проверка
 
 Оба режима читают только явные текущие outputs. Каждая HTML-страница
 разбирается один раз; linking и поиск используют одно дерево с итоговыми
-подписями ссылок. При повторном вызове читаются новые bytes. В full режиме
+подписями ссылок. При повторном вызове читаются новые данные. В full режиме
 `searchIndexes: [{path, mount?}]` задаёт текущие индексы; относительные href
 переносятся под mount, записи невыбранных HTML удаляются, root search объединяется. При повторяющемся ID текст берётся из первого HTML-элемента.
 
@@ -137,6 +152,8 @@ QRC дописывает `inspect` и `render` с полями `kind`, `executab
 аргументы не записываются; отказ необязательного журнала не меняет результат.
 
 ```sh
+quarto run tests/demo-external.ts
+quarto run tests/diagnostics.ts
 quarto run tests/local-linking.ts
 quarto run tests/local-outputs.ts
 quarto run tests/local-imports.ts
@@ -167,7 +184,7 @@ quarto run tests/portal-configured.ts
 Эти проверки адресации не определяют учебные зависимости, циклы prerequisites
 или тематическую карту курса.
 
-Документация: [контракт](docs/contract.md), [архитектура](docs/architecture.md).
+Документация: [контракт](docs/contract.md), [архитектура](docs/architecture.md), [диагностика](docs/diagnostics.md).
 
 ## Лицензия
 
@@ -175,7 +192,7 @@ quarto run tests/portal-configured.ts
 
 ## Версии и обновление
 
-Релиз `v2.2.0` соответствует версии в `_extension.yml`. Устанавливайте явный тег, как в команде выше, и сохраняйте установленные файлы `_extensions` в Git курса. Для обновления установите следующий опубликованный тег через `quarto add`, проверьте diff и выполните проверки курса. Опубликованные теги неизменяемы: исправления получают новую версию и новый тег.
+Релиз `v2.2.1` соответствует версии в `_extension.yml`. Устанавливайте явный тег, как в команде выше, и сохраняйте установленные файлы `_extensions` в Git курса. Для обновления установите следующий опубликованный тег через `quarto add`, проверьте diff и выполните проверки курса. Опубликованные теги неизменяемы: исправления получают новую версию и новый тег.
 
 Корневой состав задаётся `subprojects: [book, lectures, practice]`; путь папки задаёт размещение готового результата. Namespace остаётся в `reference-catalog` каждого проекта. Сайт может сочетать HTML и Revealjs разных документов; QRC получает их текущие native outputs. Каталог содержит адреса, подписи и номера целей, но не импортирует условия из `.task-items` или данные оценивания.
 

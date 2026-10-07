@@ -14,5 +14,3 @@ title: Внешний адресный каталог
 {{< xref docs sec-inspect "Открыть API inspect" style="title" >}}
 
 {{< xref docs sec-inspect "Выбранная подпись автора" >}}
-
-[Исходники группы](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/tree/demo-20261007/examples/external) · [Исходный QMD](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007/examples/external/index.qmd)

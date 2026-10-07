@@ -1,6 +1,6 @@
-> Исторический план/исследование. Актуальный маршрут: [план владельца](2026-10-08-implementation.md).
-> Текст описывает предыдущий этап; старые статусы и поддержка версий не подтверждают нынешнее дерево/CI.
-> Исходная локальная и опубликованная версии сохранены в `docs/history/2026-10-08-preflight/owner-snapshot`.
+> Исторический план/исследование. Актуальный маршрут от 8 октября 2026: [план владельца](2026-10-08-implementation.md).
+> Исходный текст сохранён без правок; его старые статусы и конфликтующие правила не действуют.
+> Нужные материалы сохранить в Git до удаления из активной ветки.
 
 # Каталог ссылок в обновлённой архитектуре курса
 
@@ -85,14 +85,14 @@ Pure formatter не импортирует IO и доступен domain/infrast
 `QRC.IMPORT_INVALID`, `QRC.TARGET_DUPLICATE`, `QRC.TARGET_UNKNOWN`,
 `QRC.OUTPUT_INVALID`, `QRC.REFERENCE_INVALID`.
 
-- [x] В local-linking/full-outputs/imports/local-imports закрепить ID и
+- [ ] В local-linking/full-outputs/imports/local-imports закрепить ID и
   namespace/target/output. Duplicate показывает обе output страницы; invalid
   import — выбранный URL/file и field, но не строку временной схемы как QMD.
-- [x] Оформить текущие guards по-русски без изменения predicates, resolver
+- [ ] Оформить текущие guards по-русски без изменения predicates, resolver
   или HTML parsing. Parse5 positions, если показываются, явно относятся к HTML.
-- [x] Сохранить local deferral как нынешний информационный результат;
+- [ ] Сохранить local deferral как нынешний информационный результат;
   full unresolved target остаётся ошибкой. Не переименовывать deferral в warning.
-- [x] Выполнить каждую названную проверку через `quarto run tests/<имя>.ts`;
+- [ ] Выполнить каждую названную проверку через `quarto run tests/<имя>.ts`;
   плюс export-context и boundaries. Ожидается PASS. Проверка изменений и коммит.
 
 ### R2 Внешние причины, process policy и CLI
@@ -102,14 +102,14 @@ tests: `tests/process-trace.ts`, `native-local.ts`, `import-safety.ts`.
 Существующая сигнатура native wrapper сохраняется; failure определяется exit,
 HTTP/IO refusal, без regex `WARNING|WARN:` и semantic-разбора stderr.
 
-- [x] Fake native process: exit 0 + предупреждение остаётся успехом, nonzero
+- [ ] Fake native process: exit 0 + предупреждение остаётся успехом, nonzero
   сохраняет tool/exit/оба потока. Local HTTP/file failure сохраняет cause;
   чужой ID виден, собственная подсказка не заменяет исходную диагностику.
-- [x] Удалить regex warning refusal, сохранить stderr при успехе и native trace.
+- [ ] Удалить regex warning refusal, сохранить stderr при успехе и native trace.
   Авторский strict render определяется Quarto/Pandoc, не новым QRC режимом.
-- [x] Hook печатает ожидаемые именованные ошибки однократно; неизвестные
+- [ ] Hook печатает ожидаемые именованные ошибки однократно; неизвестные
   exceptions оставляет native stack. Не добавлять общей сериализации отчётов.
-- [x] Выполнить process-trace/native-local/import-safety; проверить standalone
+- [ ] Выполнить process-trace/native-local/import-safety; проверить standalone
   QRC и вызов Publisher через прежний publish API. Проверка изменений и коммит.
 
 ### R3 Документация, группы и конечная проверка
@@ -117,26 +117,12 @@ HTTP/IO refusal, без regex `WARNING|WARN:` и semantic-разбора stderr.
 Создать: `docs/diagnostics.md`; изменить: README, `docs/contract.md`,
 `docs/architecture.md`, активные guides, `examples/course` и `examples/external`.
 
-- [x] Русские объяснения source/input/output, local/full, namespace и действий
+- [ ] Русские объяснения source/input/output, local/full, namespace и действий
   по ID; только корректные QMD. В независимых проектах lang ru задаётся отдельно.
   Для HTML использовать native source/repo/code-links без одинаковых дублей;
   Reveal оставляет обычную ссылку на QMD/группу.
-- [x] Выполнить существующую Quarto/browser матрицу: ссылки, imports, экспорт,
+- [ ] Выполнить существующую Quarto/browser матрицу: ссылки, imports, экспорт,
   поиск, full/current outputs. Не включать sample learning text в central search,
   не менять локальный base-url контракт уже выпущенных ready groups.
 - [ ] Проверка изменений, PR, новый tool release при runtime changes и новые две demo
   группы из проверенного merged SHA; immutable assets и consumer pins отдельно.
-
-### Локальная реализация кандидата
-
-R1/R2 и локальная часть R3 выполнены. Проверены все 23 TypeScript-сценария
-на Quarto 1.10.18 и 1.11.5, существующий Chromium suite на обеих версиях,
-CUE v0.17.1, проекции словаря и типы изменённых модулей. Пример курса проверяет
-162 локальные ссылки и все anchors; внешний пример проверяет `lang: ru`,
-штатное source-действие, точный QMD и прежние три внешние ссылки.
-
-Первичная усиленная проверка source-действия на Quarto 1.10.18 обнаружила
-его штатную скрытую мобильную копию в книге. Проверка теперь различает одну
-основную ссылку и адаптивную копию; ручные дубли в QMD удалены. Интеграции
-выполнены с неизменяемым Publisher v4.0.0; совместная проверка новых кандидатов,
-новые версии, PR и новые готовые группы относятся к координатору выпуска.

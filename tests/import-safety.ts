@@ -1,3 +1,4 @@
+import { readCatalogSource } from "../_extensions/reference-catalog/infrastructure/catalog-source.ts";
 import type { Catalog, Target } from "../_extensions/reference-catalog/domain/model.ts";
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -39,3 +40,20 @@ for (const baseUrl of ["javascript:alert(1)", "data:text/html,<script>alert(1)</
   assert(failed, `Разрешён недопустимый протокол публикации: ${baseUrl}`);
 }
 console.log("Пройдено: внешние подписи — текст, локальная и авторская HTML-разметка сохранена, протоколы публикации ограничены HTTP(S)");
+
+const source = "https://selected.example.test/reference.json";
+const originalFetch = globalThis.fetch;
+const foreign = new Error("FOREIGN.NETWORK_ID: connection refused");
+try {
+  globalThis.fetch = () => Promise.reject(foreign);
+  let failure: any;
+  try { await readCatalogSource(source); } catch (error) { failure = error; }
+  assert(failure instanceof Error && failure.name === "ExternalToolFailure" && failure.cause === foreign && failure.message.includes(source) && failure.message.includes("FOREIGN.NETWORK_ID"), `HTTP refusal lost selected source/foreign cause: ${failure}`);
+  globalThis.fetch = () => Promise.resolve(new Response("FOREIGN.CATALOG_ID: unavailable", { status: 503, statusText: "Unavailable" }));
+  try { await readCatalogSource(source); } catch (error) { failure = error; }
+  assert(failure.name === "ExternalToolFailure" && failure.cause instanceof Error && failure.message.includes("HTTP 503") && failure.stderr.includes("FOREIGN.CATALOG_ID"), "HTTP status failure replaced the foreign response");
+  const missing = `/tmp/qrc-missing-${crypto.randomUUID()}.json`;
+  try { await readCatalogSource(missing); } catch (error) { failure = error; }
+  assert(failure.name === "ExternalToolFailure" && failure.cause instanceof Deno.errors.NotFound && failure.message.includes(missing), "File refusal lost selected source/cause");
+} finally { globalThis.fetch = originalFetch; }
+console.log("PASS import refusal: HTTP status/body and network/file causes with foreign IDs");
