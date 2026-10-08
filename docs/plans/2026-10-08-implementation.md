@@ -1,15 +1,16 @@
 ---
 type: plan
 component: reference-catalog
-status: accepted-next
+status: in-progress
 ---
 
 # QRC: план владельца
 
-Статус: подготовка шагов 1–2 выполнена; новое поведение ещё не реализовано. Выполнять пункт 7 и затем
+Статус: текущие runtime и авторские документы подготовлены на рабочей ветке;
+финальные совместные проверки, merge/CI и выпуск остаются отдельными gates. Выполнять пункт 7 и затем
 пункты 12–13/17–18 [линейного плана](../../../quarto-course/docs/plans/2026-10-08-course-tools-implementation.md).
-[Целевой контракт Core](../../../quarto-course/spec/authoring-model-next.md)
-задаёт поля банка/работ/назначений. Quarto 1.11.5 / CUE 0.17.1;
+[Текущие контракты Core](../../../quarto-course/spec/index.md)
+задают поля банка/работ/назначений. Quarto 1.11.5 / CUE 0.17.1;
 широкую Windows CI matrix не добавлять.
 
 ## Изменения, документация и проверки
@@ -89,7 +90,7 @@ Root и пользовательские worktrees не удалялись. Те
 ## Подготовка документации пункта 7 — 8 октября 2026
 
 Документационный исполнитель работает по принятым Core решениям; модель не
-менялась. Добавлена [подготовка авторства](../authoring-next.md) `accepted-next`,
+менялась. Добавлена [сохранённая подготовка авторства](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/6e56a5eebb2fe09ab501aef91a85d918a29ba726/docs/authoring-next.md) `accepted-next`,
 ссылки из README и индекса. Существующие current API/контракты не объявлены
 мигрированными до проверки runtime. Примеры на этой ветке предназначены для
 следующей модели; native ordinary Quarto сохранён вне bank opt-in.
@@ -110,3 +111,39 @@ student/full outputs и выбранный экспорт, после чего �
 переносится в current README/контракт. Merge/push/release/публикация не выполнены.
 
 Ruling: export-context уже подключён в workflow свежего main; публичные native exr/exm/sol примера не объявляют Core bank. Тексты объектов заменены содержательными русскими примерами с сохранением ID целей.
+
+
+## Текущие контракты и release-pinned примеры — 8 октября 2026
+
+Документальный commit: `46ca2477e34ef3d85839c5e52b2c37a0b0244a40`.
+Принята версия `v3.0.0`; descriptor подготовлен отдельным runtime
+исполнителем. На момент этой записи новые Releases ещё не опубликованы;
+merge/main, финальный CI, готовая release-сборка и публикация выполняются root
+по линейному плану. Эта запись не подтверждает общий финальный integration gate.
+
+- Правила подготовки перенесены в действующие README/spec/тематические docs.
+  `current` описывает код того же ref; документация выпуска читается из того же
+  immutable tag. В README/examples нет временных заявлений о доступности Release.
+- `docs/authoring-next.md` удалён только после проверки точного Git blob
+  `a7f4b64f65ee748d48eb7b1df6181be191dd6e86` на commit
+  `6e56a5eebb2fe09ab501aef91a85d918a29ba726`; восстановление записано в карте истории.
+- Install/source/BUILD pins задают Core `v4.0.0`, Publisher `v5.0.0`, QRC `v3.0.0`
+  и свою новую версию там, где эти зависимости используются. Native source-ссылки
+  ведут на tool tag производителя; планируемый demo tag — `demo-20261008`,
+  из того же clean producer SHA с `BUILD.sourceDirty: false`. Download не получает
+  собственного demo Release. Механизм provenance/build runtime не менялся.
+- Свежая статическая проверка: 15 YAML/front matter без повторных
+  ключей, 32 существующих локальных Markdown-ссылок, 3 native
+  source-конфигураций. У всех public base `_quarto.yml` — `lang: ru` и
+  `fail-if-warnings: true`. Активные авторские документы не содержат Quarto 1.10,
+  старой requirements карты/kinds, solution for и переходных contract ссылок.
+- Канонический банк здесь не включён; ordinary native Quarto сохранён.
+  Это проверка авторской разметки и ссылок, не native AST/render.
+- `git diff --check` и staged whitespace — PASS. `deno fmt --check`
+  существующих build/build-info scripts — PASS там, где они есть. Публичные
+  API, runtime/tests/.github/CI этим документальным исполнителем не изменены.
+
+Команды проверки и полные результаты: `/tmp/consumer-docs-final-20261008/verify.py`,
+`bank-check.py`, `verify.log`, `bank-check.log`, `checks.json`, `bank-checks.json`.
+Широкие native suites и release demo builds здесь не запускались параллельно:
+их свежие результаты записывает отдельный integration исполнитель и root.
