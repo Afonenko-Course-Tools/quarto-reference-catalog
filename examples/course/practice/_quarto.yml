@@ -1,3 +1,4 @@
+fail-if-warnings: true
 project:
   type: default
   post-render:

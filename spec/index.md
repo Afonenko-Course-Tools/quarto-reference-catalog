@@ -13,6 +13,7 @@ vocabulary, architecture, reference и plan; `component` указывает вл
 
 | Документ | type | component | status |
 | --- | --- | --- | --- |
+| [Подготовка авторства](../docs/authoring-next.md) | authoring-guide | reference-catalog | accepted-next |
 | [Контракт QRC](../docs/contract.md) | contract | reference-catalog | current |
 | [Авторская конфигурация](config.cue) | contract/schema | reference-catalog | current |
 | [JSON каталога](../schemas/catalog.schema.json) | contract/schema | reference-catalog | current |
