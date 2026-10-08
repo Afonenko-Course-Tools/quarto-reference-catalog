@@ -62,8 +62,21 @@ Owner plans до origin update и из опубликованного origin/mai
 run/outputs; независимые ID/QRC адреса; owner containment до cleanup; закрытые
 тела/ресурсы не включаются в публичный payload; внешний exit/tool/потоки/cause
 сохраняются; общей runtime/report/registry надстройки нет. Их нормативные
-владельцы связаны из текущего spec index. Новые bank/assignments поля остаются
-accepted-next до реализации Core/потребителей.
+владельцы связаны из текущего spec index. Это описание фиксирует историческое
+состояние подготовки; актуальные правила
+банка/assignments теперь находятся в текущих контрактах Core и владельца.
 
 Сохранить автоматический OPEN PR #5 head `dependabot/npm_and_yarn/playwright-1.63.0`
 (`8d88a3272d73f6d868f3c7bd2b6ad84a743081c6`) при финальной очистке веток.
+
+## Подготовка авторства 8 октября
+
+Переходный `docs/authoring-next.md` перенесён в действующие тематические документы.
+Точные исходные bytes сохранены в Git: commit `6e56a5eebb2fe09ab501aef91a85d918a29ba726`,
+blob `a7f4b64f65ee748d48eb7b1df6181be191dd6e86`. Восстановление без изменения рабочего дерева:
+
+```sh
+git show 6e56a5eebb2fe09ab501aef91a85d918a29ba726:docs/authoring-next.md
+```
+
+[Исходная подготовка](https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/6e56a5eebb2fe09ab501aef91a85d918a29ba726/docs/authoring-next.md) остаётся историей этого владельца.
