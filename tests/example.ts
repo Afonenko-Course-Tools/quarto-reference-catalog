@@ -73,9 +73,9 @@ try {
     if (document) {
       assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), `Independent native project lost lang ru: ${path}`);
       const qmd = path.slice(output.length + 1).replace(/\.html$/, ".qmd").replace("lectures/01/lecture-memory.qmd", "lectures/01/memory.qmd");
-      const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007-ru1/examples/course/${qmd}`;
+      const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.0.0/examples/course/${qmd}`;
       const sourceLinks = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
-      // Quarto 1.10 renders one desktop action and a hidden mobile counterpart.
+      // Native Quarto renders one desktop action and a hidden mobile counterpart.
       // Count authored duplicates separately from that native responsive placement.
       const mobile = (node: (typeof sourceLinks)[number]) => {
         let ancestor = node.parentNode;

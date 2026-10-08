@@ -1,3 +1,4 @@
+fail-if-warnings: true
 project:
   type: book
   post-render:
@@ -6,7 +7,7 @@ project:
   output-dir: _book
 book:
   repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
-  repo-branch: demo-20261007-ru1
+  repo-branch: v3.0.0
   repo-subdir: examples/course/book
   repo-actions: [source]
   title: Программирование

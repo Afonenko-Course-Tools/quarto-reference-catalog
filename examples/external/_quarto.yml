@@ -1,3 +1,4 @@
+fail-if-warnings: true
 project:
   type: website
   output-dir: _site
@@ -8,7 +9,7 @@ profile:
 website:
   title: Внешний адресный каталог
   repo-url: https://github.com/Afonenko-Course-Tools/quarto-reference-catalog
-  repo-branch: demo-20261007-ru1
+  repo-branch: v3.0.0
   repo-subdir: examples/external
   repo-actions: [source]
 lang: ru

@@ -1,3 +1,9 @@
+---
+type: contract
+component: reference-catalog
+status: current
+---
+
 # Контракт каталога ссылок
 
 Авторская конфигурация `reference-catalog` содержит `namespace`, `imports`, `exports`, `publication`. Неизвестные поля отклоняются. Состав native проектов задаётся отдельно в корневом `subprojects: [paths]`.
@@ -27,3 +33,22 @@ Promise<void>` и API маркеров сохраняются. Внутренн�
 текущие результаты Quarto. Нельзя трактовать позиции JSON или HTML как строки
 QMD. Отсрочка local остаётся информационным результатом; full требует полного
 разрешения целей. Строгость предупреждений задаётся параметрами Quarto/Pandoc.
+
+## Банк Core и student/full
+
+QRC переносит только идентичность и адрес цели. Он не импортирует условия,
+решения, assignments или grading payload; общий банк принадлежит
+[Core](../../quarto-course/spec/index.md). Restricted задача удалена из
+student-проекции и не оставляет цель, подпись или текст условия в её каталоге
+и поиске. Full каталог строится из текущего full набора и может содержать адрес.
+Выбор `exports` управляет адресами каталога, а не публикацией условий.
+
+Строгий full отклоняет явно выбранную недоступную цель с `QRC.TARGET_UNKNOWN`;
+local сохраняет отсрочку без фиктивного href. `.assessment-preview` содержит
+обычные ссылки сайта; его исключение из Body выполняет producer Core.
+В служебном source export QRC сохраняет нейтральную native идентичность ссылок,
+не копируя чужое условие. `publish(context)` сохраняет current outputs,
+containment, strict full и общий проход linking/search.
+
+[Демонстрации](../README.md) не подключают Core. Их native exr/exm/sol остаются
+обычными Quarto объектами без обязательных банковских difficulty/time.
