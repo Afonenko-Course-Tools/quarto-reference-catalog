@@ -1,0 +1,65 @@
+{
+  "inputs": [
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/checks/quarto-reference-catalog/verified-demo-checks.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/checks/quarto-reference-catalog/verified-demo-checks.json",
+      "sha256": "567d1b1e1b96dd88ed753eb46fdba9d68f8de3e577ed757ab11e1fe7514ef5ba",
+      "bytes": 30100
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/RELEASE.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/RELEASE.json",
+      "sha256": "f78b67b859316bf036cd2d8e72e4f33db4b53cf151704fdfcbf606b10f5aab7c",
+      "bytes": 87963
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/download-verified.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/download-verified.json",
+      "sha256": "ac356ce5d875136ab249a5492451cd839f63250f788295a05c97512d4850a4ea",
+      "bytes": 411
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/published.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/demo-20261008/published.json",
+      "sha256": "fcfca75ad2356c5a3341e5cc1b2a82d8f6ab999e0e95060af998e4f735553118",
+      "bytes": 8131
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/RELEASE.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/RELEASE.json",
+      "sha256": "119d56bc4d76368466ee2b42fa9703cdee5a1d0c4c80216cd109176fcbda7152",
+      "bytes": 408
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/download-verified.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/download-verified.json",
+      "sha256": "d99a879396c91c2edb83512506d548fe0f7e27be58f2a731471990d66cd2f785",
+      "bytes": 280
+    },
+    {
+      "owner": "quarto-reference-catalog",
+      "source": "/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/published.json",
+      "stagedPath": "sources/tmp/course-release-20261008/receipts/releases/quarto-reference-catalog/v3.0.0/published.json",
+      "sha256": "6131a8830f9ac16504797098adbc23b64510792e6b71ca721d2806e03bb3b30b",
+      "bytes": 6221
+    }
+  ],
+  "latestPlans": [
+    {
+      "source": "docs/plans/2026-10-08-implementation.md",
+      "sha256": "36d6544109f961ab0d4cf5fac1352f2f5c5f0527d7b3621179d5633a3ee7fbf8",
+      "bytes": 22080
+    }
+  ],
+  "courseGate": {
+    "coursePRNumber": 4,
+    "courseHead": "b6b085cf0541785d11159bd9a106cd131dfabaf0",
+    "courseCIRun": 37743840665
+  }
+}
