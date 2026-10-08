@@ -12,7 +12,7 @@ try {
   assert(result.success, new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr));
   const nodes = elements(parseHtml(await Deno.readTextFile(join(root, "_site/index.html"))));
   assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), "External independent project lost lang ru");
-  const source = "https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/demo-20261007-ru1/examples/external/index.qmd";
+  const source = "https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.0.0/examples/external/index.qmd";
   const actions = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
   assert(actions.length === 1 && hasClass(actions[0], "toc-action"), "External HTML must have exactly one native source action to the correct QMD");
   const external = nodes.filter(node => node.tagName === "a" && attr(node, "data-qrc-ref") === "docs:sec-inspect");
