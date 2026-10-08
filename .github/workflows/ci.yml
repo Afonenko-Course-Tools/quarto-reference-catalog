@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        quarto: ["1.10.18", "1.11.5"]
+        quarto: ["1.11.5"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,6 +57,7 @@ jobs:
           quarto run tests/native-local.ts
           quarto run tests/full-outputs.ts
           quarto run tests/search-publication.ts
+          quarto run tests/profile-publication.ts
           quarto run tests/boundaries.ts
           quarto run tests/process-trace.ts
           quarto run tests/search.ts
