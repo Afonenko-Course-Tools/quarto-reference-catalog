@@ -20,7 +20,7 @@ vocabulary, architecture, reference и plan; `component` указывает вл
 | [Архитектура](../docs/architecture.md) | architecture | reference-catalog | current |
 | [Диагностика](../docs/diagnostics.md) | reference | reference-catalog | current |
 | [Авторская модель Core](../../quarto-course/spec/index.md) | specification/index | course-core | current |
-| [План владельца](../docs/plans/2026-10-08-implementation.md) | plan | reference-catalog | in-progress |
+| [Результат реализации](../docs/releases/2026-10-08-implementation.md) | implementation-report | reference-catalog | historical |
 | [Карта сохранённой истории](../docs/history-index.md) | history-index | reference-catalog | current |
 
 QRC владеет namespace/imports/exports, адресацией, local/full связыванием и каталогом текущих outputs. Publisher владеет составом; Core — банком, работами, назначениями и Body. QRC не переносит тела заданий.
