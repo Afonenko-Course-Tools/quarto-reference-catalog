@@ -1,3 +1,5 @@
+import {createMetrics as __createMetrics} from "../observability/bridge.ts";
+const __metrics=__createMetrics("reference-catalog");
 import { parse } from "../vendor/parse5/dist/index.js";
 // Минимальный интерфейс адаптера HTML; сторонняя библиотека изолирована в этом модуле.
 interface Offset { startOffset: number; endOffset: number }
@@ -48,3 +50,20 @@ export function replace(html: string, edits: Edit[]): string {
   return html;
 }
 export function parseHtml(html: string) { return parse(html, { sourceCodeLocationInfo: true }) as unknown as Document; }
+
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+elements=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.elements",kind:"io"},elements);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+attr=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.attr",kind:"io"},attr);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+hasClass=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.hasClass",kind:"io"},hasClass);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+content=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.content",kind:"io"},content);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+inner=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.inner",kind:"io"},inner);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+escape=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.escape",kind:"io"},escape);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+replace=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.replace",kind:"io"},replace);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+parseHtml=__metrics.wrapSync({id:"reference-catalog.infrastructure.html.parseHtml",kind:"io"},parseHtml);

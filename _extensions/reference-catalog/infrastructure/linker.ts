@@ -1,3 +1,5 @@
+import {createMetrics as __createMetrics} from "../observability/bridge.ts";
+const __metrics=__createMetrics("reference-catalog");
 import { diagnostic } from "../diagnostics.ts";
 import { namespacePattern, referenceStyles } from "../domain/contract.ts";
 import type { Target } from "../domain/model.ts";
@@ -106,3 +108,6 @@ export function linkPages(pages: Page[], navigationScript: string, imports: Targ
   }
   return { pages: result, parsedPages: new Map(pages.map(page => [page.path, page])), targets, links, deferred };
 }
+
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+linkPages=__metrics.wrapSync({id:"reference-catalog.infrastructure.linker.linkPages",kind:"io"},linkPages);

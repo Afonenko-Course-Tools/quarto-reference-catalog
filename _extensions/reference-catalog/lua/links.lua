@@ -1,3 +1,5 @@
+local __metrics=require("../observability/bridge").create_metrics("reference-catalog",1)
+
 local M = {}
 local diagnostics = require("./diagnostics")
 local constants = require("./constants")
@@ -20,4 +22,5 @@ function M.link(namespace, id, style, label)
     "#qrc-unresolved", "", pandoc.Attr("", {"qrc-link"}, attrs))
 end
 M.text = text
+M.link=__metrics.wrap_sync({id="reference-catalog.lua.links.link",kind='phase'},M.link)
 return M

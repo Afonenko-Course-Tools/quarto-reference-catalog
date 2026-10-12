@@ -81,96 +81,10 @@ esac
   const visible = await new Deno.Command(nativeQuarto, { args: ["run", probe], cwd: root, stdout: "piped", stderr: "piped" }).output();
   assert(visible.success && new TextDecoder().decode(visible.stderr).includes("WARNING: PRIVATE_WARNING"), "Successful native stderr was hidden");
   Deno.env.set("COURSE_BUILD_TRACE", trace);
-  assert(
-    await quarto([
-      "inspect",
-      root,
-      "--profile",
-      "student",
-      "--metadata-file",
-      "PRIVATE_ARGUMENT",
-    ], root) === "PRIVATE_STDOUT\n",
-    "Tracing changed capture bytes",
-  );
-  assert(
-    await quarto(["--version"], root) === "PRIVATE_STDOUT\n",
-    "Tracing changed untracked version capture",
-  );
-  const traced = [];
-  for (const mode of ["success", "warning", "failure"]) {
-    traced.push(await outcome(mode));
-  }
-  assert(
-    JSON.stringify(traced) === JSON.stringify(baseline),
-    "Tracing changed warning/child failure precedence",
-  );
-  let bytes = "";
-  try {
-    bytes = await Deno.readTextFile(trace);
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
-  }
-  assert(bytes !== "", "Native calls did not produce optional trace records");
-  assert(
-    !bytes.includes("PRIVATE_"),
-    "Trace leaked command arguments or captured output",
-  );
-  const rows = bytes.trim().split("\n").map((line) => JSON.parse(line));
-  assert(rows.length === 4, "Trace lost native invocations");
-  assert(
-    rows[0].kind === "inspect" &&
-      JSON.stringify(rows[0].args) ===
-        JSON.stringify([root, "--profile", "student"]),
-    "Trace did not limit inspect arguments to target/profile",
-  );
-  for (const row of rows) {
-    assert(
-      JSON.stringify(Object.keys(row).sort()) ===
-        JSON.stringify([
-          "args",
-          "cwd",
-          "elapsedMs",
-          "executable",
-          "exitCode",
-          "kind",
-        ]),
-      "Unexpected trace fields",
-    );
-    assert(
-      row.executable === fake && row.cwd === root &&
-        Number.isFinite(row.elapsedMs) && row.elapsedMs >= 0,
-      "Invalid native trace identity/timing",
-    );
-  }
-  assert(
-    JSON.stringify(rows.map((row) => row.exitCode)) === "[0,0,0,23]",
-    "Trace lost native exit codes",
-  );
-  Deno.env.set("COURSE_BUILD_TRACE", root); // A directory is an unavailable optional sink.
-  const broken = [];
-  for (const mode of ["success", "warning", "failure"]) {
-    broken.push(await outcome(mode));
-  }
-  assert(
-    JSON.stringify(broken) === JSON.stringify(baseline),
-    "Optional trace failure replaced native behavior",
-  );
-  Deno.env.set("COURSE_BUILD_TRACE", relativeTrace);
-  assert(
-    await outcome("success") === baseline[0],
-    "Relative trace path changed native behavior",
-  );
-  let relativeCreated = true;
-  try {
-    await Deno.lstat(relativeTrace);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) relativeCreated = false;
-    else throw error;
-  }
-  assert(!relativeCreated, "A relative optional trace path was written");
-  console.log(
-    "PASS native trace: bounded arguments, private captures, exit codes and optional-sink failure isolation",
-  );
+  assert(await outcome("success") === baseline[0], "Отключённые метрики изменили результат");
+  let exists=false;try{await Deno.stat(trace);exists=true;}catch(error){if(!(error instanceof Deno.errors.NotFound))throw error;}
+  assert(!exists,"Legacy trace удалён: обычный режим не пишет журнал");
+  console.log("PASS native command: выводы, ошибки, causes и отсутствие legacy trace");
 } finally {
   for (const [name, value] of saved) {
     value === undefined ? Deno.env.delete(name) : Deno.env.set(name, value);

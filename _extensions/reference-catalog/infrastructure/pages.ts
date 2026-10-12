@@ -1,3 +1,5 @@
+import {createMetrics as __createMetrics} from "../observability/bridge.ts";
+const __metrics=__createMetrics("reference-catalog");
 import { diagnostic } from "../diagnostics.ts";
 import type { Target } from "../domain/model.ts";
 import { attr, content, elements, hasClass, inner, parseHtml, type Element, type Node } from "./html.ts";
@@ -67,3 +69,6 @@ export function readPage(path: string, html: string): Page {
   }
   return { path, html, nodes, targets, probes, ids, reveal, root };
 }
+
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+readPage=__metrics.wrapSync({id:"reference-catalog.infrastructure.pages.readPage",kind:"io"},readPage);

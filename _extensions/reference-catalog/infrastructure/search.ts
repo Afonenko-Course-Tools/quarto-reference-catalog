@@ -1,3 +1,5 @@
+import {createMetrics as __createMetrics} from "../observability/bridge.ts";
+const __metrics=__createMetrics("reference-catalog");
 import { attr, elements, hasClass, type Element, type Node } from "./html.ts";
 import type { Page } from "./pages.ts";
 import { relative, isAbsolute } from "./files.ts";
@@ -46,3 +48,10 @@ export async function updateSearch(root: string, indexFiles: (string | SearchInd
     await Deno.writeTextFile(file, JSON.stringify(rows, null, 2) + "\n");
   }
 }
+
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+searchIndexBase=__metrics.wrapSync({id:"reference-catalog.infrastructure.search.searchIndexBase",kind:"io"},searchIndexBase);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+readable=__metrics.wrapSync({id:"reference-catalog.infrastructure.search.readable",kind:"io"},readable);
+// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
+updateSearch=__metrics.wrapAsync({id:"reference-catalog.infrastructure.search.updateSearch",kind:"io"},updateSearch);
