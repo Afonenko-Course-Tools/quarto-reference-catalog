@@ -46,6 +46,8 @@ jobs:
         run: |
           quarto --version
           cue version
+      - name: Проверка режима off без доступа к часам
+        run: quarto run tests/performance.ts
       - name: Источники каталогов и оформление ссылок
         run: |
           quarto run tests/demo-external.ts
