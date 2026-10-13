@@ -161,6 +161,8 @@ quarto run tests/local-outputs.ts
 quarto run tests/local-imports.ts
 quarto run tests/native-local.ts
 quarto run tests/full-outputs.ts
+quarto run tests/metadata-order.ts
+quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
 quarto run tests/search-publication.ts
 quarto run tests/boundaries.ts
 quarto run tests/export-context.ts
