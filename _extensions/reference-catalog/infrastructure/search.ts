@@ -50,8 +50,4 @@ export async function updateSearch(root: string, indexFiles: (string | SearchInd
 }
 
 // @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-searchIndexBase=__metrics.wrapSync({id:"reference-catalog.infrastructure.search.searchIndexBase",kind:"io"},searchIndexBase);
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-readable=__metrics.wrapSync({id:"reference-catalog.infrastructure.search.readable",kind:"io"},readable);
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
 updateSearch=__metrics.wrapAsync({id:"reference-catalog.infrastructure.search.updateSearch",kind:"io"},updateSearch);
