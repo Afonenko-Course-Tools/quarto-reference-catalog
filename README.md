@@ -10,7 +10,7 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 ## Установка
 
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.0.0
+quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.1.0
 ```
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
@@ -217,3 +217,9 @@ Counters обходов не являются числом посещённых 
 
 Прежний `COURSE_BUILD_TRACE` удалён; для новых измерений используются фасады ABI 1.
 Копии `observability/bridge.ts` и `bridge.lua` синхронизируются из проекта Performance.
+
+## Подготовка выпуска 3.1.0
+
+Текущий ref добавляет публичный Body resolver. До фактической публикации тега
+`v3.1.0` проверяйте кандидат целой установкой локального checkout; команда
+с тегом выше применяется после его публикации. ABI Performance остаётся 1.
