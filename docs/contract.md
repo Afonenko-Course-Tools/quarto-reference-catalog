@@ -66,3 +66,15 @@ Pandoc Attr и финализации HTML. Карты Lua преобразую�
 переданный корень временной копии в `data-qrc-source` контейнера проб;
 относительный путь сохраняется. Обычная публикация не передаёт этот параметр.
 Script/style/comments и теги с duplicate attributes остаются буквальными.
+
+## Публичная адресация Body (unreleased)
+
+`entrypoints/body-links.ts` предоставляет `createBodyLinks({catalog, baseUrl})`
+и `loadBodyLinks({catalogFile, baseUrl, root, namespace, imports})`.
+Возвращаемый `resolve(key, style, source)` выдаёт `{href, label}` по тем же
+проверкам target и алгоритму URL, что веб-публикация, включая вложенные
+цели Reveal и стили подписей. Base URL обязан быть HTTP(S) и заканчиваться `/`.
+Loader использует обычную проверку каталогов/импортов; неизвестная обязательная
+цель сохраняет диагностику QRC и source. Он не читает тела заданий и не
+добавляет repository metadata overlay. Core удаляет self-target и разделяет
+публичный/закрытый AST; native consumer задаёт политику новых вкладок.
