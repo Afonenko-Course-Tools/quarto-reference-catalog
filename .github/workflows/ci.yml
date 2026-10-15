@@ -40,17 +40,24 @@ jobs:
           ref: v5.0.0
           path: .ci/course-site
           persist-credentials: false
+      - name: Детерминированная сериализация QRC
+        run: |
+          quarto run tests/metadata-order.ts
+          quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
       - name: Путь к native композиции
         run: echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
       - name: Версии инструментов
         run: |
           quarto --version
           cue version
+      - name: Проверка режима off без доступа к часам
+        run: quarto run tests/performance.ts
       - name: Источники каталогов и оформление ссылок
         run: |
           quarto run tests/demo-external.ts
           quarto run tests/diagnostics.ts
           quarto run tests/export-context.ts
+          quarto run tests/body-links.ts
           quarto run tests/local-linking.ts
           quarto run tests/local-outputs.ts
           quarto run tests/local-imports.ts

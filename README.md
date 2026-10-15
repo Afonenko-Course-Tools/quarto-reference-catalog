@@ -10,7 +10,7 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 ## Установка
 
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.0.0
+quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.1.0
 ```
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
@@ -152,10 +152,6 @@ Quarto, exit code, оба потока и исходную причину; HTTP 
 `searchIndexes: [{path, mount?}]` задаёт текущие индексы; относительные href
 переносятся под mount, записи невыбранных HTML удаляются, root search объединяется. При повторяющемся ID текст берётся из первого HTML-элемента.
 
-`COURSE_BUILD_TRACE` принимает абсолютный путь к JSONL-файлу native вызовов.
-QRC дописывает `inspect` и `render` с полями `kind`, `executable`, `cwd`, `args`
-(только target и `--profile`), `elapsedMs`, `exitCode`. Stdout, stderr и остальные
-аргументы не записываются; отказ необязательного журнала не меняет результат.
 
 ```sh
 quarto run tests/demo-external.ts
@@ -165,6 +161,8 @@ quarto run tests/local-outputs.ts
 quarto run tests/local-imports.ts
 quarto run tests/native-local.ts
 quarto run tests/full-outputs.ts
+quarto run tests/metadata-order.ts
+quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
 quarto run tests/search-publication.ts
 quarto run tests/boundaries.ts
 quarto run tests/export-context.ts
@@ -206,3 +204,22 @@ quarto run tests/portal-configured.ts
 Корневой состав задаётся `subprojects: [book, lectures, practice]`; путь папки задаёт размещение готового результата. Namespace остаётся в `reference-catalog` каждого проекта. Сайт может сочетать HTML и Revealjs разных документов; QRC получает их текущие native outputs. Каталог содержит адреса, подписи и номера целей, но не импортирует условия из `.task-items` или данные оценивания.
 
 `examples/external` — самостоятельная группа внешнего каталога с явно помеченным вручную составленным снимком адресов официального сайта Quarto. Asset: `external-catalog.tar.gz`. Группа переходов между проектами — `examples/course`, asset `catalog-cross-project.tar.gz`. Обе демонстрации используют full по умолчанию.
+
+## Метрики производительности
+
+Значимые операции и явные обходы AST размечены локальным фасадом ABI 1.
+В обычной сборке (`off`, по умолчанию) фабрики возвращают исходные функции:
+агент, hooks, часы телеметрии и журналы не загружаются. Расширение самодостаточно.
+Сбор метрик включается launcher проекта `quarto-course-performance`; установка
+`COURSE_PERF_MODE` сама по себе агент не загружает и не обеспечивает валидные данные.
+TypeScript использует wall time, Lua — CPU процесса; шкалы анализируются раздельно.
+Counters обходов не являются числом посещённых AST-узлов.
+
+Прежний `COURSE_BUILD_TRACE` удалён; для новых измерений используются фасады ABI 1.
+Копии `observability/bridge.ts` и `bridge.lua` синхронизируются из проекта Performance.
+
+## Подготовка выпуска 3.1.0
+
+Текущий ref добавляет публичный Body resolver. До фактической публикации тега
+`v3.1.0` проверяйте кандидат целой установкой локального checkout; команда
+с тегом выше применяется после его публикации. ABI Performance остаётся 1.
