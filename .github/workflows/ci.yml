@@ -37,9 +37,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 2ab388a89c9d70f8faaab0ee1505064656208eee # Site 5.1.4: точный кандидат
+          ref: 9a23c6ba30f0fda27eee8ae7c39e8ac2796fbdfd # Site 5.1.4: точный кандидат
           path: .ci/course-site
           persist-credentials: false
+      - name: Проверить закреплённый Site
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "9a23c6ba30f0fda27eee8ae7c39e8ac2796fbdfd"
       - name: Детерминированная сериализация QRC
         run: |
           quarto run tests/metadata-order.ts
@@ -54,6 +56,7 @@ jobs:
         run: |
           quarto run tests/performance.ts
           quarto run tests/performance-context.ts
+          quarto run tests/performance-noenv.ts
           quarto run tests/performance-document-context.ts
           COURSE_PERF_MODE=summary quarto pandoc --lua-filter tests/performance-filter-context.lua --to plain < /dev/null
           quarto run tests/performance-native-context.ts
