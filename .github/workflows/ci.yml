@@ -51,7 +51,12 @@ jobs:
           quarto --version
           cue version
       - name: Проверка режима off без доступа к часам
-        run: quarto run tests/performance.ts
+        run: |
+          quarto run tests/performance.ts
+          quarto run tests/performance-context.ts
+          quarto run tests/performance-document-context.ts
+          COURSE_PERF_MODE=summary quarto pandoc --lua-filter tests/performance-filter-context.lua --to plain < /dev/null
+          quarto run tests/performance-native-context.ts
       - name: Источники каталогов и оформление ссылок
         run: |
           quarto run tests/demo-external.ts
