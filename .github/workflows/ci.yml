@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: v5.0.0
+          ref: 2ab388a89c9d70f8faaab0ee1505064656208eee # Site 5.1.4: точный кандидат
           path: .ci/course-site
           persist-credentials: false
       - name: Детерминированная сериализация QRC
@@ -50,7 +50,7 @@ jobs:
         run: |
           quarto --version
           cue version
-      - name: Проверка режима off без доступа к часам
+      - name: Проверка режима off и контекста ABI 1
         run: |
           quarto run tests/performance.ts
           quarto run tests/performance-context.ts

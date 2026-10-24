@@ -1,17 +1,23 @@
 # Каталог перекрёстных ссылок Quarto
 
 Действующие правила: [индекс спецификаций](spec/index.md) и [контракт QRC](docs/contract.md).
-Версия данного ref определяется descriptor; контракт и документация выпуска
-читаются из того же тега, что и код. Изменения main после выпущенного тега —
+Текущий ref — кандидат **3.1.1**. Версия определяется descriptor; контракт
+и документация выпуска читаются из того же тега, что и код. Изменения main после выпущенного тега —
 **unreleased**. Минимум — Quarto 1.11.5; при использовании Core требуется CUE 0.17.1.
 
 QRC собирает цели из готовых HTML и Reveal-презентаций, разрешает ссылки между ними и по умолчанию публикует все собственные цели для других проектов. Форматы остаются стандартными `html` и `revealjs`. Расширение не собирает подпроекты и не управляет их размещением. Каталог содержит идентичность и адреса целей; он не включает тела заданий, машинные ключи, семантический граф prerequisites или учёт успеваемости.
 
 ## Установка
 
+До выпуска установите полный локальный checkout кандидата:
+
 ```sh
-quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.1.0
+quarto add /absolute/path/to/quarto-reference-catalog --no-prompt
 ```
+
+После публикации нового тега установка из GitHub выполняется командой
+`quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.1.1`. Наличие тега
+и готовность установленного проекта проверяются отдельно.
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
 
@@ -154,6 +160,11 @@ Quarto, exit code, оба потока и исходную причину; HTTP 
 
 
 ```sh
+quarto run tests/performance.ts
+quarto run tests/performance-context.ts
+quarto run tests/performance-document-context.ts
+COURSE_PERF_MODE=summary quarto pandoc --lua-filter tests/performance-filter-context.lua --to plain < /dev/null
+quarto run tests/performance-native-context.ts
 quarto run tests/demo-external.ts
 quarto run tests/diagnostics.ts
 quarto run tests/local-linking.ts
@@ -179,7 +190,14 @@ quarto run tests/portal.ts
 quarto run tests/portal-configured.ts
 ```
 
-Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`. Пример дополнительно проверяет JSON через CUE. Браузерный тест: `npm ci && npm run test:browser`.
+Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний
+checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`.
+CI закрепляет точный SHA кандидата Site 5.1.4. Согласуемая матрица Core 8.2.3 /
+Site 5.1.4 / QRC 3.1.1 / Download 3.2.2 требует отдельной проверки итоговых refs
+и установленного состава; прежний CI не подтверждает новую матрицу. Эти
+companion-проверки не вводят обязательную зависимость самостоятельного QRC.
+Пример дополнительно проверяет JSON через CUE. Браузерный тест:
+`npm ci && npm run test:browser`.
 
 Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом), Lua и CUE. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 
@@ -197,7 +215,7 @@ quarto run tests/portal-configured.ts
 ## Версии и обновление
 
 Версия определяется descriptor того же Git ref. Устанавливайте точный тег
-из команды выше; документация и код выбранного выпуска читаются из одного ref.
+после его публикации; документация и код выбранного выпуска читаются из одного ref.
 Сохраните установленные `_extensions` в Git курса; при обновлении просмотрите diff и выполните проверки курса. Опубликованные
 теги неизменяемы: исправления получают новую версию и новый тег.
 
@@ -217,9 +235,25 @@ Counters обходов не являются числом посещённых 
 
 Прежний `COURSE_BUILD_TRACE` удалён; для новых измерений используются фасады ABI 1.
 Копии `observability/bridge.ts` и `bridge.lua` синхронизируются из проекта Performance.
+Фасад сохраняет ABI 1 и добавляет `attributes.extension_id: "reference-catalog"`.
+Необязательный `document_id` передаётся только на подтверждённых границах:
+Обработчики Lua `requests`/`probes` читают публичный `quarto.doc.input_file` при
+каждом вызове, пропуская пустое или отсутствующее значение; `readPage(path, html)`
+использует явный путь output. Эти значения могут различаться: входной QMD и
+выходной HTML не подменяют друг друга. Пакетный `publish` не выбирает один
+произвольный документ из набора outputs.
 
-## Подготовка выпуска 3.1.0
+Дочерняя команда получает полный снимок окружения с явными переопределениями
+через `childEnv` и `clearEnv: true`: рабочие переменные сохраняются, удалённый
+устаревший `COURSE_PERF_PARENT_SPAN_ID` не наследуется повторно. Контекст родителя
+берётся из текущего активного span. Общий runtime не добавляется; полного
+семантического покрытия функций QRC эта разметка не заявляет.
 
-Текущий ref добавляет публичный Body resolver. До фактической публикации тега
-`v3.1.0` проверяйте кандидат целой установкой локального checkout; команда
-с тегом выше применяется после его публикации. ABI Performance остаётся 1.
+## Подготовка выпуска 3.1.1
+
+Текущий кандидат добавляет подтверждённый контекст наблюдения одного документа
+и исправляет передачу контекста родителя дочерней команде. Публичный Body resolver,
+алгоритмы ссылок, авторская конфигурация и JSON-схема каталога сохраняются.
+До фактической публикации `v3.1.1` проверяйте кандидат целой установкой локального
+checkout; команда с тегом выше применяется после публикации. ABI остаётся 1.
+Полная проверка установленной матрицы и CI итогового HEAD выполняются отдельно.
