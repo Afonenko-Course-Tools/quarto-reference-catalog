@@ -72,8 +72,5 @@ export function readPage(path: string, html: string): Page {
   return { path, html, nodes, targets, probes, ids, reveal, root };
 }
 
-const readPageImpl = readPage;
 // @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-readPage = (path: string, html: string): Page => __metrics.wrapSync({
-  id: "reference-catalog.infrastructure.pages.readPage", kind: "io", document_id: path,
-}, readPageImpl)(path, html);
+readPage=__metrics.wrapSync({id:"reference-catalog.infrastructure.pages.readPage",kind:"io"},readPage);
