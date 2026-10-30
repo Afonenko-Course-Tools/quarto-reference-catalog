@@ -22,3 +22,11 @@
 `quarto run tests/body-links.ts`. Общий native Core→QRC→Download fixture находится
 в Download `tests/public-inventory.ts`; он не заменяет приёмку штатного Publisher
 и установленных Java/SP consumers.
+
+`bindConditionLinks` также принимает `sources`: точную public native карту
+owner-relative source → output-root-relative HTML. Query/anchor сохраняются,
+расширение исходника не подменяется предположением. `resourceLinks` явно оставляет
+файловые ссылки owner materializer. `catalogBaseUrl` отделяет базу общего
+reference catalog от base текущего mounted owner. `public.ts` предоставляет
+`publishReferenceCatalog` для текущих HTML outputs; Publisher не импортирует
+private QRC infrastructure entrypoint.
