@@ -23,7 +23,7 @@ Deno.writeTextFileSync(
       dependencies: {
         ...{
           "quarto-reference-catalog": "v3.2.0",
-          "quarto-project-publish": "v5.1.4",
+          "quarto-project-publish": "v5.2.0",
         },
         quarto: new TextDecoder().decode(version.stdout).trim(),
       },

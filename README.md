@@ -192,12 +192,11 @@ quarto run tests/portal-configured.ts
 
 Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний
 checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`.
-CI закрепляет точный SHA кандидата Site 5.1.4. Согласуемая матрица Core 8.2.3 /
-Site 5.1.4 / QRC 3.1.1 / Download 3.2.2 требует отдельной проверки итоговых refs
-и установленного состава; прежний CI не подтверждает новую матрицу. Эти
-companion-проверки не вводят обязательную зависимость самостоятельного QRC.
-Пример дополнительно проверяет JSON через CUE. Браузерный тест:
-`npm ci && npm run test:browser`.
+CI закрепляет отдельно проверенный Site 5.2.0
+`0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff`. Текущий кандидат QRC3.2.0 сохраняет
+main ABI1/document/process context и публичную B3 адресацию. Прежняя матрица
+Core8.2.3/Site5.1.4/QRC3.1.1/Download3.2.2 остаётся историческим контекстом;
+она не подтверждает новые exact refs или установленный состав.
 
 Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом), Lua и CUE. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 

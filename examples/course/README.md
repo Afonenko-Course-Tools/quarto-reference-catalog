@@ -1,7 +1,7 @@
 # Книга и две презентации
 
 Пример использует native root website и опциональный course-site, поставляемый
-репозиторием quarto-project-publish. Текущие кандидаты — QRC 3.2.0 и Site 5.1.4
+репозиторием quarto-project-publish. Текущие кандидаты — QRC 3.2.0 и Site 5.2.0
 (**unreleased**). До публикации тегов проверяйте целые локальные checkout;
 `task install` применяется после их публикации. Hooks используют GitHub namespace
 Afonenko-Course-Tools.
