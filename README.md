@@ -3,7 +3,7 @@
 Действующие правила: [индекс спецификаций](spec/index.md) и [контракт QRC](docs/contract.md).
 Текущий ref — кандидат **3.2.0**. Версия определяется descriptor; контракт
 и документация выпуска читаются из того же тега, что и код. Изменения main после выпущенного тега —
-**unreleased**. Минимум — Quarto 1.11.5; при использовании Core требуется CUE 0.17.1.
+**unreleased**. Минимум — Quarto 1.11.5. Контракты каталога и конфигурации проверяются исполняемым TypeScript.
 
 QRC собирает цели из готовых HTML и Reveal-презентаций, разрешает ссылки между ними и по умолчанию публикует все собственные цели для других проектов. Форматы остаются стандартными `html` и `revealjs`. Расширение не собирает подпроекты и не управляет их размещением. Каталог содержит идентичность и адреса целей; он не включает тела заданий, машинные ключи, семантический граф prerequisites или учёт успеваемости.
 
@@ -198,9 +198,9 @@ main ABI1/document/process context и публичную B3 адресацию. 
 Core8.2.3/Site5.1.4/QRC3.1.1/Download3.2.2 остаётся историческим контекстом;
 она не подтверждает новые exact refs или установленный состав.
 
-Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом), Lua и CUE. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
+Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом) и Lua. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 
-Структурная спецификация конфигурации: каталог `spec/` (`cue vet ./spec`).
+Исполняемые контракты конфигурации: `_extensions/reference-catalog/infrastructure/config.ts`, `import-config.ts`, `export-config.ts`. Публикуемые каталоги проверяет тот же `catalog-validation.ts`, который используется при импорте. Проверки выполняются в TS без внешнего валидатора.
 Целостность namespace/ID и ссылок проверяется при связывании готовых страниц.
 Эти проверки адресации не определяют учебные зависимости, циклы prerequisites
 или тематическую карту курса.

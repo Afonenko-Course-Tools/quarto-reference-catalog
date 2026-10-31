@@ -1,4 +1,4 @@
-name: Проверка Quarto и CUE
+name: Проверка Quarto и исполняемых TS-контрактов
 
 on:
   pull_request:
@@ -31,17 +31,14 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
         with:
           version: ${{ matrix.quarto }}
-      - uses: cue-lang/setup-cue@b0e30e540a2dae47304ebf16586a5b2db023b61c # v2.0.0
-        with:
-          version: v0.17.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff # Site 5.2.0: отдельно проверенный кандидат
+          ref: 710c40b281998a61530654a160d372861d8e1df5 # Site 5.2.0: CUE-free companion, production bytes сохранённой merge-линии
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "710c40b281998a61530654a160d372861d8e1df5"
       - name: Детерминированная сериализация QRC
         run: |
           quarto run tests/metadata-order.ts
@@ -51,7 +48,6 @@ jobs:
       - name: Версии инструментов
         run: |
           quarto --version
-          cue version
       - name: Проверка режима off и контекста ABI 1
         run: |
           quarto run tests/performance.ts
@@ -91,7 +87,7 @@ jobs:
         run: quarto run tests/navigation.ts
       - name: Профили составного проекта
         run: quarto run tests/composition.ts
-      - name: Сборка примера и проверка каталога CUE
+      - name: Сборка примера и проверка каталога TS
         run: quarto run tests/example.ts
       - name: Установка браузерных зависимостей
         run: |
