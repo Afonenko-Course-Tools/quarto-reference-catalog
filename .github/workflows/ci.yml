@@ -37,9 +37,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: v5.0.0
+          ref: 0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff # Site 5.2.0: отдельно проверенный кандидат
           path: .ci/course-site
           persist-credentials: false
+      - name: Проверить закреплённый Site
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff"
       - name: Детерминированная сериализация QRC
         run: |
           quarto run tests/metadata-order.ts
@@ -50,14 +52,22 @@ jobs:
         run: |
           quarto --version
           cue version
-      - name: Проверка режима off без доступа к часам
-        run: quarto run tests/performance.ts
+      - name: Проверка режима off и контекста ABI 1
+        run: |
+          quarto run tests/performance.ts
+          quarto run tests/performance-context.ts
+          quarto run tests/performance-noenv.ts
+          quarto run tests/performance-document-context.ts
+          COURSE_PERF_MODE=summary quarto pandoc --lua-filter tests/performance-filter-context.lua --to plain < /dev/null
+          quarto run tests/performance-native-context.ts
       - name: Источники каталогов и оформление ссылок
         run: |
           quarto run tests/demo-external.ts
           quarto run tests/diagnostics.ts
           quarto run tests/export-context.ts
           quarto run tests/body-links.ts
+          quarto run tests/condition-links.ts
+          quarto run tests/native-source-addresses.ts
           quarto run tests/local-linking.ts
           quarto run tests/local-outputs.ts
           quarto run tests/local-imports.ts
