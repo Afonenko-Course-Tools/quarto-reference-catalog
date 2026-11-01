@@ -192,11 +192,10 @@ quarto run tests/portal-configured.ts
 
 Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний
 checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`.
-CI закрепляет отдельно проверенный Site 5.2.0
-`0342fb7cd22e6c06aa345239c5d6e2ee6c3eb7ff`. Текущий кандидат QRC3.2.0 сохраняет
-main ABI1/document/process context и публичную B3 адресацию. Прежняя матрица
-Core8.2.3/Site5.1.4/QRC3.1.1/Download3.2.2 остаётся историческим контекстом;
-она не подтверждает новые exact refs или установленный состав.
+Точный контрольный commit Publisher задаётся [CI](.github/workflows/ci.yml)
+того же Git ref. Кандидат QRC 3.2.0 сохраняет ABI 1, контекст документов/процессов
+и публичную адресацию. Реальный CI и установленный состав проверяются отдельно;
+результаты прежних матриц не являются проверкой новой связки.
 
 Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом) и Lua. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 
