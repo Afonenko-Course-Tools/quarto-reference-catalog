@@ -33,18 +33,30 @@ jobs:
           version: ${{ matrix.quarto }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          repository: Afonenko-Course-Tools/quarto-course
+          ref: 946ad619830aa1affcbdaf4b5b447324e3d41002 # Core 9.0.0: exact source candidate
+          path: .ci/course-core
+          persist-credentials: false
+      - name: Проверить закреплённый Core
+        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "946ad619830aa1affcbdaf4b5b447324e3d41002"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 710c40b281998a61530654a160d372861d8e1df5 # Site 5.2.0: CUE-free companion, production bytes сохранённой merge-линии
+          ref: b019ac08a5ab473a70e04589e1b125d977281373 # Site 5.2.0: production-stable companion, independent review/release pending
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "710c40b281998a61530654a160d372861d8e1df5"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "b019ac08a5ab473a70e04589e1b125d977281373"
+      - name: Согласованность guard outputs и публичных типов
+        run: quarto run tests/contract-consistency.ts
       - name: Детерминированная сериализация QRC
         run: |
           quarto run tests/metadata-order.ts
           quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
       - name: Путь к native композиции
-        run: echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
+        run: |
+          echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
+          echo "CORE=$GITHUB_WORKSPACE/.ci/course-core" >> "$GITHUB_ENV"
       - name: Версии инструментов
         run: |
           quarto --version

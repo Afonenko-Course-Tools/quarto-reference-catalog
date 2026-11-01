@@ -14,8 +14,8 @@ vocabulary, architecture, reference и plan; `component` указывает вл
 | Документ | type | component | status |
 | --- | --- | --- | --- |
 | [Контракт QRC](../docs/contract.md) | contract | reference-catalog | current |
-| [Авторская конфигурация](config.cue) | contract/schema | reference-catalog | current |
-| [JSON каталога](../schemas/catalog.schema.json) | contract/schema | reference-catalog | current |
+| [Авторская конфигурация](../_extensions/reference-catalog/infrastructure/config.ts) | contract/schema | reference-catalog | current |
+| [Исполняемый контракт каталога](../_extensions/reference-catalog/infrastructure/catalog-validation.ts) | contract/schema | reference-catalog | current |
 | [Стили ссылок](../_extensions/reference-catalog/vocabulary/reference-styles.json) | vocabulary | reference-catalog | current |
 | [Архитектура](../docs/architecture.md) | architecture | reference-catalog | current |
 | [Диагностика](../docs/diagnostics.md) | reference | reference-catalog | current |
@@ -26,7 +26,9 @@ vocabulary, architecture, reference и plan; `component` указывает вл
 QRC владеет namespace/imports/exports, адресацией, local/full связыванием и каталогом текущих outputs. Publisher владеет составом; Core — банком, работами, назначениями и Body. QRC не переносит тела заданий.
 
 Версия пакета определяется [descriptor](../_extensions/reference-catalog/_extension.yml) того же Git ref.
-Quarto 1.11.5 и CUE 0.17.1 согласованы с текущими правилами Core.
+Целевой Quarto — 1.11.5; исполняемые контракты локальные TypeScript.
+Target/Catalog/Import/Exports выводятся из фактических validators и projection импорта;
+отдельной JSON-схемы и внешнего schema validator нет.
 Текущий ref — кандидат **3.2.0**. Изменения main после выпущенного тега — **unreleased**.
 Документация установленного выпуска читается из того же immutable tag, что и код.
 
@@ -36,8 +38,10 @@ Quarto 1.11.5 и CUE 0.17.1 согласованы с текущими прав�
 пакетный `publish` сохраняет общий контекст. Только активный контекст агента
 использует полный снимок окружения через `childEnv` и `clearEnv: true`.
 Identity/off/недоступный режим/отсутствующий агент сохраняют прежние env overrides,
-наследование и разрешения. Авторская конфигурация,
-JSON-схема каталога и словарь стилей не меняются; нового общего runtime нет.
-Согласуемая матрица Core 8.2.3 / Site 5.1.4 / QRC 3.1.1 / Download 3.2.2 требует
-собственных проверок точных refs и установленного состава. Полное семантическое
+наследование и разрешения. Поведение авторской конфигурации, JSON каталога и словаря стилей сохраняется;
+нового общего runtime нет.
+Историческая матрица ABI 1 не задаёт текущие component pins.
+Для кандидата 3.2.0 CI закрепляет Core 946ad61 (9.0.0) и production-stable
+Publisher companion b019ac08; companion ещё требует независимой рецензии, а
+финальные межкомпонентные CI и installed состав проверяются отдельно. Полное семантическое
 покрытие функций и прохождение матрицы этим описанием не заявляются.
