@@ -1,4 +1,4 @@
-name: Проверка Quarto и CUE
+name: Проверка Quarto и исполняемых TS-контрактов
 
 on:
   pull_request:
@@ -31,27 +31,35 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
         with:
           version: ${{ matrix.quarto }}
-      - uses: cue-lang/setup-cue@b0e30e540a2dae47304ebf16586a5b2db023b61c # v2.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          version: v0.17.1
+          repository: Afonenko-Course-Tools/quarto-course
+          ref: 946ad619830aa1affcbdaf4b5b447324e3d41002 # Core 9.0.0: exact source candidate
+          path: .ci/course-core
+          persist-credentials: false
+      - name: Проверить закреплённый Core
+        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "946ad619830aa1affcbdaf4b5b447324e3d41002"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 9a23c6ba30f0fda27eee8ae7c39e8ac2796fbdfd # Site 5.1.4: точный кандидат
+          ref: b019ac08a5ab473a70e04589e1b125d977281373 # Site 5.2.0: production-stable companion, independent review/release pending
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "9a23c6ba30f0fda27eee8ae7c39e8ac2796fbdfd"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "b019ac08a5ab473a70e04589e1b125d977281373"
+      - name: Согласованность guard outputs и публичных типов
+        run: quarto run tests/contract-consistency.ts
       - name: Детерминированная сериализация QRC
         run: |
           quarto run tests/metadata-order.ts
           quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
       - name: Путь к native композиции
-        run: echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
+        run: |
+          echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
+          echo "CORE=$GITHUB_WORKSPACE/.ci/course-core" >> "$GITHUB_ENV"
       - name: Версии инструментов
         run: |
           quarto --version
-          cue version
       - name: Проверка режима off и контекста ABI 1
         run: |
           quarto run tests/performance.ts
@@ -66,6 +74,8 @@ jobs:
           quarto run tests/diagnostics.ts
           quarto run tests/export-context.ts
           quarto run tests/body-links.ts
+          quarto run tests/condition-links.ts
+          quarto run tests/native-source-addresses.ts
           quarto run tests/local-linking.ts
           quarto run tests/local-outputs.ts
           quarto run tests/local-imports.ts
@@ -89,7 +99,7 @@ jobs:
         run: quarto run tests/navigation.ts
       - name: Профили составного проекта
         run: quarto run tests/composition.ts
-      - name: Сборка примера и проверка каталога CUE
+      - name: Сборка примера и проверка каталога TS
         run: quarto run tests/example.ts
       - name: Установка браузерных зависимостей
         run: |

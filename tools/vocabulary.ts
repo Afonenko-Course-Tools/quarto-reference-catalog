@@ -20,7 +20,5 @@ export function vocabularyProjections(styles: string[]): Map<string, string> {
       `// ${header}\nexport const referenceStyles = [${quoted.join(", ")}] as const;\n`],
     ["_extensions/reference-catalog/lua/generated/reference-styles.lua",
       `-- ${header}\nreturn {\n${quoted.map(style => `  [${style}] = true,`).join("\n")}\n}\n`],
-    ["spec/reference-styles.cue",
-      `// ${header}\npackage catalog\n\n#ReferenceStyle: ${quoted.join(" | ")}\n`],
   ]);
 }

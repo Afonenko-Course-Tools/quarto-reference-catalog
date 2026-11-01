@@ -2,11 +2,11 @@ import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join, resolve } from "stdlib/path";
 import { attr, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import type { Catalog } from "../_extensions/reference-catalog/domain/model.ts";
+import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
 const root = await Deno.makeTempDir({ prefix: "qrc-example-" });
 const quarto = Deno.env.get("QUARTO") || "quarto";
-const cue = Deno.env.get("CUE") || "cue";
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
@@ -44,10 +44,10 @@ try {
   await run(quarto, ["render", "--fail-if-warnings"]);
   const output = join(root, "_site");
   const catalogPath = join(output, "reference-catalog.json");
-  const schema = join(repo, "schemas/catalog.schema.json");
-  const vet = ["vet", "-c", "jsonschema:", schema, "json:"];
-  await run(cue, [...vet, catalogPath]);
-  const catalog: Catalog = JSON.parse(await Deno.readTextFile(catalogPath));
+  // Тот же исполняемый контракт, который принимает каталог в runtime.
+  const catalog: Catalog = validateImportedCatalog(
+    JSON.parse(await Deno.readTextFile(catalogPath)), catalogPath,
+  );
   for (const key of ["book:sec-objects", "book:fig-demo", "lectures:sec-memory", "practice:exr-demo"])
     assert(catalog.targets[key], `Missing example target: ${key}`);
   assert((await Deno.stat(join(output, "index.html"))).isFile, "Native landing page is missing");
@@ -73,7 +73,7 @@ try {
     if (document) {
       assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), `Independent native project lost lang ru: ${path}`);
       const qmd = path.slice(output.length + 1).replace(/\.html$/, ".qmd").replace("lectures/01/lecture-memory.qmd", "lectures/01/memory.qmd");
-      const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.1.1/examples/course/${qmd}`;
+      const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.2.0/examples/course/${qmd}`;
       const sourceLinks = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
       // Native Quarto renders one desktop action and a hidden mobile counterpart.
       // Count authored duplicates separately from that native responsive placement.
@@ -108,10 +108,12 @@ try {
     if (target.slide) assert(ids?.has(target.slide), `Missing Revealjs slide: ${key}`);
   }
   // A success-only test could miss an accidentally disabled schema check.
-  const invalid = join(root, "invalid-catalog.json");
-  await Deno.writeTextFile(invalid, JSON.stringify({ ...catalog, schema: "invalid" }));
-  await run(cue, [...vet, invalid], "schema");
-  console.log(`PASS example: installed local extension, HTML + Revealjs, CUE catalog, ${links} local links and all catalog anchors`);
+  let invalid: unknown;
+  try { validateImportedCatalog({ ...catalog, schema: "invalid" }, catalogPath); }
+  catch (error) { invalid = error; }
+  assert(String(invalid).includes("QRC.IMPORT_INVALID") && String(invalid).includes("schema"),
+    "Исполняемый контракт обязан отклонить неверную схему каталога");
+  console.log(`PASS example: installed local extension, HTML + Revealjs, TS catalog contract, ${links} local links and all catalog anchors`);
 } finally {
   await Deno.remove(root, { recursive: true });
 }
