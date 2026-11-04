@@ -1,3 +1,5 @@
+import { deepStrictEqual } from "node:assert";
+import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { dirname, join, toFileUrl } from "stdlib/path";
 import { parseImports } from "../_extensions/reference-catalog/infrastructure/import-config.ts";
 import { importTargets } from "../_extensions/reference-catalog/infrastructure/imports.ts";
@@ -30,7 +32,19 @@ const consumer = join(root, "java");
 const sibling = join(root, "os", "reference.json");
 await Deno.mkdir(consumer);
 await Deno.mkdir(dirname(sibling));
-await Deno.writeTextFile(sibling, JSON.stringify(fixture));
+const metadataCatalog = {
+  ...fixture,
+  version: "метаданные каталога",
+  generator: { ...fixture.generator, version: "метаданные генератора" },
+  publication: { title: "Operating systems", extra: { description: "метаданные публикации" } },
+  targets: {
+    ...fixture.targets,
+    "book:sec-memory": { ...fixture.targets["book:sec-memory"], extra: ["метаданные цели"] },
+  },
+};
+// Дополнительные данные принимаются, но потребитель получает только поля каталога.
+deepStrictEqual(validateImportedCatalog(metadataCatalog, sibling), fixture);
+await Deno.writeTextFile(sibling, JSON.stringify(metadataCatalog));
 let reads = 0;
 const server = Deno.serve({ hostname: "127.0.0.1", port: 0, onListen() {} }, (request) => {
   const path = new URL(request.url).pathname;
@@ -98,8 +112,8 @@ try {
 
   const malformed: [unknown, string][] = [
     [{ ...fixture, generator: null }, "поле generator каталога"],
-    [{ ...fixture, generator: { quarto: "test", version: "1" } }, "недопустимое поле version"],
-    [{ ...fixture, version: "1" }, "недопустимое поле version"],
+    [{ ...fixture, generator: { quarto: 1 } }, "поле generator каталога"],
+    [{ ...fixture, targets: { "book:sec-memory": null } }, "ожидается объект"],
     [{ ...fixture, targets: [] }, "поле targets каталога"],
     [{ ...fixture, publication: { title: 10 } }, "publication.title"],
   ];
