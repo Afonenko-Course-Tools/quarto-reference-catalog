@@ -46,7 +46,7 @@ const originalFetch = globalThis.fetch;
 const foreign = new Error("FOREIGN.NETWORK_ID: connection refused");
 try {
   globalThis.fetch = () => Promise.reject(foreign);
-  let failure: any;
+  let failure: unknown;
   try { await readCatalogSource(source); } catch (error) { failure = error; }
   assert(failure instanceof Error && failure.name === "ExternalToolFailure" && failure.cause === foreign && failure.message.includes(source) && failure.message.includes("FOREIGN.NETWORK_ID"), `HTTP refusal lost selected source/foreign cause: ${failure}`);
   globalThis.fetch = () => Promise.resolve(new Response("FOREIGN.CATALOG_ID: unavailable", { status: 503, statusText: "Unavailable" }));

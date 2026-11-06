@@ -1,3 +1,4 @@
+import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
 import { Parser } from "../_extensions/reference-catalog/vendor/parse5/dist/index.js";
 import { updateSearch } from "../_extensions/reference-catalog/infrastructure/search.ts";
@@ -49,7 +50,7 @@ try {
   ].map(([path, html]) => [path, readPage(path, html)]));
   await updateSearch(root, files, pages);
   assert(parses === 2, `Expected one final HTML parse per page, got ${parses}`);
-  const first = JSON.parse(await Deno.readTextFile(files[0])).map((
+  const first = (await readSearch(files[0])).map((
     row: { text: string },
   ) => row.text);
   assert(
@@ -66,7 +67,7 @@ try {
   );
   assert(
     JSON.stringify(
-      JSON.parse(await Deno.readTextFile(files[1])).map((
+      (await readSearch(files[1])).map((
         row: { text: string },
       ) => row.text),
     ) === '["first match","Other text"]',
@@ -80,7 +81,7 @@ try {
   await updateSearch(root, files, pages);
   assert(parses === 0, "Search reparsed already supplied current pages");
   assert(
-    JSON.parse(await Deno.readTextFile(files[0]))[1].text ===
+    (await readSearch(files[0]))[1].text ===
       "changed linked caption",
     "A later search operation retained stale linked HTML",
   );

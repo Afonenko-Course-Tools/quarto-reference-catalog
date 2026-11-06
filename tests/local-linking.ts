@@ -8,7 +8,7 @@ function assert(value: unknown, message: string): asserts value {
 }
 function rejects(action: () => unknown, message: string, code = "QRC.TARGET_UNKNOWN") {
   try { action(); } catch (error) {
-    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : ("code" in error && error.code) === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), String(error));
     return;
   }

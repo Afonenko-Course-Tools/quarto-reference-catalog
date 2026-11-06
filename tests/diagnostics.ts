@@ -10,7 +10,7 @@ import { postConfiguration, postOutputDirectory } from "../_extensions/reference
 function assert(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 async function rejects(action: () => unknown, code: string, fragments: string[]) {
   try { await action(); } catch (error) {
-    assert(error instanceof Error && error.name === "ExtensionDiagnostic" && (error as Error & { code?: string }).code === code, `Expected ${code}, got ${error}`);
+    assert(error instanceof Error && error.name === "ExtensionDiagnostic" && ("code" in error && error.code) === code, `Expected ${code}, got ${error}`);
     for (const fragment of fragments) assert(error.message.includes(fragment), `Missing context ${fragment}: ${error.message}`);
     return error;
   }

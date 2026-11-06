@@ -36,7 +36,7 @@ export async function loadBodyLinks(options: {
   catalogFile: string; baseUrl: string; root: string; namespace: string; imports?: unknown;
 }) {
   if (!namespacePattern.test(options.namespace)) throw diagnostic("QRC.CONFIG_INVALID", "Body требует namespace проекта", {source: options.root, field: "namespace"});
-  const catalog = JSON.parse(await readCatalogSource(options.catalogFile));
+  const catalog: unknown = JSON.parse(await readCatalogSource(options.catalogFile));
   const imports = parseImports(options.imports, options.root, [options.namespace]);
   return createBodyLinks({catalog, baseUrl: options.baseUrl, importedTargets: await importTargets(imports)});
 }

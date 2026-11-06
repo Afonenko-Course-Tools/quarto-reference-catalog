@@ -1,3 +1,4 @@
+import { readCatalog } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -98,7 +99,7 @@ Known local target: @book:sec-current.
   const chapter = nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-later")!;
   assert(attr(chapter, "data-qrc-deferred") === "true" && content(chapter) === "Read the later chapter", "Missing same-namespace chapter facts were not deferred");
   assert(nodes.some(node => attr(node, "data-qrc-ref") === "book:sec-current" && attr(node, "href") === "index.html#sec-current"), "Known native local target was not resolved");
-  const partial = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+  const partial = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(Object.keys(partial.targets).join() === "book:sec-current", "Native selected render exported unavailable chapter facts");
 
   const context = { root, stage, quarto: "native-test", config: { "reference-catalog": { namespace: "book" } }, members: [{ namespace: "book", format: "html" }], outputs: ["_site/index.html"] };
@@ -140,7 +141,7 @@ Known local target: @book:sec-current.
   imported.targets["practice:sec-external"].page = "current.html";
   await Deno.writeTextFile(join(root, "external.json"), JSON.stringify(imported));
   await publish({ ...current, scope: "full" });
-  const publicCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog.json")));
+  const publicCatalog = await readCatalog(join(stage, "reference-catalog.json"));
   assert(Object.keys(publicCatalog.targets).join() === "book:sec-current,book:sec-later", "Native default full export must publish current own chapters without imported targets");
   nodes = await links();
   const finalExternal = nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!;

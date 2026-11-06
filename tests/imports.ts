@@ -12,7 +12,7 @@ function equal(actual: unknown, expected: unknown, message: string) {
 async function rejects(action: () => unknown | Promise<unknown>, message: string, code = "QRC.IMPORT_INVALID") {
   try { await action(); }
   catch (error) {
-    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : ("code" in error && error.code) === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), `Expected error containing ${message}; got ${error}`);
     return;
   }

@@ -1,3 +1,4 @@
+import { jsonValue, record } from "./support.ts";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 const repo = dirname(dirname(fromFileUrl(import.meta.url))),
   root = await Deno.makeTempDir({ prefix: "qrc-export-context-" });
@@ -25,14 +26,16 @@ try {
     '---\nfilters: [reference-catalog]\nreference-catalog: {namespace: bank}\ncourse-export-context: true\n---\n\n{{< xref other exr-task "Authored label" >}}\n\n@other:exr-second\n',
   );
   await run(["render", "bank.qmd", "--to", "json", "--output", "bank.json"]);
-  const document = JSON.parse(await Deno.readTextFile(join(root, "bank.json")));
-  const markers: any[] = [];
-  function walk(value: any) {
+  const document = jsonValue(await Deno.readTextFile(join(root, "bank.json")));
+  const markers: Record<string, unknown>[] = [];
+  function walk(value: unknown) {
     if (!value || typeof value !== "object") return;
     if (
-      value.t === "Span" &&
-      value.c[0][2].some(([key]: string[]) => key === "data-qrc-ref")
-    ) markers.push(value);
+      !Array.isArray(value) && "t" in value && value.t === "Span" &&
+      "c" in value && Array.isArray(value.c) && Array.isArray(value.c[0]) &&
+      Array.isArray(value.c[0][2]) && value.c[0][2].some((pair: unknown) =>
+        Array.isArray(pair) && pair[0] === "data-qrc-ref")
+    ) markers.push(record(value));
     for (const item of Object.values(value)) {
       if (Array.isArray(item)) item.forEach(walk);
       else if (typeof item === "object") walk(item);

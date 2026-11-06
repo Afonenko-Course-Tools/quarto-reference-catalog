@@ -71,7 +71,7 @@ esac
     outcome("failure"),
   ]);
   assert(baseline[1] === "PRIVATE_STDOUT\n", "Exit zero plus WARNING must remain success");
-  let failure: any;
+  let failure: unknown;
   try { await quarto(["render", "."], root, { MODE: "failure" }); } catch (error) { failure = error; }
   const nativeFailure = failure as Error & { tool: string; exitCode: number; stdout: string; stderr: string };
   assert(failure instanceof Error && nativeFailure.name === "ExternalToolFailure" && nativeFailure.tool === fake && nativeFailure.exitCode === 23 && nativeFailure.stdout === "PRIVATE_STDOUT\n" && nativeFailure.stderr === "WARNING: PRIVATE_FAILURE\n" && nativeFailure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);

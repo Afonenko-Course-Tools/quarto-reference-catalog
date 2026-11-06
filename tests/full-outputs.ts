@@ -1,3 +1,4 @@
+import { readCatalog } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
@@ -7,7 +8,7 @@ function assert(value: unknown, message: string): asserts value {
 async function rejects(action: () => Promise<void>, message: string, code = "QRC.OUTPUT_INVALID") {
   let failed = false;
   try { await action(); } catch (error) {
-    assert(error instanceof Error && (error as Error & { code?: string }).code === code, `Expected ${code}: ${error}`);
+    assert(error instanceof Error && ("code" in error && error.code) === code, `Expected ${code}: ${error}`);
     failed = true;
   }
   assert(failed, message);
@@ -23,7 +24,7 @@ try {
   await Deno.writeTextFile(join(stage, "malformed.html"), '<div class="qrc-probes" data-qrc-namespace="book"><div class="qrc-probe" data-qrc-id="sec-broken"></div></div>');
   await publish(context);
   assert(await Deno.readTextFile(join(stage, "stale.html")) === html, "Full finalization rewrote unrelated retained HTML");
-  const catalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog.json")));
+  const catalog = await readCatalog(join(stage, "reference-catalog.json"));
   assert(Object.keys(catalog.targets).join() === "book:sec-current", "Full catalog included noncurrent target facts");
   assert((await Deno.readTextFile(join(stage, "current.html"))).includes('href="current.html#sec-current">Current caption'), "Current full target was not linked");
   await rejects(() => publish({ ...context, outputs: ["stage/missing.html"] }), "Full finalization accepted a missing current output");

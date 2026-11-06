@@ -1,3 +1,4 @@
+import { readCatalog } from "./support.ts";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 
 function assert(value: unknown, message: string): asserts value {
@@ -46,7 +47,7 @@ esac
   for (const fileList of [false, true]) {
     const result = await hook({ config, quarto: { version: "1.11.5-fixture" } }, fileList);
     assert(result.success, `Post не использовал готовую версию inspect: ${new TextDecoder().decode(result.stderr)}`);
-    const catalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+    const catalog = await readCatalog(join(stage, "reference-catalog-local.json"));
     assert(catalog.generator.quarto === "1.11.5-fixture", "Каталог потерял native версию inspect");
     assert((await Deno.readTextFile(trace)) === `inspect\n${root}\n--profile\nteacher,ru\n`, "Post изменил effective profiles или повторно запустил Quarto");
     assert(await Deno.readTextFile(join(stage, "retained.html")) === retained, "Post прочитал или изменил retained output вне текущего списка");

@@ -1,3 +1,4 @@
+import { readCatalog, jsonValue, record, strings } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import type { Catalog } from "../_extensions/reference-catalog/domain/model.ts";
@@ -34,7 +35,7 @@ async function render(workspace: string, expectedError?: string, outputDir?: str
   // A standalone native hook is local; exporting a public catalog is explicit full work.
   const inspected = await new Deno.Command(quarto, { args: ["inspect", workspace], cwd: workspace, stdout: "piped", stderr: "piped" }).output();
   assert(inspected.success, new TextDecoder().decode(inspected.stderr));
-  await publish({ root: workspace, stage: join(workspace, outputDir ?? "_site"), quarto: "native-integration", config: JSON.parse(new TextDecoder().decode(inspected.stdout)).config, members: [{ namespace: "book", format: "html" }], scope: "full", outputs: JSON.parse(await Deno.readTextFile(join(workspace, "current-outputs.json"))) });
+  await publish({ root: workspace, stage: join(workspace, outputDir ?? "_site"), quarto: "native-integration", config: record(record(jsonValue(new TextDecoder().decode(inspected.stdout))).config), members: [{ namespace: "book", format: "html" }], scope: "full", outputs: strings(jsonValue(await Deno.readTextFile(join(workspace, "current-outputs.json")))) });
 }
 async function rejects(action: () => unknown | Promise<unknown>, message: string) {
   try { await action(); }
@@ -80,7 +81,7 @@ reference-catalog:
 ${extra}`;
 }
 async function catalog(workspace: string): Promise<Catalog> {
-  return JSON.parse(await Deno.readTextFile(join(workspace, "_site/reference-catalog.json")));
+  return await readCatalog(join(workspace, "_site/reference-catalog.json"));
 }
 async function page(workspace: string, name = "index.html"): Promise<Element[]> {
   return elements(parseHtml(await Deno.readTextFile(join(workspace, "_site", name))));
