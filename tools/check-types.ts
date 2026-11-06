@@ -1,6 +1,7 @@
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { isRecord } from "../_extensions/reference-catalog/infrastructure/import-config.ts";
 
+async function main(): Promise<void> {
 const root = dirname(dirname(fromFileUrl(import.meta.url)));
 const mode = Deno.args[0] ?? "--typescript";
 if (!["--typescript", "--browser", "--lua"].includes(mode) || Deno.args.length > 1) {
@@ -43,13 +44,14 @@ if (mode === "--lua") {
     const path = join(temporary, "luarc.json");
     await Deno.writeTextFile(path, JSON.stringify(config));
     const result = await new Deno.Command("lua-language-server", {
-      args: [`--check=${root}`, "--checklevel=Warning", `--configpath=${path}`, `--logpath=${temporary}`, "--num_threads=1"],
+      args: [`--check=${root}`, "--checklevel=Warning", "--check_format=json", `--check_out_path=${join(temporary, "check.json")}`, `--configpath=${path}`, `--logpath=${temporary}`, "--num_threads=1"],
       cwd: root, stdout: "inherit", stderr: "inherit",
     }).output();
-    if (!result.success) Deno.exit(result.code);
-    console.log(`Проверено Lua: ${files.filter(entry => entry.gate === "lua").length}`);
+    console.log(await Deno.readTextFile(join(temporary, "check.json")));
+    if (!result.success) Deno.exitCode = result.code;
+    else console.log(`Проверено Lua: ${files.filter(entry => entry.gate === "lua").length}`);
   } finally { await Deno.remove(temporary, { recursive: true }); }
-  Deno.exit(0);
+  return;
 }
 const selected = mode === "--typescript" ? "deno" : "browser";
 const targets = files.filter(entry => entry.gate === selected).map(entry => join(root, entry.path));
@@ -70,8 +72,11 @@ try {
     stdout: "inherit",
     stderr: "inherit",
   }).output();
-  if (!result.success) Deno.exit(result.code);
-  console.log(`Проверено типов: ${targets.length}; состав: ${files.length}`);
+  if (!result.success) Deno.exitCode = result.code;
+  else console.log(`Проверено типов: ${targets.length}; состав: ${files.length}`);
 } finally {
   await Deno.remove(map);
 }
+
+}
+await main();

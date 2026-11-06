@@ -78,7 +78,9 @@ Finished.
   let server;
   try {
     const script = await fs.readFile(navigationPath, "utf8");
-    for (const [name, content] of [["book", book], ["slides", slides]]) {
+    /** @type {[string, string][]} */
+    const renderFixtures = [["book", book], ["slides", slides]];
+    for (const [name, content] of renderFixtures) {
       await fs.writeFile(path.join(root, `${name}.qmd`), content);
       const render = spawnSync(quarto, ["render", `${name}.qmd`, "--fail-if-warnings"], { cwd: root, encoding: "utf8" });
       assert.equal(render.status, 0, render.stdout + render.stderr);
@@ -132,7 +134,7 @@ await Deno.writeTextFile(${JSON.stringify(path.join(root, "consumer.html"))}, li
     const consumer = spawnSync(quarto, ["run", "consumer.ts"], { cwd: root, encoding: "utf8" });
     assert.equal(consumer.status, 0, consumer.stdout + consumer.stderr);
     browser = await chromium.launch({
-      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}),
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
     });
     const page = await browser.newPage();
