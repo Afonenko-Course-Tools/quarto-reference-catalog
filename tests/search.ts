@@ -1,3 +1,4 @@
+import type { ParserOptions, TreeAdapterTypeMap } from "../_extensions/reference-catalog/types/parse5/dist/index.d.ts";
 import { required } from "./support.ts";
 import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
@@ -12,9 +13,10 @@ function assert(value: unknown, message: string): asserts value {
 const root = await Deno.makeTempDir({ prefix: "qrc-search-" });
 const parse = Parser.parse;
 let parses = 0;
-Parser.parse = function (...args: Parameters<typeof parse>) {
+Parser.parse = function <T extends TreeAdapterTypeMap>(html: string, options?: ParserOptions<T>): T["document"] {
   parses++;
-  return parse.apply(this, args);
+  const bound = parse.bind(this);
+  return bound<T>(html, options);
 };
 const files: [string, string] = [join(root, "search.json"), join(root, "nested/search.json")];
 async function writeRows() {

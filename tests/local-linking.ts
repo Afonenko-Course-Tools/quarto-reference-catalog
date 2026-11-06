@@ -45,7 +45,7 @@ assert(!elements(parseHtml(required(full.pages.get("index.html")))).some(node =>
 // A later call must use the supplied current facts and clear old deferred state.
 const next = linkPages([readPage("index.html", required(deferred.pages.get("index.html")))], "", [{ ...imported, label: "Current section", page: "current.html" }], "", "local");
 const current = anchors(required(next.pages.get("index.html")));
-assert(content(current[0]) === "Current section" && attr(current[0], "href") === "https://example.test/os/current.html#sec-memory", "A later invocation reused old catalog facts");
+assert(content(required(current[0])) === "Current section" && attr(required(current[0]), "href") === "https://example.test/os/current.html#sec-memory", "A later invocation reused old catalog facts");
 assert(current.every(node => attr(node, "data-qrc-deferred") === undefined), "A resolved target retained its deferred marker");
 
 rejects(() => linkPages([page], "", [], "", "full"), "неизвестная ссылка os:sec-memory");
