@@ -1,7 +1,7 @@
 import {createMetrics as __createMetrics} from "../observability/bridge.ts";
 const __metrics=__createMetrics("reference-catalog");
 // @deno-types="../types/parse5/index.d.ts"
-import { parse } from "../vendor/parse5/dist/index.js";
+import { parse, defaultTreeAdapter } from "../vendor/parse5/dist/index.js";
 // Тип дерева принадлежит parse5; адаптер не поддерживает параллельную модель HTML.
 import type { Element as ParseElement, Node as ParseNode, ChildNode as ParseChildNode } from "../types/parse5/tree-adapters/default.d.ts";
 export type Element = ParseElement;
@@ -48,3 +48,19 @@ function parseHtmlImpl(html: string) { return parse(html, { sourceCodeLocationIn
 
 export const replace = __metrics.wrapSync({id:"reference-catalog.infrastructure.html.replace",kind:"io"},replaceImpl);
 export const parseHtml = __metrics.wrapSync({id:"reference-catalog.infrastructure.html.parseHtml",kind:"io"},parseHtmlImpl);
+
+/** Изменения сохраняют реальное дерево parse5, включая двусторонние связи. */
+export function textNode(value: string): ChildNode {
+  return defaultTreeAdapter.createTextNode(value);
+}
+export function span(parent: Element, className: string, children: ChildNode[]): Element {
+  const node = defaultTreeAdapter.createElement("span", parent.namespaceURI, [{ name: "class", value: className }]);
+  node.parentNode = parent;
+  for (const child of children) defaultTreeAdapter.appendChild(node, child);
+  return node;
+}
+export function location(node: Element) {
+  const position = node.sourceCodeLocation;
+  if (!position) throw new Error(`QRC отсутствуют позиции HTML-элемента ${node.tagName}`);
+  return position;
+}

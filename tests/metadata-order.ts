@@ -20,7 +20,7 @@ for (const { probe, row, link } of variants) {
   const pending = linkPages([readPage("a.html", `<html><body><a ${link}>Отложенная <em>подпись</em></a></body></html>`)], "", [], "", "local");
   assert.equal(pending.links, 0);
   assert.equal(pending.deferred, 1);
-  const pendingLink = elements(parseHtml(required(pending.pages.get("a.html")))).find(node => node.tagName === "a")!;
+  const pendingLink = required(elements(parseHtml(required(pending.pages.get("a.html")))).find(node => node.tagName === "a"));
   assert.equal(attr(pendingLink, "href"), undefined);
   assert.equal(attr(pendingLink, "data-qrc-ref"), "book:sec-a");
   assert.equal(attr(pendingLink, "data-qrc-deferred"), "true");

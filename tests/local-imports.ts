@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -21,7 +22,7 @@ const context = {
   config: { "reference-catalog": { imports: { practice: { source: "sibling.json", namespace: "book", "base-url": "https://example.test/practice/" } } } },
 };
 async function anchor() {
-  return elements(parseHtml(await Deno.readTextFile(join(stage, "current.html")))).find(node => node.tagName === "a")!;
+  return required(elements(parseHtml(await Deno.readTextFile(join(stage, "current.html")))).find(node => node.tagName === "a"));
 }
 try {
   await Deno.mkdir(stage);

@@ -61,7 +61,9 @@ try {
       node.tagName === "img" && (attr(node, "src") ?? attr(node, "data-src"))?.endsWith("dot.svg")
     );
     assert(image, `Missing lecture demonstration image: ${page}`);
-    const target = resolve(dirname(page), (attr(image, "src") ?? attr(image, "data-src"))!);
+    const source = attr(image, "src") ?? attr(image, "data-src");
+    assert(source, `Missing image source: ${page}`);
+    const target = resolve(dirname(page), source);
     assert(target.startsWith(stage + "/"), `Lecture image escapes its native project output: ${target}`);
     assert((await Deno.stat(target)).isFile, `Missing native lecture resource: ${target}`);
   }

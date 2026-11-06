@@ -20,6 +20,11 @@ function slideOf(node: Element, path: string, key: string): string | undefined {
   return undefined;
 }
 function readPageImpl(path: string, html: string): Page {
+  function required(node: Element, field: string): string {
+    const value = attr(node, field);
+    if (!value) throw diagnostic("QRC.OUTPUT_INVALID", `отсутствует обязательный атрибут ${field}`, { source: `HTML-результат ${path}`, field });
+    return value;
+  }
   const root = parseHtml(html);
   const nodes = elements(root);
   const probes = nodes.filter((n) => hasClass(n, "qrc-probes"));
@@ -31,13 +36,13 @@ function readPageImpl(path: string, html: string): Page {
   }
   const targets: Target[] = [];
   for (const container of probes) {
-    const namespace = attr(container, "data-qrc-namespace")!;
+    const namespace = required(container, "data-qrc-namespace");
     const rows = elements(container).filter((n) => hasClass(n, "qrc-probe"));
     const paired = new Map<string, Map<string, { html: string; text: string }>>();
     const titles = new Map<string, string>();
     for (const row of rows) {
-      const id = attr(row, "data-qrc-id")!;
-      const style = attr(row, "data-qrc-style")!;
+      const id = required(row, "data-qrc-id");
+      const style = required(row, "data-qrc-style");
       const title = attr(row, "data-qrc-title");
       if (title !== undefined) titles.set(id, title);
       const pair = paired.get(id) ?? new Map();
@@ -50,7 +55,7 @@ function readPageImpl(path: string, html: string): Page {
       if (links.length !== 1 || !link || !content(link).trim()) {
         throw diagnostic("QRC.OUTPUT_INVALID", `Quarto не разрешил штатную ссылку ${namespace}:${id}/${style} в ${path}`, { source: `HTML-результат ${path}`, id: `${namespace}:${id}`, field: "native probe" });
       }
-      const url = new URL(attr(link, "href")!, `https://qrc.invalid/${path}`);
+      const url = new URL(required(link, "href"), `https://qrc.invalid/${path}`);
       if (decodeURIComponent(url.pathname).slice(1) !== path || decodeURIComponent(url.hash.slice(1)).replace(/^\//, "") !== id) {
         throw diagnostic("QRC.OUTPUT_INVALID", `изменился адрес штатной ссылки для ${namespace}:${id}: ${attr(link, "href")}`, { source: `HTML-результат ${path}`, id: `${namespace}:${id}`, field: "native probe" });
       }
@@ -64,9 +69,10 @@ function readPageImpl(path: string, html: string): Page {
       if (!label || !number) throw diagnostic("QRC.OUTPUT_INVALID", `неполная штатная ссылка-проба ${namespace}:${id}`, { source: `HTML-результат ${path}`, id: `${namespace}:${id}`, field: "native probe" });
       const slide = reveal ? slideOf(firstAnchor, path, `${namespace}:${id}`) : undefined;
       if (reveal && !slide) throw diagnostic("QRC.OUTPUT_INVALID", `цель ${id} находится вне слайда в ${path}`, { source: `HTML-результат ${path}`, id: `${namespace}:${id}`, field: "native probe" });
+      const title = titles.get(id);
       targets.push({ namespace, id, page: path, fragment: id, ...(slide === undefined ? {} : { slide }),
         labelHtml: label.html, numberHtml: number.html, label: label.text, number: number.text,
-        ...(titles.has(id) ? { title: titles.get(id)! } : {}) });
+        ...(title === undefined ? {} : { title }) });
     }
   }
   return { path, html, nodes, targets, probes, ids, reveal, root };
