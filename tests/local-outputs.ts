@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { readSearch } from "./support.ts";
 import { readCatalog } from "./support.ts";
 import { join } from "stdlib/path";
@@ -26,7 +27,7 @@ try {
   assert(await Deno.readTextFile(join(stage, "stale.html")) === stale, "A selected local render rewrote an unrelated retained page");
   assert((await Deno.readTextFile(join(stage, "current.html"))).includes('href="current.html#sec-current">Current caption'), "Current facts were replaced by a retained duplicate");
   const rows = (await readSearch(join(stage, "search.json")));
-  assert(rows[0].text === "Current heading Current caption practice:sec-missing" && rows[1].text === "keep unrelated", "Local search read unrelated pages or retained probes");
+  assert(required(rows[0]).text === "Current heading Current caption practice:sec-missing" && required(rows[1]).text === "keep unrelated", "Local search read unrelated pages or retained probes");
   assert(await Deno.readTextFile(join(stage, "reference-catalog.json")) === completeCatalog, "Local linking replaced the prior complete public catalog with partial facts");
 
   const selectedExports = { ...context, config: { "reference-catalog": { exports: { book: ["sec-current", "sec-later"] } } } };

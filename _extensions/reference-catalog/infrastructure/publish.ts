@@ -96,7 +96,7 @@ async function publishImpl(context: CatalogPublication): Promise<void> {
     }
     await Deno.writeTextFile(join(stage, "search.json"), JSON.stringify([...rows.values()], null, 2) + "\n");
   }
-  const catalog: Catalog = { schema: "quarto-reference-catalog", generator: { quarto }, publication: config.publication, targets: exported };
+  const catalog: Catalog = { schema: "quarto-reference-catalog", generator: { quarto }, ...(config.publication === undefined ? {} : { publication: config.publication }), targets: exported };
   await Deno.writeTextFile(join(stage, context.scope === "local" ? "reference-catalog-local.json" : "reference-catalog.json"), JSON.stringify(catalog, null, 2) + "\n");
   console.log(`QRC разрешено ссылок: ${linked.links}; отложено ссылок: ${linked.deferred}; целей: ${linked.targets.size}; страниц: ${pages.length}`);
 }

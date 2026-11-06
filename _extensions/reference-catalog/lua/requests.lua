@@ -1,5 +1,8 @@
 local __metrics=require("../observability/bridge").create_metrics("reference-catalog",1)
 
+---@generic T: table
+---@param filters T
+---@return T
 local function __perfFilters(filters)
  for key,value in pairs(filters) do
   if type(value)=='function' then
@@ -19,6 +22,7 @@ return __perfFilters({{Meta = function(meta)
   if config then meta["reference-catalog"] = {namespace=config.namespace} end
   return meta
 end}, {Cite = function(el)
+  ---@type {ns: string, id: string, cite: pandoc.Citation}[]
   local refs = {}
   for _, c in ipairs(el.citations) do
     local ns, id = c.id:match("^([%a][%w_-]*):([%a][^:]*%-[^:]+)$")

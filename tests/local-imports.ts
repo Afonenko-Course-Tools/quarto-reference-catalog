@@ -37,7 +37,7 @@ try {
   assert(attr(await anchor(), "data-qrc-deferred") === "true", "An absent namespace in a valid retained catalog was not deferred");
   await rejects(() => publish({ ...context, scope: "full" }), "не содержит пространство имён book");
 
-  for (const [bytes, message] of [["{broken", "некорректный JSON"], [JSON.stringify({ schema: "invalid", targets: {} }), "неподдерживаемая схема"]]) {
+  for (const [bytes, message] of [["{broken", "некорректный JSON"], [JSON.stringify({ schema: "invalid", targets: {} }), "неподдерживаемая схема"]] satisfies [string, string][]) {
     await Deno.writeTextFile(source, bytes);
     await rejects(() => publish({ ...context, scope: "local" }), message);
   }

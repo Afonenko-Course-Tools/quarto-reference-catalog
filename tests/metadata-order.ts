@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { strict as assert } from "node:assert";
 import { attr, content, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
@@ -46,10 +47,10 @@ for (const { probe, row, link } of variants) {
     const retained = nodes.filter(node => hasClass(node, "qrc-probes"));
     assert.equal(retained.length, scope === "local" ? 1 : 0);
     if (scope === "local") {
-      assert.equal(attr(retained[0], "data-qrc-source"), "/owner/a.qmd");
-      assert.equal(attr(retained[0], "data-qrc-namespace"), "book");
-      assert.equal(attr(retained[0], "hidden"), "");
-      assert.equal(attr(retained[0], "aria-hidden"), "true");
+      assert.equal(attr(required(retained[0]), "data-qrc-source"), "/owner/a.qmd");
+      assert.equal(attr(required(retained[0]), "data-qrc-namespace"), "book");
+      assert.equal(attr(required(retained[0]), "hidden"), "");
+      assert.equal(attr(required(retained[0]), "aria-hidden"), "true");
     }
   }
 }

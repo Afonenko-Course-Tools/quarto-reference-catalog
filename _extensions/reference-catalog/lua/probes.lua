@@ -1,5 +1,8 @@
 local __metrics=require("../observability/bridge").create_metrics("reference-catalog",1)
 
+---@generic T: table
+---@param filters T
+---@return T
 local function __perfFilters(filters)
  for key,value in pairs(filters) do
   if type(value)=='function' then
@@ -14,6 +17,8 @@ end
 local diagnostics = require("./diagnostics")
 local targets = require("./targets")
 local constants = require("./constants")
+---@param doc pandoc.Pandoc
+---@return pandoc.Pandoc
 local function finish(doc)
   if not quarto.doc.is_format("html") then return doc end
   local config = doc.meta["reference-catalog"]
@@ -23,6 +28,7 @@ local function finish(doc)
   for _, id in ipairs(targets.sorted()) do
     for _, style in ipairs(constants.probe_styles) do
       local mode = style == "number" and "SuppressAuthor" or "NormalCitation"
+      ---@type pandoc.Cite|pandoc.Span|pandoc.Link
       local ref = pandoc.Cite({pandoc.Str("@" .. id)}, {pandoc.Citation(id, mode)})
       if targets.title(id) then
         ref = style == "number" and pandoc.Span({}, pandoc.Attr("", {"qrc-unavailable"}))

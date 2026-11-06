@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { readCatalog } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
@@ -137,8 +138,8 @@ Known local target: @book:sec-current.
   await publish({ ...current, scope: "local" });
   nodes = await links();
   assert(content(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!) === "External section", "A subsequent invocation did not read newly available catalog facts");
-  imported.targets["practice:sec-external"].label = "Current external section";
-  imported.targets["practice:sec-external"].page = "current.html";
+  required(imported.targets["practice:sec-external"]).label = "Current external section";
+  required(imported.targets["practice:sec-external"]).page = "current.html";
   await Deno.writeTextFile(join(root, "external.json"), JSON.stringify(imported));
   await publish({ ...current, scope: "full" });
   const publicCatalog = await readCatalog(join(stage, "reference-catalog.json"));

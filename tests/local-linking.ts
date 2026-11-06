@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import type { Target } from "../_extensions/reference-catalog/domain/model.ts";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import { linkPages } from "../_extensions/reference-catalog/infrastructure/linker.ts";
@@ -30,7 +31,7 @@ const deferred = linkPages([page], "", [], "", "local");
 const pending = anchors(deferred.pages.get("index.html")!);
 assert(deferred.links === 0 && deferred.deferred === 2, "Deferred requests were counted as resolved links");
 assert(pending.length === 2 && pending.every(node => attr(node, "data-qrc-ref") === "os:sec-memory" && attr(node, "data-qrc-deferred") === "true"), "Deferred links lost their identity or marker");
-assert(content(pending[0]) === "os:sec-memory" && content(pending[1]) === "Read about memory", "Deferred links lost their meaningful labels");
+assert(content(required(pending[0])) === "os:sec-memory" && content(required(pending[1])) === "Read about memory", "Deferred links lost their meaningful labels");
 assert(deferred.pages.get("index.html")!.includes("<em>Read about memory</em>"), "Deferred custom markup was changed");
 assert(pending.every(node => attr(node, "href") === undefined), "Deferred links retained an unresolved navigation URL");
 assert(elements(parseHtml(deferred.pages.get("index.html")!)).some(node => attr(node, "data-qrc-namespace") === "book" && attr(node, "hidden") !== undefined && attr(node, "aria-hidden") === "true"), "Local linking discarded hidden current facts needed by full finalization");

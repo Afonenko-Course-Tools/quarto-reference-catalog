@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
 // @deno-types="../_extensions/reference-catalog/vendor/parse5/dist/index.d.ts"
@@ -15,7 +16,7 @@ Parser.parse = function (...args: Parameters<typeof parse>) {
   parses++;
   return parse.apply(this, args);
 };
-const files = [join(root, "search.json"), join(root, "nested/search.json")];
+const files: [string, string] = [join(root, "search.json"), join(root, "nested/search.json")];
 async function writeRows() {
   await Deno.mkdir(join(root, "nested"), { recursive: true });
   await Deno.writeTextFile(
@@ -39,7 +40,7 @@ async function writeRows() {
 }
 try {
   await writeRows();
-  const pages = new Map([
+  const fixtures: [string, string][] = [
     [
       "index.html",
       '<html><body><main>Final <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" hidden aria-hidden="true">omit retained target probes</div></main><main>later main</main></body></html>',
@@ -48,7 +49,8 @@ try {
       "nested/other.html",
       '<html><body><main><section id="encoded id">Other text</section><button>omit button</button><style>omit style</style></main></body></html>',
     ],
-  ].map(([path, html]) => [path, readPage(path, html)]));
+  ];
+  const pages = new Map(fixtures.map(([path, html]) => [path, readPage(path, html)]));
   await updateSearch(root, files, pages);
   assert(parses === 2, `Expected one final HTML parse per page, got ${parses}`);
   const first = (await readSearch(files[0])).map((
@@ -82,7 +84,7 @@ try {
   await updateSearch(root, files, pages);
   assert(parses === 0, "Search reparsed already supplied current pages");
   assert(
-    (await readSearch(files[0]))[1].text ===
+    required((await readSearch(files[0]))[1]).text ===
       "changed linked caption",
     "A later search operation retained stale linked HTML",
   );

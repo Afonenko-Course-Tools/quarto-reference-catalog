@@ -3,8 +3,8 @@ import { isRecord } from "../_extensions/reference-catalog/infrastructure/import
 
 const root = dirname(dirname(fromFileUrl(import.meta.url)));
 const mode = Deno.args[0] ?? "--typescript";
-if (!["--typescript", "--browser"].includes(mode) || Deno.args.length > 1) {
-  throw new Error("Использование: quarto run tools/check-types.ts [--typescript|--browser]");
+if (!["--typescript", "--browser", "--lua"].includes(mode) || Deno.args.length > 1) {
+  throw new Error("Использование: quarto run tools/check-types.ts [--typescript|--browser|--lua]");
 }
 const inventory: unknown = JSON.parse(await Deno.readTextFile(join(root, "typecheck/inventory.json")));
 if (!isRecord(inventory) || !Array.isArray(inventory.files)) throw new Error("Некорректный состав проверки типов");
@@ -21,6 +21,35 @@ const code = new TextDecoder().decode(listing.stdout).trim().split("\n")
 const declared = files.map(entry => entry.path);
 if (new Set(declared).size !== declared.length || [...code].sort().join("\n") !== [...declared].sort().join("\n")) {
   throw new Error("Состав поддерживаемого кода изменился: обновите typecheck/inventory.json");
+}
+if (mode === "--lua") {
+  const share = Deno.env.get("QRC_QUARTO_SHARE") ?? join(dirname(Deno.execPath()), "../../../share");
+  const temporary = await Deno.makeTempDir({ prefix: "qrc-luals-" });
+  try {
+    const config = {
+      "runtime.version": "Lua 5.4",
+      "runtime.path": ["?.lua", "?/init.lua", "_extensions/reference-catalog/lua/?.lua"],
+      "runtime.plugin": join(share, "lua-plugin/plugin.lua"),
+      "workspace.library": [join(share, "lua-types"), join(root, "_extensions/reference-catalog/observability")],
+      "workspace.ignoreDir": [".git", "node_modules", "_extensions/reference-catalog/observability"],
+      "diagnostics.libraryFiles": "Disable",
+      "diagnostics.ignoredFiles": "Disable",
+      "diagnostics.groupFileStatus": { "type-check": "Any!", strong: "Any!" },
+      "diagnostics.groupSeverity": { "type-check": "Error!", strong: "Error!" },
+      "type.weakNilCheck": false,
+      "type.weakUnionCheck": false,
+      "type.checkTableShape": true,
+    };
+    const path = join(temporary, "luarc.json");
+    await Deno.writeTextFile(path, JSON.stringify(config));
+    const result = await new Deno.Command("lua-language-server", {
+      args: [`--check=${root}`, "--checklevel=Warning", `--configpath=${path}`, `--logpath=${temporary}`, "--num_threads=1"],
+      cwd: root, stdout: "inherit", stderr: "inherit",
+    }).output();
+    if (!result.success) Deno.exit(result.code);
+    console.log(`Проверено Lua: ${files.filter(entry => entry.gate === "lua").length}`);
+  } finally { await Deno.remove(temporary, { recursive: true }); }
+  Deno.exit(0);
 }
 const selected = mode === "--typescript" ? "deno" : "browser";
 const targets = files.filter(entry => entry.gate === selected).map(entry => join(root, entry.path));

@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join, resolve } from "stdlib/path";
 import { attr, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -86,14 +87,14 @@ try {
         return false;
       };
       assert(sourceLinks.length >= 1 && sourceLinks.length <= 2 && sourceLinks.filter(node => !mobile(node)).length === 1, `Expected one source QMD action plus optional native mobile counterpart: ${path}; got ${sourceLinks.length}`);
-      if (!qmd.startsWith("lectures/") && !qmd.startsWith("practice/")) assert(sourceLinks[0].attrs.some(attribute => attribute.name === "class" && attribute.value.split(/\s+/).includes("toc-action")), `HTML source link is not a native action: ${path}`);
+      if (!qmd.startsWith("lectures/") && !qmd.startsWith("practice/")) assert(required(sourceLinks[0]).attrs.some(attribute => attribute.name === "class" && attribute.value.split(/\s+/).includes("toc-action")), `HTML source link is not a native action: ${path}`);
     }
     if (document) assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
     pages.set(path, new Set(nodes.map(node => attr(node, "id")).filter((id): id is string => !!id)));
     for (const node of nodes) for (const name of ["href", "src", "data-src"]) {
       const raw = attr(node, name);
       if (!raw || /^(?:[A-Za-z][A-Za-z0-9+.-]*:|\/\/|#)/.test(raw)) continue;
-      const url = decodeURIComponent(raw.split(/[?#]/)[0]);
+      const url = decodeURIComponent((raw.split(/[?#]/)[0] ?? ""));
       if (!url) continue;
       assert(!url.startsWith("/"), `Root-relative URL breaks project Pages: ${raw}`);
       const target = resolve(dirname(path), url);

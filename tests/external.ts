@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { readCatalog, jsonValue, record, strings } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
@@ -131,9 +132,9 @@ lang: ru
   assert(published.schema === "quarto-reference-catalog", "Публикация должна использовать текущую схему без номера версии");
   assert(published.publication?.title === "Операционные системы", "Publication title missing from exported catalog");
   assert(Object.keys(published.targets).sort().join() === "book:sec-addressing,book:sec-memory", "Explicit exports must contain only the selected own targets");
-  const memory = published.targets["book:sec-memory"];
+  const memory = required(published.targets["book:sec-memory"]);
   assert(memory.title === "Управление памятью", `Heading title includes numbering or is missing: ${memory.title}`);
-  assert(published.targets["book:sec-addressing"].title === "Обзор адресации", "Ordinary section title is missing or includes numbering");
+  assert(required(published.targets["book:sec-addressing"]).title === "Обзор адресации", "Ordinary section title is missing or includes numbering");
   assert(memory.number.length > 0, "Fixture must contain a numbered heading");
   const privateLink = link(await page(os, "memory.html"), "book:sec-implementation");
   assert(attr(privateLink, "href")?.endsWith("#sec-implementation"), "Non-exported own targets must remain available for internal links");
@@ -210,7 +211,7 @@ lang: ru
   assert(content(link(nodes, "os-native:sec-memory")) === memory.label, "Локальный импорт без style сохраняет штатную подпись Quarto");
   const javaCatalog = await catalog(java);
   assert(Object.keys(javaCatalog.targets).join() === "book:sec-memory", "Default export must contain own targets without reexporting imported aliases");
-  assert(javaCatalog.targets["book:sec-memory"].page === "index.html" && javaCatalog.targets["book:sec-memory"].title === "Java", "Default export replaced own target with an imported target of the same ID");
+  assert(required(javaCatalog.targets["book:sec-memory"]).page === "index.html" && required(javaCatalog.targets["book:sec-memory"]).title === "Java", "Default export replaced own target with an imported target of the same ID");
 
   // Each build chooses a fresh snapshot; repeated references and aliases within it share that snapshot.
   remoteCatalog = JSON.stringify({ ...published, publication: { title: "ОС: новая редакция" } });

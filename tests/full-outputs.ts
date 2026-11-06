@@ -28,7 +28,7 @@ try {
   assert(Object.keys(catalog.targets).join() === "book:sec-current", "Full catalog included noncurrent target facts");
   assert((await Deno.readTextFile(join(stage, "current.html"))).includes('href="current.html#sec-current">Current caption'), "Current full target was not linked");
   await rejects(() => publish({ ...context, outputs: ["stage/missing.html"] }), "Full finalization accepted a missing current output");
-  await rejects(() => publish({ ...context, outputs: undefined } as any), "Full finalization accepted no explicit outputs");
+  await rejects(async () => { await Reflect.apply(publish, undefined, [{ ...context, outputs: undefined }]); }, "Full finalization accepted no explicit outputs");
   await Deno.writeTextFile(join(stage, "current.html"), html.replace('book:sec-current" data-qrc-style', 'book:sec-missing" data-qrc-style'));
   await rejects(() => publish(context), "Explicit current full finalization deferred a missing target", "QRC.TARGET_UNKNOWN");
   await Deno.mkdir(join(root, "outside"));

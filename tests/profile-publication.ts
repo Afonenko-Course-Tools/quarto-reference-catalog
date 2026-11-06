@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { jsonValue } from "./support.ts";
 import { join } from "stdlib/path";
@@ -63,7 +64,7 @@ try {
       "Address catalog imported exercise body",
     );
     assert(
-      catalog.targets["bank:exr-open"].label === "Open native caption",
+      required(catalog.targets["bank:exr-open"]).label === "Open native caption",
       "Catalog lost the native authored target caption",
     );
     const search = await Deno.readTextFile(join(stage, "search.json"));

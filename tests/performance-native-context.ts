@@ -1,3 +1,4 @@
+import { jsonValue, record } from "./support.ts";
 import {strict as assert} from 'node:assert';
 import {dirname, fromFileUrl, join} from 'stdlib/path';
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
@@ -32,11 +33,11 @@ return {}
     await run(['render', name + '.qmd', '--to', 'html'], {COURSE_PERF_MODE: 'summary', QRC_TEST_METRICS: metrics});
     assert.match(await Deno.readTextFile(join(root, name + '.html')), /data-qrc-source="(?:[^\"]*\/)?(?:one|two)\.qmd"/);
   }
-  const calls = (await Deno.readTextFile(metrics)).trim().split('\n').map(line => JSON.parse(line));
+  const calls = (await Deno.readTextFile(metrics)).trim().split('\n').map(line => record(jsonValue(line)));
   for (const suffix of ['requests.handler.Meta', 'probes.handler.Pandoc']) {
     const handlers = calls.filter(call => call.id === 'reference-catalog.lua.' + suffix);
     assert.deepEqual(handlers.map(call => call.document_id), [join(root, 'one.qmd'), join(root, 'two.qmd')]);
-    for (const call of handlers) assert.equal(call.attributes.extension_id, 'reference-catalog');
+    for (const call of handlers) assert.equal(record(call.attributes).extension_id, 'reference-catalog');
   }
   console.log('PASS actual Quarto: input_file двух документов передан без изменения native HTML');
 } finally {

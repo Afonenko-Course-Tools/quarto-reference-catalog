@@ -45,7 +45,7 @@ esac
   Deno.env.set("QUARTO", fake);
   Deno.env.delete("COURSE_BUILD_TRACE");
   let invalidArguments: unknown;
-  try { await quarto(null as unknown as string[], root); } catch (error) { invalidArguments = error; }
+  try { await Reflect.apply(quarto, undefined, [null, root]); } catch (error) { invalidArguments = error; }
   assert(invalidArguments instanceof TypeError && invalidArguments.stack?.includes("process.ts"), `Internal argument failure must retain native TypeError/stack: ${invalidArguments}`);
   const originalCommand = Deno.Command;
   const invariant = new TypeError("INTERNAL.INVARIANT: command fixture");
@@ -62,8 +62,7 @@ esac
   Deno.env.set("QUARTO", missing);
   let startup: unknown;
   try { await quarto(["inspect", root], root); } catch (error) { startup = error; }
-  const metadata = startup as Error & { tool: string; exitCode: null; stdout: string; stderr: string };
-  assert(startup instanceof Error && startup.name === "ExternalToolFailure" && startup.cause instanceof Deno.errors.NotFound && metadata.tool === missing && metadata.exitCode === null && metadata.stdout === "" && metadata.stderr === startup.cause.message, `Operational startup refusal must preserve tool/cause: ${startup}`);
+  assert(startup instanceof Error && startup.name === "ExternalToolFailure" && startup.cause instanceof Deno.errors.NotFound && "tool" in startup && "exitCode" in startup && "stdout" in startup && "stderr" in startup && startup.tool === missing && startup.exitCode === null && startup.stdout === "" && startup.stderr === startup.cause.message, `Operational startup refusal must preserve tool/cause: ${startup}`);
   Deno.env.set("QUARTO", fake);
   const baseline = await Promise.all([
     outcome("success"),
@@ -73,8 +72,7 @@ esac
   assert(baseline[1] === "PRIVATE_STDOUT\n", "Exit zero plus WARNING must remain success");
   let failure: unknown;
   try { await quarto(["render", "."], root, { MODE: "failure" }); } catch (error) { failure = error; }
-  const nativeFailure = failure as Error & { tool: string; exitCode: number; stdout: string; stderr: string };
-  assert(failure instanceof Error && nativeFailure.name === "ExternalToolFailure" && nativeFailure.tool === fake && nativeFailure.exitCode === 23 && nativeFailure.stdout === "PRIVATE_STDOUT\n" && nativeFailure.stderr === "WARNING: PRIVATE_FAILURE\n" && nativeFailure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
+  assert(failure instanceof Error && "tool" in failure && "exitCode" in failure && "stdout" in failure && "stderr" in failure && failure.name === "ExternalToolFailure" && failure.tool === fake && failure.exitCode === 23 && failure.stdout === "PRIVATE_STDOUT\n" && failure.stderr === "WARNING: PRIVATE_FAILURE\n" && failure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
   const probe = join(root, "probe.ts");
   await Deno.writeTextFile(probe, `import { quarto } from ${JSON.stringify(new URL("../_extensions/reference-catalog/infrastructure/process.ts", import.meta.url).href)}; await quarto(["render", "."], Deno.cwd(), { MODE: "warning" });`);
   const nativeQuarto = saved.get("QUARTO") || "quarto";

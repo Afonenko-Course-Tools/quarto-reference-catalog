@@ -33,3 +33,9 @@ export async function readSearch(path: string) {
     return { ...row, href, text };
   });
 }
+
+/** Проверяет наличие конкретного результата, не маскируя пустую выборку. */
+export function required<T>(value: T | undefined, message = "Отсутствует ожидаемый результат"): T {
+  if (value === undefined) throw new Error(message);
+  return value;
+}

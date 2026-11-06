@@ -24,7 +24,7 @@ export function readable(node: Node): string {
 /** Штатные индексы созданы до post-render; обновляем их текст из окончательного HTML. */
 async function updateSearchImpl(root: string, indexFiles: (string | SearchIndex)[], pages: Map<string, Page>): Promise<UpdatedSearchIndex[]> {
   // Linking updates the current tree; no second HTML parse is needed.
-  const parsed = new Map<string, { main?: Element; ids: Map<string, Element> }>();
+  const parsed = new Map<string, { main: Element | undefined; ids: Map<string, Element> }>();
   const updated: UpdatedSearchIndex[] = [];
   const rowsByPath = new Map<string, SearchRow[]>();
   for (const value of indexFiles) {

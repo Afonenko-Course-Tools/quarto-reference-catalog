@@ -1,3 +1,5 @@
+import { readCatalog } from "./support.ts";
+import { required } from "./support.ts";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { copy } from "stdlib/fs";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
@@ -98,15 +100,13 @@ try {
   await render("book.qmd", "book", "book-output");
   await resetStage();
   await publish(context);
-  const catalog = JSON.parse(
-    await Deno.readTextFile(join(stage, "reference-catalog.json")),
-  );
+  const catalog = await readCatalog(join(stage, "reference-catalog.json"));
   assert(
     Object.keys(catalog.targets).join() === "book:sec-book,site:sec-portal",
     "Portal and member exports must share one catalog",
   );
   assert(
-    catalog.targets["site:sec-portal"].page === "index.html",
+    required(catalog.targets["site:sec-portal"]).page === "index.html",
     "Portal target must retain its native root placement",
   );
   const html = await Deno.readTextFile(join(stage, "index.html"));
@@ -135,9 +135,7 @@ try {
       },
     },
   }));
-  const imported = JSON.parse(
-    await Deno.readTextFile(join(stage, "reference-catalog.json")),
-  );
+  const imported = await readCatalog(join(stage, "reference-catalog.json"));
   assert(
     Object.keys(imported.targets).join() === "book:sec-book,site:sec-portal",
     "Default export must publish portal/member targets without reexporting imports",
@@ -145,7 +143,10 @@ try {
   await resetStage();
   const initial = await Deno.readTextFile(join(stage, "index.html"));
   await rejects(
-    () => publish({ ...context, portal: undefined }),
+    () => {
+      const { portal: _portal, ...withoutPortal } = context;
+      return publish(withoutPortal);
+    },
     "не относится к локальному проекту: site",
   );
   for (const namespace of [undefined, null, "", "bad:namespace", 42]) {

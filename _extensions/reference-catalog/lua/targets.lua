@@ -3,11 +3,18 @@ local __perfWalk1=__metrics.wrap_walk({id="reference-catalog.lua.targets.walk.1"
 -- Адаптер использует публичные узлы Pandoc/Quarto, не обращаясь к внутреннему индексу.
 local M = {}
 local constants = require("./constants")
+---@type table<string, boolean>
 local types = {}
+---@type table<string, boolean>
 local ids = {}
+---@type table<string, pandoc.Inlines>
 local titles = {}
+---@type table<string, string>
 local heading_titles = {}
+---@param v pandoc.MetaValue|pandoc.Inline|pandoc.Block|nil
+---@return string
 local function str(v) return v and pandoc.utils.stringify(v) or "" end
+---@param meta pandoc.Meta
 function M.init(meta)
   for _, name in ipairs(constants.target_types) do
     types[name] = true
@@ -38,6 +45,7 @@ function M.capture(el)
     end
   end
 end
+---@param block pandoc.Para|pandoc.Plain
 function M.equations(block)
   -- К фазе post-ast метки формул остаются обычными строчными аннотациями.
   -- Читаем атрибуты только непосредственно после выключной формулы.
@@ -52,13 +60,18 @@ function M.equations(block)
     else pending = false end
   end
 end
+---@return string[]
 function M.sorted()
   local out = {}; for id in pairs(ids) do out[#out + 1] = id end
   table.sort(out); return out
 end
+---@param id string
+---@return pandoc.Inlines|nil
 function M.title(id) return titles[id] end
 -- Название — обычный текст; штатная подпись перекрёстной ссылки хранится отдельно.
 -- Для ненумерованных целей M.title предоставляет название вместо номера.
+---@param id string
+---@return string|nil
 function M.heading_title(id) return heading_titles[id] end
 M.init=__metrics.wrap_sync({id="reference-catalog.lua.targets.init",kind='phase'},M.init)
 M.capture=__metrics.wrap_sync({id="reference-catalog.lua.targets.capture",kind='phase'},M.capture)

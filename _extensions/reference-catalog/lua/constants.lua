@@ -1,5 +1,8 @@
 local __metrics=require("../observability/bridge").create_metrics("reference-catalog",1)
 
+---@generic T: table
+---@param filters T
+---@return T
 local function __perfFilters(filters)
  for key,value in pairs(filters) do
   if type(value)=='function' then filters[key]=__metrics.wrap_sync({id="reference-catalog.lua.constants.handler."..tostring(key),kind=key=='Pandoc' and 'phase' or 'function'},value)
