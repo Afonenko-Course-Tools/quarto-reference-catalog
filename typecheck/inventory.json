@@ -273,6 +273,10 @@
       "gate": "deno"
     },
     {
+      "path": "tests/html-boundaries.ts",
+      "gate": "deno"
+    },
+    {
       "path": "tests/import-safety.ts",
       "gate": "deno"
     },
