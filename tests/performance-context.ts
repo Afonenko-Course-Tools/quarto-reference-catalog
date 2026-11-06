@@ -25,10 +25,7 @@ try {
     },
   }});
   const {quarto} = await import('../_extensions/reference-catalog/infrastructure/process.ts?context-test');
-  const args = ['eval', `import {ppid} from 'node:process'; console.log(JSON.stringify([
-    Deno.env.get('COURSE_PERF_PARENT_SPAN_ID') ?? null,
-    Deno.env.get('FUNCTIONAL'), Deno.env.get('FUNCTIONAL_INHERITED'),
-    Deno.env.get('QUARTO_PROFILE'), ppid]));`];
+  const args = ["run", "--no-config", "--no-lock", "--allow-env", new URL("./fixtures/performance-child.ts", import.meta.url).pathname];
   const env = {FUNCTIONAL: 'keep', QUARTO_PROFILE: 'student'};
   assert.deepEqual(jsonValue(await quarto(args, root, env)), [null, 'keep', 'inherited', 'student', Deno.pid]);
   const values = await Promise.all(['parent-a', 'parent-b'].map(parent => contexts.run(parent, async () =>

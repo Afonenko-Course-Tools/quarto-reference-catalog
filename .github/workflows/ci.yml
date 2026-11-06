@@ -47,6 +47,14 @@ jobs:
           persist-credentials: false
       - name: Проверить закреплённый Site
         run: test "$(git -C .ci/course-site rev-parse HEAD)" = "b019ac08a5ab473a70e04589e1b125d977281373"
+      - name: Установить зависимости статических проверок
+        run: npm ci --ignore-scripts
+      - name: Строгие типы исходников, инструментов и проверок
+        run: |
+          quarto run tools/generate-parse5-types.ts --check
+          quarto run tools/check-types.ts --typescript
+          quarto run tools/check-types.ts --browser
+          npm run check:node
       - name: Согласованность guard outputs и публичных типов
         run: quarto run tests/contract-consistency.ts
       - name: Детерминированная сериализация QRC
@@ -72,6 +80,7 @@ jobs:
         run: |
           quarto run tests/demo-external.ts
           quarto run tests/diagnostics.ts
+          quarto run tests/html-boundaries.ts
           quarto run tests/post-inspection.ts
           quarto run tests/export-context.ts
           quarto run tests/body-links.ts
@@ -104,7 +113,6 @@ jobs:
         run: quarto run tests/example.ts
       - name: Установка браузерных зависимостей
         run: |
-          npm ci
           npx playwright install --with-deps chromium
       - name: Раскрытие HTML-блоков и фрагментов Revealjs
         run: npm run test:browser

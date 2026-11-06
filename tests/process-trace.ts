@@ -30,17 +30,7 @@ async function outcome(mode: string) {
 }
 try {
   const fake = join(root, "quarto.sh");
-  await Deno.writeTextFile(
-    fake,
-    `#!/bin/sh
-printf 'PRIVATE_STDOUT\\n'
-case "$MODE" in
-  failure) printf 'WARNING: PRIVATE_FAILURE\\n' >&2; exit 23 ;;
-  warning) printf 'WARNING: PRIVATE_WARNING\\n' >&2 ;;
-  *) printf 'PRIVATE_STDERR\\n' >&2 ;;
-esac
-`,
-  );
+  await Deno.copyFile(new URL("./fixtures/process-tool.sh", import.meta.url), fake);
   await Deno.chmod(fake, 0o700);
   Deno.env.set("QUARTO", fake);
   Deno.env.delete("COURSE_BUILD_TRACE");
@@ -73,10 +63,9 @@ esac
   let failure: unknown;
   try { await quarto(["render", "."], root, { MODE: "failure" }); } catch (error) { failure = error; }
   assert(failure instanceof Error && "tool" in failure && "exitCode" in failure && "stdout" in failure && "stderr" in failure && failure.name === "ExternalToolFailure" && failure.tool === fake && failure.exitCode === 23 && failure.stdout === "PRIVATE_STDOUT\n" && failure.stderr === "WARNING: PRIVATE_FAILURE\n" && failure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
-  const probe = join(root, "probe.ts");
-  await Deno.writeTextFile(probe, `import { quarto } from ${JSON.stringify(new URL("../_extensions/reference-catalog/infrastructure/process.ts", import.meta.url).href)}; await quarto(["render", "."], Deno.cwd(), { MODE: "warning" });`);
+  const probe = new URL("./fixtures/process-warning.ts", import.meta.url);
   const nativeQuarto = saved.get("QUARTO") || "quarto";
-  const visible = await new Deno.Command(nativeQuarto, { args: ["run", probe], cwd: root, stdout: "piped", stderr: "piped" }).output();
+  const visible = await new Deno.Command(nativeQuarto, { args: ["run", probe.pathname], cwd: root, stdout: "piped", stderr: "piped" }).output();
   assert(visible.success && new TextDecoder().decode(visible.stderr).includes("WARNING: PRIVATE_WARNING"), "Successful native stderr was hidden");
   Deno.env.set("COURSE_BUILD_TRACE", trace);
   assert(await outcome("success") === baseline[0], "Отключённые метрики изменили результат");

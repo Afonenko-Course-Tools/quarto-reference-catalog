@@ -40,13 +40,7 @@ async function links() {
 try {
   await copy(join(repo, "_extensions"), join(root, "_extensions"));
   const fake = join(root, "native-refusal.sh");
-  await Deno.writeTextFile(fake, `#!/bin/sh
-case "$REFUSAL" in
-  known) printf '%s' '{"config":{}}' ;;
-  foreign) printf 'FOREIGN.QUARTO_ID: failure\\n' >&2; exit 17 ;;
-  *) printf '%s' 'invalid JSON' ;;
-esac
-`);
+  await Deno.copyFile(new URL("./fixtures/native-refusal.sh", import.meta.url), fake);
   await Deno.chmod(fake, 0o700);
   for (const mode of ["known", "foreign", "unknown"]) {
     const result = await new Deno.Command(quarto, { args: ["run", "_extensions/reference-catalog/entrypoints/post.ts"], cwd: root, env: { QUARTO: fake, REFUSAL: mode }, stdout: "piped", stderr: "piped" }).output();
@@ -58,12 +52,7 @@ esac
     else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${rawStderr}`);
   }
   const bootstrap = join(root, "unknown-process.ts");
-  await Deno.writeTextFile(bootstrap, `const NativeCommand = Deno.Command;
-Deno.Command = class extends NativeCommand {
-  output() { return Promise.reject(new TypeError("INTERNAL.STARTUP_INVARIANT")); }
-};
-await import("./_extensions/reference-catalog/entrypoints/post.ts");
-`);
+  await Deno.copyFile(new URL("./fixtures/unknown-process.ts", import.meta.url), bootstrap);
   const unknownProcess = await new Deno.Command(quarto, { args: ["run", bootstrap], cwd: root, env: { QUARTO: fake }, stdout: "piped", stderr: "piped" }).output();
   const rawUnknownStderr = new TextDecoder().decode(unknownProcess.stderr);
   const unknownStderr = plainStderr(rawUnknownStderr);

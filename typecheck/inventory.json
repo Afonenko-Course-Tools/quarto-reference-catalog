@@ -301,6 +301,50 @@
       "gate": "deno"
     },
     {
+      "path": "tests/fixtures/browser-consumer.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/capture-outputs.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/inspect-only.sh",
+      "gate": "shell"
+    },
+    {
+      "path": "tests/fixtures/native-refusal.sh",
+      "gate": "shell"
+    },
+    {
+      "path": "tests/fixtures/ok-tool.sh",
+      "gate": "shell"
+    },
+    {
+      "path": "tests/fixtures/performance-child.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/print-env.sh",
+      "gate": "shell"
+    },
+    {
+      "path": "tests/fixtures/process-tool.sh",
+      "gate": "shell"
+    },
+    {
+      "path": "tests/fixtures/process-warning.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/restricted-parent.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/unknown-process.ts",
+      "gate": "deno"
+    },
+    {
       "path": "tests/full-outputs.ts",
       "gate": "deno"
     },

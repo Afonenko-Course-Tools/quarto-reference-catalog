@@ -7,7 +7,6 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
 const http = require("node:http");
-const { pathToFileURL } = require("node:url");
 const { spawnSync } = require("node:child_process");
 /** @type {typeof import("playwright").chromium} */
 let chromium;
@@ -118,20 +117,7 @@ Finished.
       schema: "quarto-reference-catalog", generator: { quarto: "браузерная проверка" },
       publication: { title: "Курс-производитель" }, targets,
     }));
-    /** @param {string} name */
-    const moduleUrl = name => pathToFileURL(path.join(repo, "_extensions/reference-catalog/infrastructure", name)).href;
-    const consumerScript = `
-import { importTargets } from ${JSON.stringify(moduleUrl("imports.ts"))};
-import { readPage } from ${JSON.stringify(moduleUrl("pages.ts"))};
-import { linkPages } from ${JSON.stringify(moduleUrl("linker.ts"))};
-const imports = await importTargets([{ namespace: "os", source: ${JSON.stringify(catalogPath)}, sourceNamespace: "book", baseUrl: ${JSON.stringify(base + "/")}, style: "external" }]);
-const links = ["sol-hidden", "sol-nested"].map(id => '<a id="external-' + id + '" data-qrc-ref="os:' + id + '" data-qrc-style="default" data-qrc-custom="false">Ссылка</a>').join(" ");
-const page = readPage("consumer.html", '<html><head><meta charset="utf-8"><title>Курс-потребитель</title></head><body>' + links + '</body></html>');
-const linked = linkPages([page], "", imports, '.qrc-source{opacity:.8}').pages.get("consumer.html");
-await Deno.writeTextFile(${JSON.stringify(path.join(root, "consumer.html"))}, linked);
-`;
-    await fs.writeFile(path.join(root, "consumer.ts"), consumerScript);
-    const consumer = spawnSync(quarto, ["run", "consumer.ts"], { cwd: root, encoding: "utf8" });
+    const consumer = spawnSync(quarto, ["run", path.join(repo, "tests/fixtures/browser-consumer.ts"), catalogPath, base + "/", path.join(root, "consumer.html")], { cwd: root, encoding: "utf8" });
     assert.equal(consumer.status, 0, consumer.stdout + consumer.stderr);
     browser = await chromium.launch({
       ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}),

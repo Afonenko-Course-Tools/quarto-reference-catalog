@@ -49,11 +49,7 @@ async function rejects(action: () => unknown | Promise<unknown>, message: string
 async function initialize(workspace: string) {
   await Deno.mkdir(workspace, { recursive: true });
   await copy(join(repo, "_extensions"), join(workspace, "_extensions"));
-  await write(workspace, "capture.ts", `const file=Deno.env.get("QUARTO_USE_FILE_FOR_PROJECT_OUTPUT_FILES");
-const text=file ? await Deno.readTextFile(file) : Deno.env.get("QUARTO_PROJECT_OUTPUT_FILES");
-if(text===undefined) throw new Error("Missing current native output list");
-await Deno.writeTextFile("current-outputs.json",JSON.stringify(text.split(/\\r?\\n/).filter(Boolean)));
-`);
+  await Deno.copyFile(new URL("./fixtures/capture-outputs.ts", import.meta.url), join(workspace, "capture.ts"));
   await write(workspace, "_quarto.yml", `project:
   type: website
   output-dir: _site

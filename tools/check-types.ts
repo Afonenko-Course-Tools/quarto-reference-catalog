@@ -4,8 +4,8 @@ import { isRecord } from "../_extensions/reference-catalog/infrastructure/import
 async function main(): Promise<void> {
 const root = dirname(dirname(fromFileUrl(import.meta.url)));
 const mode = Deno.args[0] ?? "--typescript";
-if (!["--typescript", "--browser", "--lua"].includes(mode) || Deno.args.length > 1) {
-  throw new Error("Использование: quarto run tools/check-types.ts [--typescript|--browser|--lua]");
+if (!["--typescript", "--browser", "--lua", "--shell"].includes(mode) || Deno.args.length > 1) {
+  throw new Error("Использование: quarto run tools/check-types.ts [--typescript|--browser|--lua|--shell]");
 }
 const inventory: unknown = JSON.parse(await Deno.readTextFile(join(root, "typecheck/inventory.json")));
 if (!isRecord(inventory) || !Array.isArray(inventory.files)) throw new Error("Некорректный состав проверки типов");
@@ -18,10 +18,29 @@ const files: { path: string; gate: string }[] = inventory.files.map((entry: unkn
 const listing = await new Deno.Command("git", { args: ["ls-files"], cwd: root, stdout: "piped", stderr: "piped" }).output();
 if (!listing.success) throw new Error(new TextDecoder().decode(listing.stderr));
 const code = new TextDecoder().decode(listing.stdout).trim().split("\n")
-  .filter(path => /\.(?:ts|js|cjs|lua)$/.test(path) && !path.includes("/vendor/"));
+  .filter(path => /\.(?:ts|js|cjs|lua|sh)$/.test(path) && !path.includes("/vendor/"));
+function gateFor(path: string): string {
+  if (path.startsWith("_extensions/reference-catalog/observability/")) return "bridge-owner";
+  if (path.endsWith(".lua")) return "lua";
+  if (path.endsWith(".cjs")) return "node";
+  if (path.endsWith(".sh")) return "shell";
+  if (path.endsWith(".js") || path === "typecheck/browser.d.ts") return "browser";
+  return "deno";
+}
+for (const entry of files) {
+  if (entry.gate !== gateFor(entry.path)) throw new Error(`Некорректный gate: ${entry.path}`);
+}
 const declared = files.map(entry => entry.path);
 if (new Set(declared).size !== declared.length || [...code].sort().join("\n") !== [...declared].sort().join("\n")) {
   throw new Error("Состав поддерживаемого кода изменился: обновите typecheck/inventory.json");
+}
+if (mode === "--shell") {
+  const targets = files.filter(entry => entry.gate === "shell").map(entry => join(root, entry.path));
+  if (!targets.length) throw new Error("Пустая проверка ShellCheck");
+  const result = await new Deno.Command("shellcheck", { args: ["--severity=style", ...targets], cwd: root, stdout: "inherit", stderr: "inherit" }).output();
+  if (!result.success) Deno.exitCode = result.code;
+  else console.log(`Проверено shell: ${targets.length}`);
+  return;
 }
 if (mode === "--lua") {
   const share = Deno.env.get("QRC_QUARTO_SHARE") ?? join(dirname(Deno.execPath()), "../../../share");
