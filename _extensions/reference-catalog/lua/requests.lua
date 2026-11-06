@@ -18,7 +18,10 @@ local function prepare(meta)
     assert(type(config) == "table", diagnostics.message("QRC.CONFIG_INVALID", "reference-catalog должен быть объектом", nil, "reference-catalog"))
     ---@type pandoc.MetaValue|nil
     local namespace = rawget(config, "namespace")
-    meta["reference-catalog"] = {namespace=namespace}
+    ---@type pandoc.MetaMap
+    local selected = {}
+    if namespace ~= nil then selected.namespace = namespace end
+    meta["reference-catalog"] = selected
   end
   return meta
 end

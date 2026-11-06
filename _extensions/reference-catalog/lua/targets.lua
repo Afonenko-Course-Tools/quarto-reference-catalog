@@ -42,10 +42,17 @@ end
 
 ---@alias QrcTargetNode pandoc.Header|pandoc.Div|pandoc.Span|pandoc.Figure|pandoc.Table|pandoc.Image|pandoc.CodeBlock|QrcCustomTarget
 
+-- У custom узла принимается прежний div fallback независимо от значения t.
+---@param node {div?: pandoc.Div}
+---@return string|nil
+local function nestedIdentifier(node)
+  return node.div and node.div.identifier
+end
+
 ---@param el QrcTargetNode
 function M.capture(el)
   local id = el.identifier or (el.attr and el.attr.identifier)
-  if not id and (el.t == nil or el.t == "FloatRefTarget" or el.t == "Callout" or el.t == "Theorem" or el.t == "Proof") and el.div then id = el.div.identifier end
+  if not id then id = nestedIdentifier(el) end
   local prefix = id and id:match("^([^-]+)%-")
   if id and prefix and types[prefix] then
     ids[id] = true
