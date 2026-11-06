@@ -1,6 +1,6 @@
 import {assemble, resolve} from "../domain/catalog.ts";
 import {href} from "../domain/urls.ts";
-import {namespacePattern, referenceStyles} from "../domain/contract.ts";
+import {namespacePattern, isReferenceStyle} from "../domain/contract.ts";
 import type {Target} from "../domain/model.ts";
 import {validateImportedCatalog} from "../infrastructure/catalog-validation.ts";
 import {parseImports, publicationBaseUrl} from "../infrastructure/import-config.ts";
@@ -18,7 +18,7 @@ export function createBodyLinks(options: {catalog: unknown; baseUrl: string; imp
   ]);
   return {
     resolve(key: string, requestedStyle: string, source: string): {href: string; label: string} {
-      if (!(referenceStyles as readonly string[]).includes(requestedStyle)) {
+      if (!isReferenceStyle(requestedStyle)) {
         throw diagnostic("QRC.REFERENCE_INVALID", "Неверный стиль ссылки Body", {source, id: key, field: "style"});
       }
       const target = resolve(targets, key, source);

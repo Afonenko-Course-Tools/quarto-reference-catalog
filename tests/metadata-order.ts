@@ -20,7 +20,7 @@ for (const { probe, row, link } of variants) {
   const pending = linkPages([readPage("a.html", `<html><body><a ${link}>Отложенная <em>подпись</em></a></body></html>`)], "", [], "", "local");
   assert.equal(pending.links, 0);
   assert.equal(pending.deferred, 1);
-  const pendingLink = elements(parseHtml(pending.pages.get("a.html")!)).find(node => node.tagName === "a")!;
+  const pendingLink = elements(parseHtml(required(pending.pages.get("a.html")))).find(node => node.tagName === "a")!;
   assert.equal(attr(pendingLink, "href"), undefined);
   assert.equal(attr(pendingLink, "data-qrc-ref"), "book:sec-a");
   assert.equal(attr(pendingLink, "data-qrc-deferred"), "true");
@@ -36,8 +36,8 @@ for (const { probe, row, link } of variants) {
     const result = linkPages([readPage("a.html", html)], "", [], "", scope);
     assert.equal(result.links, 1);
     assert.equal(result.deferred, 0);
-    const nodes = elements(parseHtml(result.pages.get("a.html")!));
-    const request = nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-a")!;
+    const nodes = elements(parseHtml(required(result.pages.get("a.html"))));
+    const request = required(nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-a"));
     assert.equal(attr(request, "href"), "a.html#sec-a");
     assert.equal(attr(request, "data-qrc-style"), "default");
     assert.equal(attr(request, "data-qrc-custom"), "false");

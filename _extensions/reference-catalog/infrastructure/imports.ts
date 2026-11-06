@@ -36,19 +36,18 @@ async function importTargetsImpl(
   const result: Target[] = [];
   for (const spec of imports) {
     const local = !/^https?:\/\//.test(spec.source);
-    if (!snapshots.has(spec.source)) {
-      snapshots.set(
-        spec.source,
-        readCatalog(spec.source).catch((error) => {
+    let snapshot = snapshots.get(spec.source);
+    if (!snapshot) {
+      snapshot = readCatalog(spec.source).catch((error: unknown) => {
           if (
             options.allowMissingLocal && local && error instanceof Error &&
             error.cause instanceof Deno.errors.NotFound
           ) return undefined;
           throw error;
-        }),
-      );
+        });
+      snapshots.set(spec.source, snapshot);
     }
-    const catalog = await snapshots.get(spec.source)!;
+    const catalog = await snapshot;
     if (!catalog) continue;
     let count = 0;
     for (const item of Object.values(catalog.targets)) {

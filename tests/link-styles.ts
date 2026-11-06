@@ -53,10 +53,10 @@ assert(content(required(finalizedAnchors[1])) === "Read more & compare — Curre
 assert(finalized.includes("<em>Read more &amp; compare</em>"), "Repeated finalization lost rich custom text");
 
 const number = render(link("number"));
-assert(content(elements(parseHtml(number)).find(n => n.tagName === "a")!) === "7", "Explicit number did not override import style");
+assert(content(required(elements(parseHtml(number)).find(n => n.tagName === "a"))) === "7", "Explicit number did not override import style");
 assert(!number.includes("data-qrc-external-style"), "CSS was injected without an external-style link");
 const title = render(link("title"));
-assert(content(elements(parseHtml(title)).find(n => n.tagName === "a")!) === imported.title, "Explicit title did not override import style");
+assert(content(required(elements(parseHtml(title)).find(n => n.tagName === "a"))) === imported.title, "Explicit title did not override import style");
 assert(!title.includes("qrc-source"), "Title style unexpectedly appended the publication title");
 const { title: _title, sourceTitle: _sourceTitle, ...uncaptioned } = imported;
 const fallback = render(link("external"), uncaptioned);

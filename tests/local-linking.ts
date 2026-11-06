@@ -28,23 +28,23 @@ const anchors = (value: string) => elements(parseHtml(value)).filter(node => nod
 
 // Removing local deferral must make this fail with the old unknown-target error.
 const deferred = linkPages([page], "", [], "", "local");
-const pending = anchors(deferred.pages.get("index.html")!);
+const pending = anchors(required(deferred.pages.get("index.html")));
 assert(deferred.links === 0 && deferred.deferred === 2, "Deferred requests were counted as resolved links");
 assert(pending.length === 2 && pending.every(node => attr(node, "data-qrc-ref") === "os:sec-memory" && attr(node, "data-qrc-deferred") === "true"), "Deferred links lost their identity or marker");
 assert(content(required(pending[0])) === "os:sec-memory" && content(required(pending[1])) === "Read about memory", "Deferred links lost their meaningful labels");
-assert(deferred.pages.get("index.html")!.includes("<em>Read about memory</em>"), "Deferred custom markup was changed");
+assert(required(deferred.pages.get("index.html")).includes("<em>Read about memory</em>"), "Deferred custom markup was changed");
 assert(pending.every(node => attr(node, "href") === undefined), "Deferred links retained an unresolved navigation URL");
-assert(elements(parseHtml(deferred.pages.get("index.html")!)).some(node => attr(node, "data-qrc-namespace") === "book" && attr(node, "hidden") !== undefined && attr(node, "aria-hidden") === "true"), "Local linking discarded hidden current facts needed by full finalization");
+assert(elements(parseHtml(required(deferred.pages.get("index.html")))).some(node => attr(node, "data-qrc-namespace") === "book" && attr(node, "hidden") !== undefined && attr(node, "aria-hidden") === "true"), "Local linking discarded hidden current facts needed by full finalization");
 
 const resolved = linkPages([page], "", [imported], "", "local");
 assert(resolved.links === 2 && resolved.deferred === 0, "Known local targets did not resolve");
-assert(anchors(resolved.pages.get("index.html")!).every(node => attr(node, "href") === "https://example.test/os/memory.html#sec-memory" && attr(node, "data-qrc-deferred") === undefined), "Known targets have incorrect URLs or remain deferred");
+assert(anchors(required(resolved.pages.get("index.html"))).every(node => attr(node, "href") === "https://example.test/os/memory.html#sec-memory" && attr(node, "data-qrc-deferred") === undefined), "Known targets have incorrect URLs or remain deferred");
 const full = linkPages([page], "", [imported], "", "full");
-assert(!elements(parseHtml(full.pages.get("index.html")!)).some(node => attr(node, "data-qrc-namespace") !== undefined), "Full finalization left hidden probes in the output");
+assert(!elements(parseHtml(required(full.pages.get("index.html")))).some(node => attr(node, "data-qrc-namespace") !== undefined), "Full finalization left hidden probes in the output");
 
 // A later call must use the supplied current facts and clear old deferred state.
-const next = linkPages([readPage("index.html", deferred.pages.get("index.html")!)], "", [{ ...imported, label: "Current section", page: "current.html" }], "", "local");
-const current = anchors(next.pages.get("index.html")!);
+const next = linkPages([readPage("index.html", required(deferred.pages.get("index.html")))], "", [{ ...imported, label: "Current section", page: "current.html" }], "", "local");
+const current = anchors(required(next.pages.get("index.html")));
 assert(content(current[0]) === "Current section" && attr(current[0], "href") === "https://example.test/os/current.html#sec-memory", "A later invocation reused old catalog facts");
 assert(current.every(node => attr(node, "data-qrc-deferred") === undefined), "A resolved target retained its deferred marker");
 

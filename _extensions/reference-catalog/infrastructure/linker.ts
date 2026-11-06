@@ -1,7 +1,7 @@
 import {createMetrics as __createMetrics} from "../observability/bridge.ts";
 const __metrics=__createMetrics("reference-catalog");
 import { diagnostic } from "../diagnostics.ts";
-import { namespacePattern, referenceStyles } from "../domain/contract.ts";
+import { namespacePattern, isReferenceStyle } from "../domain/contract.ts";
 import type { Target } from "../domain/model.ts";
 import { assemble, resolve } from "../domain/catalog.ts";
 import { href } from "../domain/urls.ts";
@@ -24,7 +24,7 @@ function linkPagesImpl(pages: Page[], navigationScript: string, imports: Target[
       const [namespace, id, extra] = key.split(":");
       if (!namespace || !namespacePattern.test(namespace) || !id || /[\s#]/.test(id) || extra !== undefined) throw diagnostic("QRC.REFERENCE_INVALID", `некорректная ссылка ${key} в ${page.path}`, { source: `HTML-результат ${page.path}`, id: key, field: "data-qrc-ref" });
       const requestedStyle = attr(node, "data-qrc-style");
-      if (!(referenceStyles as readonly string[]).includes(requestedStyle ?? "")) throw diagnostic("QRC.REFERENCE_INVALID", `некорректный стиль ссылки в ${page.path}`, { source: `HTML-результат ${page.path}`, id: key, field: "data-qrc-style" });
+      if (!isReferenceStyle(requestedStyle)) throw diagnostic("QRC.REFERENCE_INVALID", `некорректный стиль ссылки в ${page.path}`, { source: `HTML-результат ${page.path}`, id: key, field: "data-qrc-style" });
       if (scope === "local" && !targets.has(key)) {
         const attributes = node.attrs.filter(a => !["href", "data-qrc-deferred"].includes(a.name));
         attributes.push({ name: "data-qrc-deferred", value: "true" });
