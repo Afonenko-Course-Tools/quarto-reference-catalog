@@ -22,16 +22,17 @@ require('tests/fixtures/native-modules').install()
 local requests = require('./requests')
 local probes = require('./probes')
 return {{Pandoc=function(doc)
-  local native_input, native_format = quarto.doc.input_file, quarto.doc.is_format
+  -- Это native Pandoc unit: Quarto namespace создаётся тестом целиком.
+  local native_quarto = quarto
+  local mock = {doc={input_file='one.qmd', is_format=function() return false end}}
+  rawset(_G, 'quarto', mock)
   local ok, failure = pcall(function()
-    quarto.doc.input_file = 'one.qmd'
-    quarto.doc.is_format = function() return false end
     requests[1].Meta(pandoc.Meta{})
     probes[3].Pandoc(doc)
-    quarto.doc.input_file = 'two.qmd'
+    mock.doc.input_file = 'two.qmd'
     requests[1].Meta(pandoc.Meta{})
     probes[3].Pandoc(doc)
-    rawset(quarto.doc, 'input_file', nil)
+    rawset(mock.doc, 'input_file', nil)
     requests[1].Meta(pandoc.Meta{})
     probes[3].Pandoc(doc)
     local expected = {'one.qmd', 'one.qmd', 'two.qmd', 'two.qmd', false, false}
@@ -46,7 +47,7 @@ return {{Pandoc=function(doc)
     end
     assert(index == 6, 'Обработчики не наблюдались')
   end)
-  quarto.doc.input_file, quarto.doc.is_format = native_input, native_format
+  rawset(_G, 'quarto', native_quarto)
   assert(ok, failure)
   io.stderr:write('PASS native filter context: два документа и отсутствие input_file\n')
   return doc

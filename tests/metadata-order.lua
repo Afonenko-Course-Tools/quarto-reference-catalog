@@ -3,12 +3,19 @@ require('tests/fixtures/native-modules').install()
 local links = require('./links')
 local probes = require('./probes')
 return {{Pandoc=function(doc)
-  local native_input, native_format, native_get = quarto.doc.input_file, quarto.doc.is_format, quarto.metadata.get
+  -- Это native Pandoc unit: Quarto namespace создаётся тестом целиком.
+  local native_quarto = quarto
   local exported = false
+  ---@param format string
+  local function isHtml(format) return format == 'html' end
+  ---@param key string
+  local function isExported(key) return exported and key == 'course-export-context' end
+  local mock = {
+    doc={input_file='chapter.qmd', is_format=isHtml},
+    metadata={get=isExported},
+  }
+  rawset(_G, 'quarto', mock)
   local ok, failure = pcall(function()
-    quarto.doc.input_file = 'chapter.qmd'
-    quarto.doc.is_format = function(format) return format == 'html' end
-    quarto.metadata.get = function(key) return exported and key == 'course-export-context' end
     local attrs = {['data-qrc-title']='Название & тема', ['data-qrc-style']='default', ['data-qrc-id']='sec-a'}
     local native = pandoc.Attr('', {'qrc-probe'}, attrs)
     for key, value in pairs(attrs) do
@@ -63,7 +70,7 @@ return {{Pandoc=function(doc)
     end
     assert(styles.default and styles.number, 'Потерян один из native probe styles')
   end)
-  quarto.doc.input_file, quarto.doc.is_format, quarto.metadata.get = native_input, native_format, native_get
+  rawset(_G, 'quarto', native_quarto)
   assert(ok, failure)
   io.stderr:write('PASS native Attr map: QRC links/source-export/probes сохраняют refs, labels и hidden/data-*\n')
   return doc

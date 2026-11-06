@@ -3,6 +3,9 @@
 -- Только дополнение отсутствующих сведений штатных Quarto lua-types.
 -- Методы, конструкторы и классы берутся из исходной библиотеки.
 ---@class QrcPandocNamespace
+-- Pandoc поставляет json.encode; Quarto lua-types этот модуль не описывает.
+-- Здесь указан только используемый табличный вход native API.
+---@field json {encode: fun(value: table): string}
 pandoc = {}
 
 ---@class pandoc.Inline

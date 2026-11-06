@@ -2,7 +2,12 @@ local __metrics=require("../observability/bridge").create_metrics("reference-cat
 ---@param node pandoc.Span
 ---@param filter table<string, fun(span: pandoc.Span)>
 local function walkSpan(node, filter) return node:walk(filter) end
-local __perfWalk1=__metrics.wrap_walk({id="reference-catalog.lua.targets.walk.1",kind='ast_walk',scope="block"},walkSpan)
+---@param node pandoc.Span
+---@param filter table<string, fun(span: pandoc.Span)>
+---@return pandoc.Inline
+local function __perfWalk1(node, filter)
+  return __metrics.wrap_walk({id="reference-catalog.lua.targets.walk.1",kind='ast_walk',scope="block"},walkSpan)(node, filter)
+end
 -- Адаптер использует публичные узлы Pandoc/Quarto, не обращаясь к внутреннему индексу.
 local M = {}
 local constants = require("./constants")

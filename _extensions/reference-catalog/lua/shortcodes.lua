@@ -11,4 +11,10 @@ local function xref(args, kwargs)
   return links.link(links.text(args[1]), links.text(args[2]),
     style == "" and "default" or style, links.text(args[3]))
 end
-return {xref = metrics.wrap_sync({id="reference-catalog.lua.shortcodes.handler.xref", kind="function"}, xref)}
+---@param args pandoc.MetaValue[]
+---@param kwargs table<string, pandoc.MetaValue>
+---@return pandoc.Link|pandoc.Span
+local function observedXref(args, kwargs)
+  return metrics.wrap_sync({id="reference-catalog.lua.shortcodes.handler.xref", kind="function"}, xref)(args, kwargs)
+end
+return {xref = observedXref}

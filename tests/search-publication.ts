@@ -1,4 +1,6 @@
 import { join } from "stdlib/path";
+import type { ParserOptions, TreeAdapterTypeMap } from "../_extensions/reference-catalog/types/parse5/dist/index.d.ts";
+// @deno-types="../_extensions/reference-catalog/types/parse5/dist/index.d.ts"
 import { Parser } from "../_extensions/reference-catalog/vendor/parse5/dist/index.js";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 import { isRecord } from "../_extensions/reference-catalog/infrastructure/import-config.ts";
@@ -10,9 +12,10 @@ const root = await Deno.makeTempDir({ prefix: "qrc-search-publication-" });
 const stage = join(root, "stage");
 const parse = Parser.parse;
 let parses = 0;
-Parser.parse = function (...args: Parameters<typeof parse>) {
+Parser.parse = function <T extends TreeAdapterTypeMap>(html: string, options?: ParserOptions<T>): T["document"] {
   parses++;
-  return parse.apply(this, args);
+  const bound = parse.bind(this);
+  return bound<T>(html, options);
 };
 try {
   await Deno.mkdir(join(stage, "book"), { recursive: true });
