@@ -149,6 +149,66 @@
       "gate": "deno"
     },
     {
+      "path": "_extensions/reference-catalog/types/parse5/common/doctype.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/common/error-codes.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/common/foreign-content.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/common/html.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/common/token.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/common/unicode.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/parser/formatting-element-list.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/parser/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/parser/open-element-stack.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/serializer/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/tokenizer/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/tokenizer/preprocessor.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/tree-adapters/default.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/tree-adapters/interface.d.ts",
+      "gate": "deno"
+    },
+    {
       "path": "examples/course/build-info.ts",
       "gate": "deno"
     },

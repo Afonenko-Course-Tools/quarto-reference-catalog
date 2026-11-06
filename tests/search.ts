@@ -1,7 +1,7 @@
 import { required } from "./support.ts";
 import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
-// @deno-types="../_extensions/reference-catalog/vendor/parse5/dist/index.d.ts"
+// @deno-types="../_extensions/reference-catalog/types/parse5/index.d.ts"
 import { Parser } from "../_extensions/reference-catalog/vendor/parse5/dist/index.js";
 import { updateSearch } from "../_extensions/reference-catalog/infrastructure/search.ts";
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
