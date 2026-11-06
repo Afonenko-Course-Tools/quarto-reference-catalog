@@ -14,19 +14,7 @@ try {
   const extension = join(root, '_extensions/reference-catalog');
   const descriptor = join(extension, '_extension.yml');
   await Deno.writeTextFile(descriptor, (await Deno.readTextFile(descriptor)).replace('  filters:\n', '  filters:\n    - at: pre-ast\n      path: lua/performance-test-agent.lua\n'));
-  await Deno.writeTextFile(join(extension, 'lua/performance-test-agent.lua'), `
-local function wrap(spec, fn)
- return function(...)
-  if spec.id == 'reference-catalog.lua.requests.handler.Meta' or spec.id == 'reference-catalog.lua.probes.handler.Pandoc' then
-   local file=assert(io.open(os.getenv('QRC_TEST_METRICS'), 'a'))
-   file:write(pandoc.json.encode(spec), '\\n');file:close()
-  end
-  return fn(...)
- end
-end
-_G.__course_performance_agent_v1={abiVersion=1,metrics={wrap_sync=wrap,wrap_walk=wrap,child_env=function(base)return base end}}
-return {}
-`);
+  await Deno.copyFile(new URL("./fixtures/performance-test-agent.lua", import.meta.url), join(extension, "lua/performance-test-agent.lua"));
   const metrics = join(root, 'metrics.jsonl');
   for (const name of ['one', 'two']) {
     await Deno.writeTextFile(join(root, name + '.qmd'), '---\nfilters: [reference-catalog]\nreference-catalog: {namespace: example}\nlang: ru\n---\n\n# Заголовок {#sec-title}\n\nТекст.\n');

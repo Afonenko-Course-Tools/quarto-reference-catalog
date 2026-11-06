@@ -313,6 +313,14 @@
       "gate": "shell"
     },
     {
+      "path": "tests/fixtures/marker.lua",
+      "gate": "lua"
+    },
+    {
+      "path": "tests/fixtures/native-modules.lua",
+      "gate": "lua"
+    },
+    {
       "path": "tests/fixtures/native-refusal.sh",
       "gate": "shell"
     },
@@ -323,6 +331,10 @@
     {
       "path": "tests/fixtures/performance-child.ts",
       "gate": "deno"
+    },
+    {
+      "path": "tests/fixtures/performance-test-agent.lua",
+      "gate": "lua"
     },
     {
       "path": "tests/fixtures/print-env.sh",
@@ -475,6 +487,10 @@
     {
       "path": "typecheck/browser.d.ts",
       "gate": "browser"
+    },
+    {
+      "path": "typecheck/native.d.lua",
+      "gate": "lua"
     }
   ]
 }

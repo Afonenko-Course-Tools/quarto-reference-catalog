@@ -23,8 +23,15 @@ function M.init(meta)
     types[name] = true
   end
   local crossref = meta.crossref
-  if crossref and crossref.custom then
-    for _, item in ipairs(crossref.custom) do types[str(item.key)] = true end
+  if type(crossref) == "table" then
+    local custom = rawget(crossref, "custom")
+    if type(custom) == "table" then
+      ---@type pandoc.MetaValue[]
+      local items = custom
+      for _, item in ipairs(items) do
+        if type(item) == "table" then types[str(rawget(item, "key"))] = true end
+      end
+    end
   end
 end
 ---@class QrcCustomTarget
@@ -33,7 +40,9 @@ end
 ---@field div? pandoc.Div
 ---@field t? "FloatRefTarget"|"Callout"|"Theorem"|"Proof"
 
----@param el pandoc.Header|pandoc.Div|pandoc.Span|pandoc.Figure|pandoc.Table|pandoc.Image|pandoc.CodeBlock|QrcCustomTarget
+---@alias QrcTargetNode pandoc.Header|pandoc.Div|pandoc.Span|pandoc.Figure|pandoc.Table|pandoc.Image|pandoc.CodeBlock|QrcCustomTarget
+
+---@param el QrcTargetNode
 function M.capture(el)
   local id = el.identifier or (el.attr and el.attr.identifier)
   if not id and (el.t == nil or el.t == "FloatRefTarget" or el.t == "Callout" or el.t == "Theorem" or el.t == "Proof") and el.div then id = el.div.identifier end
@@ -62,7 +71,9 @@ function M.equations(block)
   -- К фазе post-ast метки формул остаются обычными строчными аннотациями.
   -- Читаем атрибуты только непосредственно после выключной формулы.
   local pending = false
-  for _, el in ipairs(block.content) do
+  ---@type QrcInline[]
+  local content = block.content
+  for _, el in ipairs(content) do
     if el.t == "Math" and el.mathtype == "DisplayMath" then pending = true
     elseif pending and (el.t == "Space" or el.t == "SoftBreak") then
     elseif pending and el.t == "Str" then
@@ -74,6 +85,7 @@ function M.equations(block)
 end
 ---@return string[]
 function M.sorted()
+  ---@type string[]
   local out = {}; for id in pairs(ids) do out[#out + 1] = id end
   table.sort(out); return out
 end
