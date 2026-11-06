@@ -1,5 +1,8 @@
 local __metrics=require("../observability/bridge").create_metrics("reference-catalog",1)
-local __perfWalk1=__metrics.wrap_walk({id="reference-catalog.lua.targets.walk.1",kind='ast_walk',scope="block"},function(node,filter)return node:walk(filter)end)
+---@param node pandoc.Span
+---@param filter table<string, fun(span: pandoc.Span)>
+local function walkSpan(node, filter) return node:walk(filter) end
+local __perfWalk1=__metrics.wrap_walk({id="reference-catalog.lua.targets.walk.1",kind='ast_walk',scope="block"},walkSpan)
 -- Адаптер использует публичные узлы Pandoc/Quarto, не обращаясь к внутреннему индексу.
 local M = {}
 local constants = require("./constants")
@@ -24,15 +27,24 @@ function M.init(meta)
     for _, item in ipairs(crossref.custom) do types[str(item.key)] = true end
   end
 end
+---@class QrcCustomTarget
+---@field identifier? string
+---@field attr? pandoc.Attr
+---@field div? pandoc.Div
+---@field t? "FloatRefTarget"|"Callout"|"Theorem"|"Proof"
+
+---@param el pandoc.Header|pandoc.Div|pandoc.Span|pandoc.Figure|pandoc.Table|pandoc.Image|pandoc.CodeBlock|QrcCustomTarget
 function M.capture(el)
   local id = el.identifier or (el.attr and el.attr.identifier)
-  if not id and el.div then id = el.div.identifier end
-  if id and types[id:match("^([^-]+)%-")] then
+  if not id and (el.t == nil or el.t == "FloatRefTarget" or el.t == "Callout" or el.t == "Theorem" or el.t == "Proof") and el.div then id = el.div.identifier end
+  local prefix = id and id:match("^([^-]+)%-")
+  if id and prefix and types[prefix] then
     ids[id] = true
     if el.t == "Header" then heading_titles[id] = str(el.content) end
     -- К фазе pre-ast заголовки глав первого уровня уже перенесены в metadata.title.
     -- Quarto сохраняет там явный ID и элементы chapter-title.
     if el.t == "Span" and el.classes:includes("quarto-section-identifier") then
+      ---@type string|nil
       local title = nil
       __perfWalk1(el,{Span = function(span)
         if span.classes:includes("chapter-title") then title = str(span.content) end
