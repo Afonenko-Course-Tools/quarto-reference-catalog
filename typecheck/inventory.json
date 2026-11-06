@@ -149,63 +149,95 @@
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/doctype.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/decode-codepoint.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/error-codes.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/decode.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/foreign-content.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/encode.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/html.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/escape.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/token.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/generated/decode-data-html.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/common/unicode.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/generated/decode-data-xml.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/index.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/generated/encode-html.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/parser/formatting-element-list.d.ts",
+      "path": "_extensions/reference-catalog/types/entities/dist/esm/index.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/parser/index.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/doctype.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/parser/open-element-stack.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/error-codes.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/serializer/index.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/foreign-content.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/tokenizer/index.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/html.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/tokenizer/preprocessor.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/token.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/tree-adapters/default.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/common/unicode.d.ts",
       "gate": "deno"
     },
     {
-      "path": "_extensions/reference-catalog/types/parse5/tree-adapters/interface.d.ts",
+      "path": "_extensions/reference-catalog/types/parse5/dist/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/parser/formatting-element-list.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/parser/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/parser/open-element-stack.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/serializer/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/tokenizer/index.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/tokenizer/preprocessor.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/tree-adapters/default.d.ts",
+      "gate": "deno"
+    },
+    {
+      "path": "_extensions/reference-catalog/types/parse5/dist/tree-adapters/interface.d.ts",
       "gate": "deno"
     },
     {

@@ -1,9 +1,9 @@
 import {createMetrics as __createMetrics} from "../observability/bridge.ts";
 const __metrics=__createMetrics("reference-catalog");
-// @deno-types="../types/parse5/index.d.ts"
+// @deno-types="../types/parse5/dist/index.d.ts"
 import { parse, defaultTreeAdapter } from "../vendor/parse5/dist/index.js";
 // Тип дерева принадлежит parse5; адаптер не поддерживает параллельную модель HTML.
-import type { Element as ParseElement, Node as ParseNode, ChildNode as ParseChildNode } from "../types/parse5/tree-adapters/default.d.ts";
+import type { Element as ParseElement, Node as ParseNode, ChildNode as ParseChildNode } from "../types/parse5/dist/tree-adapters/default.d.ts";
 export type Element = ParseElement;
 export type Node = ParseNode;
 export type ChildNode = ParseChildNode;

@@ -25,7 +25,7 @@ function link(style: ReferenceStyle, custom = "", extra = "") {
 }
 function render(body: string, target = imported, head = true) {
   const html = head ? `<html><head><title>Java</title></head><body>${body}</body></html>` : body;
-  return linkPages([readPage("book/index.html", html)], "", [target], ".qrc-source{opacity:.8}").pages.get("book/index.html")!;
+  return required(linkPages([readPage("book/index.html", html)], "", [target], ".qrc-source{opacity:.8}").pages.get("book/index.html"));
 }
 
 // A numbered native label must remain available independently of a plain title.
@@ -47,7 +47,7 @@ assert(attr(required(anchors[1]), "rel") === "author external", "Existing rel to
 assert(external.includes("Memory &amp; &lt;storage&gt;") && external.includes("Operating systems &lt;2026&gt;"), "Title/source metadata was not escaped");
 assert(external.includes("<em>Read more &amp; compare</em>"), "Custom rich link text was changed");
 assert(externalNodes.filter(n => n.tagName === "style" && attr(n, "data-qrc-external-style") !== undefined).length === 1, "External CSS was not injected once");
-const finalized = linkPages([readPage("book/index.html", external)], "", [{ ...imported, sourceTitle: "Current source" }], ".qrc-source{opacity:.8}").pages.get("book/index.html")!;
+const finalized = required(linkPages([readPage("book/index.html", external)], "", [{ ...imported, sourceTitle: "Current source" }], ".qrc-source{opacity:.8}").pages.get("book/index.html"));
 const finalizedAnchors = elements(parseHtml(finalized)).filter(node => node.tagName === "a");
 assert(content(required(finalizedAnchors[1])) === "Read more & compare — Current source ↗", "Repeated finalization nested the generated source label inside custom text");
 assert(finalized.includes("<em>Read more &amp; compare</em>"), "Repeated finalization lost rich custom text");

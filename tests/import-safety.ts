@@ -26,7 +26,7 @@ const request = (namespace: string, style: string, custom = "") => `<a data-qrc-
 const html = "<html><head></head><body>" + ["default", "number", "title", "external"].map(style => request("external", style)).join("")
   + request("local", "default") + request("local", "number") + request("external", "default", "<em>Авторская подпись</em>") + "</body></html>";
 const page = readPage("index.html", html);
-const result = linkPages([page], "", [imported, local]).pages.get("index.html")!;
+const result = required(linkPages([page], "", [imported, local]).pages.get("index.html"));
 const nodes = elements(parseHtml(result));
 assert(!nodes.some(node => ["img", "svg", "iframe"].includes(node.tagName)), "HTML из внешнего каталога не должен создавать элементы");
 assert(!nodes.some(node => node.attrs.some(attribute => attribute.name.startsWith("on"))), "Каталог не должен внедрять обработчики событий");
