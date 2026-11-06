@@ -1,32 +1,56 @@
 import { strict as assert } from "node:assert";
-import { canonicalizeMetadata } from "../_extensions/reference-catalog/infrastructure/metadata.ts";
-const pairs = [
- ['<div class="qrc-probes" aria-hidden="true" data-qrc-source="/left/theory/a.qmd" hidden="" data-qrc-namespace="theory">', '<div class="qrc-probes" data-qrc-namespace="theory" data-qrc-source="/right/theory/a.qmd" aria-hidden="true" hidden="">'],
- ['<div class="qrc-probe" data-qrc-title="Title" data-qrc-style="default" data-qrc-id="sec-a">', '<div class="qrc-probe" data-qrc-id="sec-a" data-qrc-style="default" data-qrc-title="Title">'],
- ['<a class="qrc-link" data-qrc-ref="a:b" data-qrc-custom="false" data-qrc-style="default" data-qrc-deferred="true">', '<a class="qrc-link" data-qrc-deferred="true" data-qrc-style="default" data-qrc-ref="a:b" data-qrc-custom="false">'],
-];
-for (const [a,b] of pairs) {
- assert.equal(canonicalizeMetadata(a, '/left'), canonicalizeMetadata(b, '/right'));
- assert.notEqual(canonicalizeMetadata(a, '/left'), canonicalizeMetadata(b.replace('="', '="changed-'), '/right'));
- for(const [prefix,suffix] of [['<script>', '</script>'],['<style>', '</style>'],['<!--', '-->']]) {
-  assert.equal(canonicalizeMetadata(prefix+a+suffix, '/left'), prefix+a+suffix);
- }
- assert.equal(canonicalizeMetadata(canonicalizeMetadata(a)), canonicalizeMetadata(a));
-}
-const source = '<div class="qrc-probes" data-qrc-source="/left/theory/a.qmd">';
-assert.notEqual(canonicalizeMetadata(source,'/left'), canonicalizeMetadata(source.replace('a.qmd','b.qmd'),'/left'));
-assert.equal(canonicalizeMetadata(source.replace('/left/', '/left-other/'),'/left'),source.replace('/left/', '/left-other/'));
-assert.equal(canonicalizeMetadata(source.replace('/theory/', '/../theory/'),'/left'),source.replace('/theory/', '/../theory/'));
-const duplicate = '<div class="qrc-probe" data-qrc-id="first" data-qrc-style="default" data-qrc-id="second">';
-assert.equal(canonicalizeMetadata(duplicate),duplicate);
-const unrelated='<p data-qrc-ref="a:b">Учебный текст</p><a href="/left/a.qmd">Ответ 4</a>';
-assert.equal(canonicalizeMetadata(unrelated,'/left'),unrelated);
-console.log('PASS детерминированные QRC metadata, значения, duplicate attrs и ограниченные source paths');
-
+import { attr, content, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
 import { linkPages } from "../_extensions/reference-catalog/infrastructure/linker.ts";
-const local = (link: string) => '<html><body>'+link+'</body></html>';
-const one=linkPages([readPage('a.html',local(pairs[2][0]+'Deferred</a>'))], '', [], '', 'local').pages.get('a.html');
-const two=linkPages([readPage('a.html',local(pairs[2][1]+'Deferred</a>'))], '', [], '', 'local').pages.get('a.html');
-assert.equal(one,two);
-console.log('PASS одинаковая local publication при разном входном порядке metadata');
+
+const variants = [
+  {
+    probe: 'class="qrc-probes" aria-hidden="true" data-qrc-source="/owner/a.qmd" hidden="" data-qrc-namespace="book"',
+    row: 'class="qrc-probe" data-qrc-title="Название &amp; тема" data-qrc-style="default" data-qrc-id="sec-a"',
+    link: 'class="qrc-link" data-qrc-ref="book:sec-a" data-qrc-custom="false" data-qrc-style="default" data-qrc-deferred="true"',
+  },
+  {
+    probe: 'data-qrc-namespace="book" data-qrc-source="/owner/a.qmd" class="qrc-probes" hidden="" aria-hidden="true"',
+    row: 'data-qrc-id="sec-a" class="qrc-probe" data-qrc-style="default" data-qrc-title="Название &amp; тема"',
+    link: 'data-qrc-deferred="true" data-qrc-style="default" data-qrc-ref="book:sec-a" data-qrc-custom="false" class="qrc-link"',
+  },
+];
+for (const { probe, row, link } of variants) {
+  const pending = linkPages([readPage("a.html", `<html><body><a ${link}>Отложенная <em>подпись</em></a></body></html>`)], "", [], "", "local");
+  assert.equal(pending.links, 0);
+  assert.equal(pending.deferred, 1);
+  const pendingLink = elements(parseHtml(pending.pages.get("a.html")!)).find(node => node.tagName === "a")!;
+  assert.equal(attr(pendingLink, "href"), undefined);
+  assert.equal(attr(pendingLink, "data-qrc-ref"), "book:sec-a");
+  assert.equal(attr(pendingLink, "data-qrc-deferred"), "true");
+  assert.equal(content(pendingLink), "Отложенная подпись");
+  assert(pendingLink.childNodes.some(node => "tagName" in node && node.tagName === "em"));
+  const html = `<html><body><section id="sec-a">Тема</section><a ${link}>Ожидание</a><div ${probe}><div ${row}><a class="quarto-xref" href="#sec-a">Раздел <em>1</em></a></div><div class="qrc-probe" data-qrc-style="number" data-qrc-id="sec-a"><a class="quarto-xref" href="#sec-a">1</a></div></div></body></html>`;
+  const page = readPage("a.html", html);
+  assert.deepEqual(page.targets, [{
+    namespace: "book", id: "sec-a", page: "a.html", fragment: "sec-a", slide: undefined,
+    labelHtml: "Раздел <em>1</em>", numberHtml: "1", label: "Раздел 1", number: "1", title: "Название & тема",
+  }]);
+  for (const scope of ["local", "full"] as const) {
+    const result = linkPages([readPage("a.html", html)], "", [], "", scope);
+    assert.equal(result.links, 1);
+    assert.equal(result.deferred, 0);
+    const nodes = elements(parseHtml(result.pages.get("a.html")!));
+    const request = nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-a")!;
+    assert.equal(attr(request, "href"), "a.html#sec-a");
+    assert.equal(attr(request, "data-qrc-style"), "default");
+    assert.equal(attr(request, "data-qrc-custom"), "false");
+    assert.equal(attr(request, "data-qrc-deferred"), undefined);
+    assert.equal(content(request), "Раздел 1");
+    assert(request.childNodes.some(node => "tagName" in node && node.tagName === "em"));
+    const retained = nodes.filter(node => hasClass(node, "qrc-probes"));
+    assert.equal(retained.length, scope === "local" ? 1 : 0);
+    if (scope === "local") {
+      assert.equal(attr(retained[0], "data-qrc-source"), "/owner/a.qmd");
+      assert.equal(attr(retained[0], "data-qrc-namespace"), "book");
+      assert.equal(attr(retained[0], "hidden"), "");
+      assert.equal(attr(retained[0], "aria-hidden"), "true");
+    }
+  }
+}
+console.log("Пройдено: порядок атрибутов сохраняет цели, подписи, ссылки и семантику local/full metadata");

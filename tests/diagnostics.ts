@@ -6,6 +6,7 @@ import { validateImportedCatalog } from "../_extensions/reference-catalog/infras
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
 import { linkPages } from "../_extensions/reference-catalog/infrastructure/linker.ts";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
+import { postConfiguration, postOutputDirectory } from "../_extensions/reference-catalog/infrastructure/post-input.ts";
 function assert(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 async function rejects(action: () => unknown, code: string, fragments: string[]) {
   try { await action(); } catch (error) {
@@ -16,6 +17,23 @@ async function rejects(action: () => unknown, code: string, fragments: string[])
   throw new Error(`Expected ${code}`);
 }
 const target = { namespace: "book", id: "sec-one", page: "first.html", fragment: "sec-one", labelHtml: "Раздел", label: "Раздел", numberHtml: "", number: "" };
+for (const inspection of [null, [], {}, { config: [] }, { config: {} }, { config: { "reference-catalog": null } }, { config: { "reference-catalog": { namespace: "" } } }, { config: { "reference-catalog": { namespace: 1 } } }]) {
+  await rejects(() => postConfiguration(inspection, "/selected-post"), "QRC.CONFIG_INVALID", ["источник=/selected-post", "поле=reference-catalog.namespace"]);
+}
+const inspected = { config: { "reference-catalog": { namespace: "book", publication: { title: "Заголовок" } }, project: { "output-dir": "native-site", unrelated: [1, null] }, extension: { arbitrary: [true, { nested: "данные" }] } }, other: "Native metadata" };
+const post = postConfiguration(inspected, "/selected-post");
+assert(post.namespace === "book" && post.config === inspected.config, "Post сузил или скопировал дополнительные Native config keys");
+assert(postConfiguration({ config: { "reference-catalog": { namespace: " " } } }, "/selected-post").namespace === " ", "Post добавил новый namespace pattern gate");
+assert(postOutputDirectory(post.config, undefined, "/selected-post") === "native-site", "Post потерял Native output-dir");
+assert(postOutputDirectory(post.config, "override", "/selected-post") === "override", "ENV output-dir потерял precedence");
+assert(postOutputDirectory({ project: { "output-dir": "" } }, undefined, "/selected-post") === "", "Пустой Native output-dir заменён default");
+assert(postOutputDirectory({ project: { "output-dir": false } }, "", "/selected-post") === "", "Пустой ENV override не должен проверять перекрытый malformed Native output-dir");
+for (const config of [{}, { project: null }, { project: false }, { project: [] }, { project: {} }, { project: { "output-dir": null } }]) {
+  assert(postOutputDirectory(config, undefined, "/selected-post") === "_site", "Post изменил nullish fallback output-dir");
+}
+for (const output of [false, 0, {}, []]) {
+  await rejects(() => postOutputDirectory({ project: { "output-dir": output } }, undefined, "/selected-post"), "QRC.CONFIG_INVALID", ["источник=/selected-post", "поле=project.output-dir"]);
+}
 await rejects(() => catalogConfig({ unknown: true }, "/tmp", ["book"]), "QRC.CONFIG_INVALID", ["reference-catalog.unknown"]);
 await rejects(() => parseImports([], "/selected-component", []), "QRC.IMPORT_INVALID", ["источник=/selected-component", "поле=reference-catalog.imports"]);
 await rejects(() => parseImports({ external: { source: "chosen.json", namespace: "book", "base-url": "file:///tmp/" } }, "/tmp", []), "QRC.IMPORT_INVALID", ["chosen.json", "external", "base-url"]);
