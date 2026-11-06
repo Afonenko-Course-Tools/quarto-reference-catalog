@@ -17,6 +17,7 @@ function slideOf(node: Element, path: string, key: string): string | undefined {
     }
     current = current.parentNode && "tagName" in current.parentNode ? current.parentNode : undefined;
   }
+  return undefined;
 }
 function readPageImpl(path: string, html: string): Page {
   const root = parseHtml(html);
