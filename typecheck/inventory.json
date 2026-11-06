@@ -321,6 +321,10 @@
       "gate": "deno"
     },
     {
+      "path": "tools/generate-parse5-types.ts",
+      "gate": "deno"
+    },
+    {
       "path": "tools/generate-vocabulary.ts",
       "gate": "deno"
     },
