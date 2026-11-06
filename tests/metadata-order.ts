@@ -28,8 +28,9 @@ for (const { probe, row, link } of variants) {
   assert(pendingLink.childNodes.some(node => "tagName" in node && node.tagName === "em"));
   const html = `<html><body><section id="sec-a">Тема</section><a ${link}>Ожидание</a><div ${probe}><div ${row}><a class="quarto-xref" href="#sec-a">Раздел <em>1</em></a></div><div class="qrc-probe" data-qrc-style="number" data-qrc-id="sec-a"><a class="quarto-xref" href="#sec-a">1</a></div></div></body></html>`;
   const page = readPage("a.html", html);
+  // Как у публичного catalog validator: для обычной HTML-цели slide отсутствует.
   assert.deepEqual(page.targets, [{
-    namespace: "book", id: "sec-a", page: "a.html", fragment: "sec-a", slide: undefined,
+    namespace: "book", id: "sec-a", page: "a.html", fragment: "sec-a",
     labelHtml: "Раздел <em>1</em>", numberHtml: "1", label: "Раздел 1", number: "1", title: "Название & тема",
   }]);
   for (const scope of ["local", "full"] as const) {

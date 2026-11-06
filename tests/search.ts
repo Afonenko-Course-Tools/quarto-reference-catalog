@@ -45,7 +45,7 @@ try {
   const fixtures: [string, string][] = [
     [
       "index.html",
-      '<html><body><main>Final <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" hidden aria-hidden="true">omit retained target probes</div></main><main>later main</main></body></html>',
+      '<html><body><main><h1 id="sec-final" class="unnumbered">Final</h1> <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" data-qrc-namespace="book" data-qrc-source="index.qmd" hidden aria-hidden="true"><div class="qrc-probe" data-qrc-id="sec-final" data-qrc-style="default" data-qrc-title="Final"><a class="qrc-anchor" href="#sec-final">Final</a></div><div class="qrc-probe" data-qrc-id="sec-final" data-qrc-style="number"><span class="qrc-unavailable"></span></div></div></main><main>later main</main></body></html>',
     ],
     [
       "nested/other.html",
