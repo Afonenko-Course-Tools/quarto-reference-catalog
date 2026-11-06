@@ -15,5 +15,5 @@ async function filesImpl(root: string): Promise<string[]> {
   return out.sort();
 }
 
-export const exists = __metrics.wrapAsync({id:"reference-catalog.infrastructure.files.exists",kind:"io"},exists);
+export const exists = __metrics.wrapAsync({id:"reference-catalog.infrastructure.files.exists",kind:"io"},existsImpl);
 export const files = __metrics.wrapAsync({id:"reference-catalog.infrastructure.files.files",kind:"io"},filesImpl);

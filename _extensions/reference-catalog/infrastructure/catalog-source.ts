@@ -48,5 +48,5 @@ async function readCatalogSourceImpl(source: string): Promise<string> {
   } finally { clearTimeout(timeout); }
 }
 
-export const normalizeCatalogSource = __metrics.wrapSync({id:"reference-catalog.infrastructure.catalog-source.normalizeCatalogSource",kind:"io"},normalizeCatalogSource);
+export const normalizeCatalogSource = __metrics.wrapSync({id:"reference-catalog.infrastructure.catalog-source.normalizeCatalogSource",kind:"io"},normalizeCatalogSourceImpl);
 export const readCatalogSource = __metrics.wrapAsync({id:"reference-catalog.infrastructure.catalog-source.readCatalogSource",kind:"io"},readCatalogSourceImpl);

@@ -1,11 +1,12 @@
 import {createMetrics as __createMetrics} from "../observability/bridge.ts";
 const __metrics=__createMetrics("reference-catalog");
+// @deno-types="../vendor/parse5/dist/index.d.ts"
 import { parse } from "../vendor/parse5/dist/index.js";
 // Тип дерева принадлежит parse5; адаптер не поддерживает параллельную модель HTML.
-import type { DefaultTreeAdapterTypes } from "../vendor/parse5/dist/index.js";
-export type Element = DefaultTreeAdapterTypes.Element;
-export type Node = DefaultTreeAdapterTypes.Node;
-export type ChildNode = DefaultTreeAdapterTypes.ChildNode;
+import type { Element as ParseElement, Node as ParseNode, ChildNode as ParseChildNode } from "../vendor/parse5/dist/tree-adapters/default.d.ts";
+export type Element = ParseElement;
+export type Node = ParseNode;
+export type ChildNode = ParseChildNode;
 export function elements(node: Node): Element[] {
   const out: Element[] = [];
   const visit = (item: Node) => {
@@ -45,5 +46,5 @@ function replaceImpl(html: string, edits: Edit[]): string {
 }
 function parseHtmlImpl(html: string) { return parse(html, { sourceCodeLocationInfo: true }); }
 
-export const replace = __metrics.wrapSync({id:"reference-catalog.infrastructure.html.replace",kind:"io"},replace);
+export const replace = __metrics.wrapSync({id:"reference-catalog.infrastructure.html.replace",kind:"io"},replaceImpl);
 export const parseHtml = __metrics.wrapSync({id:"reference-catalog.infrastructure.html.parseHtml",kind:"io"},parseHtmlImpl);
