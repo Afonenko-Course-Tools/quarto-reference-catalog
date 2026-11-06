@@ -8,12 +8,24 @@ const path = require("node:path");
 const os = require("node:os");
 const http = require("node:http");
 const { spawnSync } = require("node:child_process");
-/** @type {typeof import("playwright").chromium} */
+/**
+ * @param {unknown} value
+ * @returns {value is {chromium: Pick<typeof import("playwright").chromium, "launch">}}
+ */
+function hasChromiumLaunch(value) {
+  return typeof value === "object" && value !== null && "chromium" in value &&
+    typeof value.chromium === "object" && value.chromium !== null &&
+    "launch" in value.chromium && typeof value.chromium.launch === "function";
+}
+/** @type {Pick<typeof import("playwright").chromium, "launch">} */
 let chromium;
 try { ({ chromium } = require("playwright")); }
 catch (error) {
   if (!process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES) throw error;
-  ({ chromium } = require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, "playwright")));
+  /** @type {unknown} */
+  const fallback = require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, "playwright"));
+  if (!hasChromiumLaunch(fallback)) throw new TypeError("Fallback Playwright не предоставляет chromium.launch");
+  chromium = fallback.chromium;
 }
 
 const repo = path.resolve(__dirname, "..");
