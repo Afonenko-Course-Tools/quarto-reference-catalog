@@ -18,7 +18,7 @@ function slideOf(node: Element, path: string, key: string): string | undefined {
     current = current.parentNode && "tagName" in current.parentNode ? current.parentNode : undefined;
   }
 }
-export function readPage(path: string, html: string): Page {
+function readPageImpl(path: string, html: string): Page {
   const root = parseHtml(html);
   const nodes = elements(root);
   const probes = nodes.filter((n) => hasClass(n, "qrc-probes"));
@@ -70,8 +70,6 @@ export function readPage(path: string, html: string): Page {
   return { path, html, nodes, targets, probes, ids, reveal, root };
 }
 
-const readPageImpl = readPage;
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-readPage = (path: string, html: string): Page => __metrics.wrapSync({
+export const readPage = (path: string, html: string): Page => __metrics.wrapSync({
   id: "reference-catalog.infrastructure.pages.readPage", kind: "io", document_id: path,
 }, readPageImpl)(path, html);

@@ -6,10 +6,10 @@ import type { Target } from "../domain/model.ts";
 import { assemble, resolve } from "../domain/catalog.ts";
 import { href } from "../domain/urls.ts";
 import type { Page } from "./pages.ts";
-import { attr, escape, hasClass, inner, replace, type Edit, type Node } from "./html.ts";
+import { attr, escape, hasClass, inner, replace, type Edit, type ChildNode } from "./html.ts";
 import { readable } from "./search.ts";
 export type LinkScope = "local" | "full";
-export function linkPages(pages: Page[], navigationScript: string, imports: Target[] = [], externalCss = "", scope: LinkScope = "full"): { pages: Map<string, string>; parsedPages: Map<string, Page>; targets: Map<string, Target>; links: number; deferred: number } {
+function linkPagesImpl(pages: Page[], navigationScript: string, imports: Target[] = [], externalCss = "", scope: LinkScope = "full"): { pages: Map<string, string>; parsedPages: Map<string, Page>; targets: Map<string, Target>; links: number; deferred: number } {
   const targets = assemble([...pages.flatMap((p) => p.targets), ...imports]);
   const result = new Map<string, string>();
   let links = 0;
@@ -68,14 +68,14 @@ export function linkPages(pages: Page[], navigationScript: string, imports: Targ
         value: `<a ${attrs} href="${escape(href(page.path, target))}">${label}</a>` });
       // Search consumes this same parsed tree. Update the link's semantic
       // children while preserving authored markup in the serialized edit.
-      const text = (value: string): Node => ({ nodeName: "#text", value });
+      const text = (value: string): ChildNode => ({ nodeName: "#text", value, parentNode: node });
       const captionNodes = custom ? authoredChildren : [text(labelText)];
       node.attrs = [...attributes, { name: "href", value: href(page.path, target) }];
       if (style === "external") {
         node.childNodes = [
-          { nodeName: "span", tagName: "span", attrs: [{ name: "class", value: "qrc-title" }], childNodes: captionNodes, parentNode: node },
-          { nodeName: "span", tagName: "span", attrs: [{ name: "class", value: "qrc-source" }], childNodes: [text(` — ${target.sourceTitle || target.namespace}`)], parentNode: node },
-          { nodeName: "span", tagName: "span", attrs: [{ name: "class", value: "qrc-external-marker" }], childNodes: [text(" ↗")], parentNode: node },
+          { nodeName: "span", tagName: "span", namespaceURI: node.namespaceURI, attrs: [{ name: "class", value: "qrc-title" }], childNodes: captionNodes, parentNode: node },
+          { nodeName: "span", tagName: "span", namespaceURI: node.namespaceURI, attrs: [{ name: "class", value: "qrc-source" }], childNodes: [text(` — ${target.sourceTitle || target.namespace}`)], parentNode: node },
+          { nodeName: "span", tagName: "span", namespaceURI: node.namespaceURI, attrs: [{ name: "class", value: "qrc-external-marker" }], childNodes: [text(" ↗")], parentNode: node },
         ];
       } else node.childNodes = captionNodes;
       links++;
@@ -109,5 +109,4 @@ export function linkPages(pages: Page[], navigationScript: string, imports: Targ
   return { pages: result, parsedPages: new Map(pages.map(page => [page.path, page])), targets, links, deferred };
 }
 
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-linkPages=__metrics.wrapSync({id:"reference-catalog.infrastructure.linker.linkPages",kind:"io"},linkPages);
+export const linkPages = __metrics.wrapSync({id:"reference-catalog.infrastructure.linker.linkPages",kind:"io"},linkPagesImpl);

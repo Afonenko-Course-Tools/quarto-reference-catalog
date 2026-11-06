@@ -28,7 +28,7 @@ async function readCatalog(source: string): Promise<Catalog> {
 }
 
 /** Каждый источник читается один раз, в том числе при импорте нескольких пространств имён. */
-export async function importTargets(
+async function importTargetsImpl(
   imports: Import[],
   options: { allowMissingLocal?: boolean } = {},
 ): Promise<Target[]> {
@@ -73,8 +73,7 @@ export async function importTargets(
   return result;
 }
 
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-importTargets = __metrics.wrapAsync({
+export const importTargets = __metrics.wrapAsync({
   id: "reference-catalog.infrastructure.imports.importTargets",
   kind: "io",
-}, importTargets);
+}, importTargetsImpl);

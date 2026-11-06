@@ -45,7 +45,7 @@ async function currentFiles(root: string, stage: string, outputs: string[] | und
   } catch (error) { if (!(error instanceof Deno.errors.NotFound)) throw error; }
   return paths;
 }
-export async function publish(context: CatalogPublication): Promise<void> {
+async function publishImpl(context: CatalogPublication): Promise<void> {
   const { root, stage, quarto, members } = context;
   const extension = dirname(dirname(fromFileUrl(import.meta.url)));
   const htmlMembers = members.filter(member => member.format === "html" || member.format === "revealjs");
@@ -101,5 +101,4 @@ export async function publish(context: CatalogPublication): Promise<void> {
   console.log(`QRC разрешено ссылок: ${linked.links}; отложено ссылок: ${linked.deferred}; целей: ${linked.targets.size}; страниц: ${pages.length}`);
 }
 
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-publish=__metrics.wrapAsync({id:"reference-catalog.infrastructure.publish.publish",kind:"io"},publish);
+export const publish = __metrics.wrapAsync({id:"reference-catalog.infrastructure.publish.publish",kind:"io"},publishImpl);

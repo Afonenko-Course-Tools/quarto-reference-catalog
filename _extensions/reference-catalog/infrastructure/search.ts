@@ -22,7 +22,7 @@ export function readable(node: Node): string {
   return "childNodes" in node ? node.childNodes.map(readable).join(" ") : "";
 }
 /** Штатные индексы созданы до post-render; обновляем их текст из окончательного HTML. */
-export async function updateSearch(root: string, indexFiles: (string | SearchIndex)[], pages: Map<string, Page>): Promise<UpdatedSearchIndex[]> {
+async function updateSearchImpl(root: string, indexFiles: (string | SearchIndex)[], pages: Map<string, Page>): Promise<UpdatedSearchIndex[]> {
   // Linking updates the current tree; no second HTML parse is needed.
   const parsed = new Map<string, { main?: Element; ids: Map<string, Element> }>();
   const updated: UpdatedSearchIndex[] = [];
@@ -64,5 +64,4 @@ export async function updateSearch(root: string, indexFiles: (string | SearchInd
   return updated;
 }
 
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-updateSearch=__metrics.wrapAsync({id:"reference-catalog.infrastructure.search.updateSearch",kind:"io"},updateSearch);
+export const updateSearch = __metrics.wrapAsync({id:"reference-catalog.infrastructure.search.updateSearch",kind:"io"},updateSearchImpl);

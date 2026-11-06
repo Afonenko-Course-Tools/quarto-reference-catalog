@@ -4,7 +4,7 @@ import { diagnostic } from "../diagnostics.ts";
 import { fromFileUrl, isAbsolute, resolve } from "./files.ts";
 
 /** Путь разрешается однократно; источник может находиться за пределами проекта. */
-export function normalizeCatalogSource(value: string, root: string, id?: string): string {
+function normalizeCatalogSourceImpl(value: string, root: string, id?: string): string {
   if (!value.trim()) throw diagnostic("QRC.IMPORT_INVALID", "source должен содержать непустой путь или HTTP(S) URL", { source: value, id, field: "source" });
   // Платформенная библиотека путей учитывает буквы дисков Windows.
   if (isAbsolute(value)) return resolve(value);
@@ -29,7 +29,7 @@ function refusal(source: string, message: string, cause: unknown): Error {
 }
 
 /** Каталог загружается на этапе подготовки общей сборки. */
-export async function readCatalogSource(source: string): Promise<string> {
+async function readCatalogSourceImpl(source: string): Promise<string> {
   if (!/^https?:\/\//.test(source)) {
     try { return await Deno.readTextFile(source); }
     catch (error) { throw refusal(source, "не удалось прочитать импортированный каталог", error); }
@@ -48,7 +48,5 @@ export async function readCatalogSource(source: string): Promise<string> {
   } finally { clearTimeout(timeout); }
 }
 
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-normalizeCatalogSource=__metrics.wrapSync({id:"reference-catalog.infrastructure.catalog-source.normalizeCatalogSource",kind:"io"},normalizeCatalogSource);
-// @ts-expect-error JS допускает замену function binding; сигнатура публичного API сохраняется.
-readCatalogSource=__metrics.wrapAsync({id:"reference-catalog.infrastructure.catalog-source.readCatalogSource",kind:"io"},readCatalogSource);
+export const normalizeCatalogSource = __metrics.wrapSync({id:"reference-catalog.infrastructure.catalog-source.normalizeCatalogSource",kind:"io"},normalizeCatalogSource);
+export const readCatalogSource = __metrics.wrapAsync({id:"reference-catalog.infrastructure.catalog-source.readCatalogSource",kind:"io"},readCatalogSourceImpl);
