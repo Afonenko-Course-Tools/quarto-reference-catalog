@@ -6,7 +6,7 @@
     "check:node": "tsc --project typecheck/node.json"
   },
   "devDependencies": {
-    "playwright": "1.62.1",
+    "playwright": "1.64.1",
     "@types/node": "26.6.6",
     "typescript": "6.0.3"
   }
