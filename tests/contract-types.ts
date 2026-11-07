@@ -10,10 +10,14 @@ import type {
 type NotAny<T> = 0 extends (1 & T) ? never : true;
 const catalog = validateImportedCatalog({}, "compile-only");
 const checked: NotAny<typeof catalog.targets[string]> = true;
-const target: Target = catalog.targets["book:sec-a"];
-const imported: Import = parseImports({}, "/owner", [])[0];
+const candidate = catalog.targets["book:sec-a"];
+if (!candidate) throw new Error("Нет compile-only target");
+const target: Target = candidate;
+const entry = parseImports({}, "/owner", [])[0];
+if (!entry) throw new Error("Нет compile-only import");
+const imported: Import = entry;
 const consumer = (value: Catalog) =>
-  value.targets["book:sec-a"].number.toUpperCase();
+  value.targets["book:sec-a"]?.number.toUpperCase();
 target.page.toUpperCase();
 target.labelHtml.toUpperCase();
 target.number.toUpperCase();

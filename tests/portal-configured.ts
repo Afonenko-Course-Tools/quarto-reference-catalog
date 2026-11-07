@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { copy } from "stdlib/fs";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
@@ -19,7 +20,7 @@ for (const formatFilter of [false, true]) {
     await copy(join(repo, "_extensions"), join(root, "_extensions"));
     const yaml = `project:\n  type: website\n  render: [index.qmd]\n${formatFilter ? 'format:\n  html:\n    filters: [reference-catalog]\nfilters: [marker.lua]\n' : 'format: html\nfilters: [marker.lua, reference-catalog]\n'}reference-catalog:\n  namespace: site\n`;
     await Deno.writeTextFile(join(root, "_quarto.yml"), yaml);
-    await Deno.writeTextFile(join(root, "marker.lua"), 'function Pandoc(doc) doc.blocks:insert(pandoc.Para({pandoc.Str("AUTHORED_FILTER_PRESERVED")})); return doc end\n');
+    await Deno.copyFile(new URL("./fixtures/marker.lua", import.meta.url), join(root, "marker.lua"));
     await Deno.writeTextFile(join(root, "index.qmd"), '# Portal {#sec-portal}\n\n{{< xref book sec-book "Member" >}}\n');
     await Deno.mkdir(join(root, "book"));
     await copy(join(repo, "_extensions"), join(root, "book/_extensions"));
@@ -30,7 +31,7 @@ for (const formatFilter of [false, true]) {
     const nativePortal = await Deno.readTextFile(join(root, "portal-output/index.html"));
     const nativeMember = await Deno.readTextFile(join(root, "book/book-output/index.html"));
     assert(readPage("index.html", nativePortal).targets.length === 1, "Native root duplicated its target probes");
-    assert(readPage("book/index.html", nativeMember).targets[0].namespace === "book", "Native component lost its namespace");
+    assert(required(readPage("book/index.html", nativeMember).targets[0]).namespace === "book", "Native component lost its namespace");
     const stage = join(root, "stage");
     await Deno.mkdir(join(stage, "book"), { recursive: true });
     await Deno.writeTextFile(join(stage, "index.html"), nativePortal);

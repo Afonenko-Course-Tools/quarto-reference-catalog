@@ -1,3 +1,6 @@
+import { required } from "./support.ts";
+import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
+import { jsonValue } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
@@ -48,7 +51,7 @@ try {
     };
     await publish(context);
     const text = await Deno.readTextFile(join(stage, "reference-catalog.json"));
-    const catalog = JSON.parse(text);
+    const catalog = validateImportedCatalog(jsonValue(text), join(stage, "reference-catalog.json"));
     assert(
       Object.keys(catalog.targets).sort().join() ===
         (view === "full"
@@ -61,7 +64,7 @@ try {
       "Address catalog imported exercise body",
     );
     assert(
-      catalog.targets["bank:exr-open"].label === "Open native caption",
+      required(catalog.targets["bank:exr-open"]).label === "Open native caption",
       "Catalog lost the native authored target caption",
     );
     const search = await Deno.readTextFile(join(stage, "search.json"));
@@ -92,7 +95,7 @@ try {
         });
       } catch (error) {
         assert(
-          (error as Error & { code?: string }).code === "QRC.TARGET_UNKNOWN",
+          (error instanceof Error && "code" in error && error.code) === "QRC.TARGET_UNKNOWN",
           `Wrong unavailable current target diagnostic: ${error}`,
         );
         refused = true;

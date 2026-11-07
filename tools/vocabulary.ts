@@ -1,12 +1,12 @@
 /** Единственный исходный словарь преобразуется в статические проекции сред исполнения. */
 export function referenceStyleVocabulary(value: unknown): string[] {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
-    Object.keys(value).length !== 1 || !Object.hasOwn(value, "referenceStyles")) {
+    Object.keys(value).length !== 1 || !("referenceStyles" in value)) {
     throw new Error("Словарь должен содержать только referenceStyles");
   }
-  const styles = (value as Record<string, unknown>).referenceStyles;
+  const styles = value.referenceStyles;
   if (!Array.isArray(styles) || !styles.length ||
-    styles.some(style => typeof style !== "string" || !/^[a-z][a-z0-9-]*$/.test(style)) ||
+    !styles.every((style: unknown): style is string => typeof style === "string" && /^[a-z][a-z0-9-]*$/.test(style)) ||
     new Set(styles).size !== styles.length) {
     throw new Error("referenceStyles должен быть непустым списком уникальных технических имён");
   }

@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { deepStrictEqual } from "node:assert";
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { dirname, join, toFileUrl } from "stdlib/path";
@@ -12,7 +13,7 @@ function equal(actual: unknown, expected: unknown, message: string) {
 async function rejects(action: () => unknown | Promise<unknown>, message: string, code = "QRC.IMPORT_INVALID") {
   try { await action(); }
   catch (error) {
-    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : ("code" in error && error.code) === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), `Expected error containing ${message}; got ${error}`);
     return;
   }
@@ -39,7 +40,7 @@ const metadataCatalog = {
   publication: { title: "Operating systems", extra: { description: "метаданные публикации" } },
   targets: {
     ...fixture.targets,
-    "book:sec-memory": { ...fixture.targets["book:sec-memory"], extra: ["метаданные цели"] },
+    "book:sec-memory": { ...required(fixture.targets["book:sec-memory"]), extra: ["метаданные цели"] },
   },
 };
 // Дополнительные данные принимаются, но потребитель получает только поля каталога.
@@ -59,25 +60,25 @@ const url = `http://127.0.0.1:${server.addr.port}`;
 const config = (source: string, extra: Record<string, unknown> = {}) => ({ os: { source, namespace: "book", "base-url": "https://example.edu/courses/os/", ...extra } });
 const parse = (source: string, extra: Record<string, unknown> = {}) => parseImports(config(source, extra), consumer, ["book"]);
 try {
-  const [local] = parse("../os/reference.json");
+  const local = required(parse("../os/reference.json")[0]);
   equal(local.source, sibling, "Sibling repositories are independent sources");
   await rejects(() => parseImports({ os: { file: "../os/reference.json", namespace: "book", "base-url": local.baseUrl } }, consumer, ["book"]), "неизвестное свойство импорта");
-  equal(parse(toFileUrl(sibling).href)[0].source, sibling, "file URL normalisation");
-  equal(parse(sibling)[0].source, sibling, "absolute local source");
+  equal(required(parse(toFileUrl(sibling).href)[0]).source, sibling, "file URL normalisation");
+  equal(required(parse(sibling)[0]).source, sibling, "absolute local source");
   const localTargets = await importTargets([local]);
-  equal(localTargets[0].namespace, "os", "Namespace alias");
-  equal(localTargets[0].sourceTitle, "Operating systems", "Publication title fallback");
-  equal(localTargets[0].title, "Virtual memory", "Target title preserved");
-  equal(localTargets[0].baseUrl, local.baseUrl, "Separate publication URL");
-  const remote = parse(`${url}/reference.json`, { title: "OS course", style: "external" })[0];
+  equal(required(localTargets[0]).namespace, "os", "Namespace alias");
+  equal(required(localTargets[0]).sourceTitle, "Operating systems", "Publication title fallback");
+  equal(required(localTargets[0]).title, "Virtual memory", "Target title preserved");
+  equal(required(localTargets[0]).baseUrl, local.baseUrl, "Separate publication URL");
+  const remote = required(parse(`${url}/reference.json`, { title: "OS course", style: "external" })[0]);
   const remoteTargets = await importTargets([remote, { ...remote, namespace: "os-lectures", sourceNamespace: "lectures" }]);
   equal(reads, 1, "One HTTP read for multiple imported namespaces");
   equal(remoteTargets.length, 2, "Both HTTP namespaces imported");
-  equal(remoteTargets[0].sourceTitle, "OS course", "Explicit source title wins");
-  equal(remoteTargets[0].defaultStyle, "external", "Import presentation default");
-  equal(remoteTargets[1].slide, "memory", "Slide anchor preserved");
+  equal(required(remoteTargets[0]).sourceTitle, "OS course", "Explicit source title wins");
+  equal(required(remoteTargets[0]).defaultStyle, "external", "Import presentation default");
+  equal(required(remoteTargets[1]).slide, "memory", "Slide anchor preserved");
   const redirected = await importTargets(parse(`${url}/redirect`));
-  equal(redirected[0].page, "chapters/memory.html", "HTTP redirect preserves catalog");
+  equal(required(redirected[0]).page, "chapters/memory.html", "HTTP redirect preserves catalog");
   await rejects(() => importTargets(parse(`${url}/missing`)), "HTTP 404", "ExternalToolFailure");
   await rejects(() => importTargets(parse(`${url}/invalid-json`)), "некорректный JSON импортированного каталога");
   await rejects(() => importTargets(parse(`${url}/invalid-schema`)), "неподдерживаемая схема импортированного каталога");
@@ -88,14 +89,14 @@ try {
     await Deno.writeTextFile(sibling, JSON.stringify({ ...fixture, schema }));
     await rejects(() => importTargets([local]), "неподдерживаемая схема импортированного каталога");
   }
-  for (const [property, valid] of [["baseUrl", "https://other.example/"], ["sourceTitle", "Other course"], ["defaultStyle", "external"]]) {
+  for (const [property, valid] of [["baseUrl", "https://other.example/"], ["sourceTitle", "Other course"], ["defaultStyle", "external"]] satisfies [string, string][]) {
     const candidate = structuredClone(fixture);
-    Object.assign(candidate.targets["book:sec-memory"], { [property]: valid });
+    Object.assign(required(candidate.targets["book:sec-memory"]), { [property]: valid });
     await Deno.writeTextFile(sibling, JSON.stringify(candidate));
     await rejects(() => importTargets([local]), `${property} недопустимо в каталоге публикации`);
   }
 
-  for (const [source, message] of [["ftp://example.edu/reference.json", "неподдерживаемый протокол источника импорта"], ["https://[", "некорректный URL источника импорта"], ["https://example.edu/reference.json#part", "не должен содержать фрагмент"], ["file:///tmp/ref.json?query", "источник file: не должен содержать"]]) {
+  for (const [source, message] of [["ftp://example.edu/reference.json", "неподдерживаемый протокол источника импорта"], ["https://[", "некорректный URL источника импорта"], ["https://example.edu/reference.json#part", "не должен содержать фрагмент"], ["file:///tmp/ref.json?query", "источник file: не должен содержать"]] satisfies [string, string][]) {
     await rejects(() => parse(source), message);
   }
   await rejects(() => parse("../os/reference.json", { file: "other.json" }), "неизвестное свойство импорта");
@@ -117,12 +118,12 @@ try {
     [{ ...fixture, targets: [] }, "поле targets каталога"],
     [{ ...fixture, publication: { title: 10 } }, "publication.title"],
   ];
-  for (const [property, invalid] of [["page", "../secret.html"], ["page", "/absolute.html"], ["page", "https://other.example/x"], ["page", "folder\\x.html"], ["page", "a//x.html"], ["page", "x.html?q=1"], ["fragment", ""], ["slide", 1], ["title", null], ["sourceTitle", 1], ["defaultStyle", "bad"], ["baseUrl", "javascript:alert(1)"], ["number", 1]] as [string, unknown][]) {
+  for (const [property, invalid] of [["page", "../secret.html"], ["page", "/absolute.html"], ["page", "https://other.example/x"], ["page", "folder\\x.html"], ["page", "a//x.html"], ["page", "x.html?q=1"], ["fragment", ""], ["slide", 1], ["title", null], ["sourceTitle", 1], ["defaultStyle", "bad"], ["baseUrl", "javascript:alert(1)"], ["number", 1]] satisfies [string, unknown][]) {
     const candidate = structuredClone(fixture);
-    Object.assign(candidate.targets["book:sec-memory"], { [property]: invalid });
+    Object.assign(required(candidate.targets["book:sec-memory"]), { [property]: invalid });
     malformed.push([candidate, property]);
   }
-  malformed.push([{ ...fixture, targets: { "book:wrong": fixture.targets["book:sec-memory"] } }, "ключ каталога должен совпадать"]);
+  malformed.push([{ ...fixture, targets: { "book:wrong": required(fixture.targets["book:sec-memory"]) } }, "ключ каталога должен совпадать"]);
   for (const [candidate, message] of malformed) {
     await Deno.writeTextFile(sibling, JSON.stringify(candidate));
     await rejects(() => importTargets([local]), message);

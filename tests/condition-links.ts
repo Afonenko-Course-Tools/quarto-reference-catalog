@@ -1,13 +1,9 @@
-import { dirname, fromFileUrl, join, toFileUrl } from "stdlib/path";
-const repo = dirname(dirname(fromFileUrl(import.meta.url)));
-const api = await import(
-  toFileUrl(join(repo, "_extensions/reference-catalog/public.ts")).href
-).catch(() => undefined);
-const assert = (value: unknown, message: string) => {
+import * as api from "../_extensions/reference-catalog/public.ts";
+function assert(value: unknown, message: string): asserts value {
   if (!value) throw Error(message);
-};
+}
 assert(
-  typeof api?.bindConditionLinks === "function",
+  typeof api.bindConditionLinks === "function",
   "B1 RED: QRC не привязывает ссылки публичного condition",
 );
 const target = (
@@ -59,7 +55,7 @@ const destination = {
     "starter.zip": "_downloads/exr-demo-starter.zip",
   },
 };
-const links = api!.bindConditionLinks(condition, destination);
+const links = api.bindConditionLinks(condition, destination);
 assert(
   links["other.qmd#section"] ===
     "https://pages.example.test/course/projects/other/output.html#section",
@@ -103,7 +99,7 @@ function refused(use: () => unknown, marker: string) {
 }
 refused(
   () =>
-    api!.bindConditionLinks(
+    api.bindConditionLinks(
       { ...condition, links: ["missing.qmd"] },
       destination,
     ),
@@ -111,7 +107,7 @@ refused(
 );
 refused(
   () =>
-    api!.bindConditionLinks(condition, {
+    api.bindConditionLinks(condition, {
       ...destination,
       urls: { ...destination.urls, "starter.zip": "file:///private.zip" },
     }),
@@ -119,7 +115,7 @@ refused(
 );
 refused(
   () =>
-    api!.bindConditionLinks(condition, {
+    api.bindConditionLinks(condition, {
       ...destination,
       urls: { ...destination.urls, "starter.zip": "javascript:alert(1)" },
     }),
@@ -127,7 +123,7 @@ refused(
 );
 refused(
   () =>
-    api!.bindConditionLinks(condition, {
+    api.bindConditionLinks(condition, {
       ...destination,
       references: {
         ...destination.references,

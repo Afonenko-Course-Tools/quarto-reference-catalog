@@ -1,3 +1,4 @@
+import { readCatalog } from "./support.ts";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 
 function assert(value: unknown, message: string): asserts value {
@@ -35,18 +36,12 @@ try {
   const retained = '<div class="qrc-probes" data-qrc-namespace="book"><div class="qrc-probe" data-qrc-id="sec-broken" data-qrc-style="default"></div></div>';
   await Deno.writeTextFile(join(stage, "retained.html"), retained);
   await Deno.writeTextFile(join(root, "outputs.txt"), "current-output/current.html\n");
-  await Deno.writeTextFile(executable, `#!/bin/sh
-printf '%s\\n' "$@" >> "$QRC_COMMANDS"
-case "$1" in
-  inspect) cat "$QRC_INSPECTION" ;;
-  *) echo 'Неожиданный дополнительный вызов Quarto' >&2; exit 19 ;;
-esac
-`);
+  await Deno.copyFile(new URL("./fixtures/inspect-only.sh", import.meta.url), executable);
   await Deno.chmod(executable, 0o700);
   for (const fileList of [false, true]) {
     const result = await hook({ config, quarto: { version: "1.11.5-fixture" } }, fileList);
     assert(result.success, `Post не использовал готовую версию inspect: ${new TextDecoder().decode(result.stderr)}`);
-    const catalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+    const catalog = await readCatalog(join(stage, "reference-catalog-local.json"));
     assert(catalog.generator.quarto === "1.11.5-fixture", "Каталог потерял native версию inspect");
     assert((await Deno.readTextFile(trace)) === `inspect\n${root}\n--profile\nteacher,ru\n`, "Post изменил effective profiles или повторно запустил Quarto");
     assert(await Deno.readTextFile(join(stage, "retained.html")) === retained, "Post прочитал или изменил retained output вне текущего списка");

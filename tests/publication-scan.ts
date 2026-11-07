@@ -1,3 +1,5 @@
+import { required } from "./support.ts";
+import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
@@ -42,7 +44,7 @@ try {
     `Explicit publication scanned stage directories: ${JSON.stringify([...visits])}`,
   );
   assert(
-    JSON.parse(await Deno.readTextFile(join(stage, "nested/search.json")))[0]
+    required((await readSearch(join(stage, "nested/search.json")))[0])
       .text === "Heading First final caption",
     "Publication lost search text",
   );
@@ -57,7 +59,7 @@ try {
     "Later publication scanned its retained stage",
   );
   assert(
-    JSON.parse(await Deno.readTextFile(join(stage, "nested/search.json")))[0]
+    required((await readSearch(join(stage, "nested/search.json")))[0])
       .text === "Heading Changed final caption",
     "Later publication reused old stage HTML",
   );

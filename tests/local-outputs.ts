@@ -1,3 +1,6 @@
+import { required } from "./support.ts";
+import { readSearch } from "./support.ts";
+import { readCatalog } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
@@ -19,22 +22,22 @@ try {
   await Deno.writeTextFile(join(stage, "search.json"), JSON.stringify([{ href: "current.html", text: "old current" }, { href: "stale.html", text: "keep unrelated" }]));
   // A global stage scan would assemble a duplicate target and block this edit.
   await publish(context);
-  const defaultCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+  const defaultCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(Object.keys(defaultCatalog.targets).join() === "book:sec-current", "Local catalog without exports must publish current own targets");
   assert(await Deno.readTextFile(join(stage, "stale.html")) === stale, "A selected local render rewrote an unrelated retained page");
   assert((await Deno.readTextFile(join(stage, "current.html"))).includes('href="current.html#sec-current">Current caption'), "Current facts were replaced by a retained duplicate");
-  const rows = JSON.parse(await Deno.readTextFile(join(stage, "search.json")));
-  assert(rows[0].text === "Current heading Current caption practice:sec-missing" && rows[1].text === "keep unrelated", "Local search read unrelated pages or retained probes");
+  const rows = (await readSearch(join(stage, "search.json")));
+  assert(required(rows[0]).text === "Current heading Current caption practice:sec-missing" && required(rows[1]).text === "keep unrelated", "Local search read unrelated pages or retained probes");
   assert(await Deno.readTextFile(join(stage, "reference-catalog.json")) === completeCatalog, "Local linking replaced the prior complete public catalog with partial facts");
 
   const selectedExports = { ...context, config: { "reference-catalog": { exports: { book: ["sec-current", "sec-later"] } } } };
   await publish(selectedExports);
-  const localCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+  const localCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(Object.keys(localCatalog.targets).join() === "book:sec-current", "Local export did not restrict itself to current available targets");
   assert(await Deno.readTextFile(join(stage, "reference-catalog.json")) === completeCatalog, "Local selected exports replaced the complete catalog");
 
   await publish({ ...context, config: { "reference-catalog": { exports: {} } } });
-  const disabledCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+  const disabledCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(Object.keys(disabledCatalog.targets).length === 0, "Explicit empty exports must disable local export");
 
   const malformed = '<div class="qrc-probes" data-qrc-namespace="book"><div class="qrc-probe" data-qrc-id="sec-broken" data-qrc-style="default"></div></div>';

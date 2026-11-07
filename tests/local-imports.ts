@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { join } from "stdlib/path";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -7,7 +8,7 @@ function assert(value: unknown, message: string): asserts value {
 }
 async function rejects(action: () => Promise<unknown>, message: string, code = "QRC.IMPORT_INVALID") {
   try { await action(); } catch (error) {
-    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : (error as Error & { code?: string }).code === code), `Expected ${code}: ${error}`);
+    assert(error instanceof Error && (code === "ExternalToolFailure" ? error.name === code : ("code" in error && error.code) === code), `Expected ${code}: ${error}`);
     assert(error instanceof Error && error.message.includes(message), String(error));
     return;
   }
@@ -21,7 +22,7 @@ const context = {
   config: { "reference-catalog": { imports: { practice: { source: "sibling.json", namespace: "book", "base-url": "https://example.test/practice/" } } } },
 };
 async function anchor() {
-  return elements(parseHtml(await Deno.readTextFile(join(stage, "current.html")))).find(node => node.tagName === "a")!;
+  return required(elements(parseHtml(await Deno.readTextFile(join(stage, "current.html")))).find(node => node.tagName === "a"));
 }
 try {
   await Deno.mkdir(stage);
@@ -37,7 +38,7 @@ try {
   assert(attr(await anchor(), "data-qrc-deferred") === "true", "An absent namespace in a valid retained catalog was not deferred");
   await rejects(() => publish({ ...context, scope: "full" }), "не содержит пространство имён book");
 
-  for (const [bytes, message] of [["{broken", "некорректный JSON"], [JSON.stringify({ schema: "invalid", targets: {} }), "неподдерживаемая схема"]]) {
+  for (const [bytes, message] of [["{broken", "некорректный JSON"], [JSON.stringify({ schema: "invalid", targets: {} }), "неподдерживаемая схема"]] satisfies [string, string][]) {
     await Deno.writeTextFile(source, bytes);
     await rejects(() => publish({ ...context, scope: "local" }), message);
   }

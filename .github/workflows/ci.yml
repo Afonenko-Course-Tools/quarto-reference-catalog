@@ -19,6 +19,11 @@ jobs:
   check:
     name: Проверка (${{ matrix.quarto }})
     runs-on: ubuntu-latest
+    env:
+      XDG_CACHE_HOME: ${{ github.workspace }}/.ci/course-qrc-cache
+      PERFORMANCE: ${{ github.workspace }}/.ci/performance
+      COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/.ci/performance
+      LUA_LANGUAGE_SERVER: ${{ github.workspace }}/.ci/luals/bin/lua-language-server
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -28,25 +33,75 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Подготовить доступный кеш Quarto
+        run: |
+          mkdir -p -- "$XDG_CACHE_HOME"
+          test -w "$XDG_CACHE_HOME"
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
         with:
           version: ${{ matrix.quarto }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          repository: Afonenko-Course-Tools/quarto-course-performance
+          ref: 0781f03a11f461691d7ce116f2c53bb5d8af68d7
+          path: .ci/performance
+          persist-credentials: false
+      - name: Проверить закреплённый Performance и установить LuaLS
+        run: |
+          test "$(git -C "$PERFORMANCE" rev-parse HEAD)" = "0781f03a11f461691d7ce116f2c53bb5d8af68d7"
+          bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$GITHUB_WORKSPACE/.ci/luals"
+      - name: Установить закреплённый ShellCheck
+        run: |
+          tool_dir="$RUNNER_TEMP/shellcheck-0.11.0"
+          mkdir -- "$tool_dir"
+          curl --fail --location --silent --show-error \
+            https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz \
+            --output "$tool_dir/archive.tar.xz"
+          printf '%s  %s\n' 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198 "$tool_dir/archive.tar.xz" | sha256sum --check --status
+          tar -xJf "$tool_dir/archive.tar.xz" --directory "$tool_dir" --strip-components=1
+          "$tool_dir/shellcheck" --version
+          printf '%s\n' "$tool_dir" >> "$GITHUB_PATH"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
           repository: Afonenko-Course-Tools/quarto-course
-          ref: 946ad619830aa1affcbdaf4b5b447324e3d41002 # Core 9.0.0: exact source candidate
+          ref: 8aba3b47df161c98645f3fc268adefc2e96ef8d3 # Core 9.0.0: exact source candidate
           path: .ci/course-core
           persist-credentials: false
       - name: Проверить закреплённый Core
-        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "946ad619830aa1affcbdaf4b5b447324e3d41002"
+        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "8aba3b47df161c98645f3fc268adefc2e96ef8d3"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: b019ac08a5ab473a70e04589e1b125d977281373 # Site 5.2.0: production-stable companion, independent review/release pending
+          ref: 21abbbe40a66cbdc1f0185d09b9f6710e20f140b # Site 5.2.0: production-stable companion, independent review/release pending
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "b019ac08a5ab473a70e04589e1b125d977281373"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "21abbbe40a66cbdc1f0185d09b9f6710e20f140b"
+      - name: Строгая проверка собственного Lua
+        run: quarto run tools/check-types.ts --lua
+      - name: ShellCheck и синтаксис каждого собственного shell-файла
+        run: |
+          quarto run tools/check-types.ts --shell
+          for script in \
+            tests/fixtures/inspect-only.sh \
+            tests/fixtures/native-refusal.sh \
+            tests/fixtures/ok-tool.sh \
+            tests/fixtures/print-env.sh \
+            tests/fixtures/process-tool.sh; do
+            bash -n "$script"
+          done
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26.10.0'
+          package-manager-cache: false
+      - name: Установить зависимости статических проверок
+        run: npm ci --ignore-scripts
+      - name: Строгие типы исходников, инструментов и проверок
+        run: |
+          quarto run tools/generate-parse5-types.ts --check
+          quarto run tools/check-types.ts --typescript
+          quarto run tools/check-types.ts --browser
+          npm run check:node
       - name: Согласованность guard outputs и публичных типов
         run: quarto run tests/contract-consistency.ts
       - name: Детерминированная сериализация QRC
@@ -72,6 +127,7 @@ jobs:
         run: |
           quarto run tests/demo-external.ts
           quarto run tests/diagnostics.ts
+          quarto run tests/html-boundaries.ts
           quarto run tests/post-inspection.ts
           quarto run tests/export-context.ts
           quarto run tests/body-links.ts
@@ -104,7 +160,6 @@ jobs:
         run: quarto run tests/example.ts
       - name: Установка браузерных зависимостей
         run: |
-          npm ci
           npx playwright install --with-deps chromium
       - name: Раскрытие HTML-блоков и фрагментов Revealjs
         run: npm run test:browser

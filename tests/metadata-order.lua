@@ -1,22 +1,21 @@
 -- Native Attr map и реальные QRC callers: имена/значения важны, порядок bytes нет.
-package.preload['../observability/bridge'] = function()
-  return dofile('_extensions/reference-catalog/observability/bridge.lua')
-end
-for _, name in ipairs({'diagnostics', 'links', 'targets', 'constants', 'generated/reference-styles'}) do
-  package.preload['./' .. name] = function()
-    return dofile('_extensions/reference-catalog/lua/' .. name .. '.lua')
-  end
-end
-local links = require('_extensions/reference-catalog/lua/links')
-local probes = require('_extensions/reference-catalog/lua/probes')
+require('tests/fixtures/native-modules').install()
+local links = require('./links')
+local probes = require('./probes')
 return {{Pandoc=function(doc)
+  -- Это native Pandoc unit: Quarto namespace создаётся тестом целиком.
   local native_quarto = quarto
   local exported = false
+  ---@param format string
+  local function isHtml(format) return format == 'html' end
+  ---@param key string
+  local function isExported(key) return exported and key == 'course-export-context' end
+  local mock = {
+    doc={input_file='chapter.qmd', is_format=isHtml},
+    metadata={get=isExported},
+  }
+  rawset(_G, 'quarto', mock)
   local ok, failure = pcall(function()
-    quarto = {
-      doc = {input_file='chapter.qmd', is_format=function(format)return format == 'html' end},
-      metadata = {get=function(key)return exported and key == 'course-export-context' end},
-    }
     local attrs = {['data-qrc-title']='Название & тема', ['data-qrc-style']='default', ['data-qrc-id']='sec-a'}
     local native = pandoc.Attr('', {'qrc-probe'}, attrs)
     for key, value in pairs(attrs) do
@@ -32,21 +31,35 @@ return {{Pandoc=function(doc)
     assert(marker.t == 'Span' and marker.classes:includes('qrc-reference'), 'Потерян source-export marker')
     assert(marker.attributes['data-qrc-ref'] == 'book:sec-a' and marker.attributes['data-qrc-style'] == 'number' and marker.attributes['data-qrc-custom'] == 'false', 'Потеряны source-export attributes')
     assert(pandoc.utils.stringify(marker.content) == 'book:sec-a', 'Потеряна исходная подпись')
-    local heading = pandoc.Header(1, 'Заголовок & тема', pandoc.Attr('sec-a', {'unnumbered'}))
+    local heading = pandoc.Header(1, pandoc.Inlines{pandoc.Str('Заголовок & тема')}, pandoc.Attr('sec-a', {'unnumbered'}))
     local subject = pandoc.Pandoc({heading}, {['reference-catalog']={namespace='book'}})
     probes[1].Meta(subject.meta)
     probes[2].Header(heading)
     probes[3].Pandoc(subject)
-    local container = subject.blocks[#subject.blocks]
+    ---@type QrcBlock[]
+    local blocks = subject.blocks
+    local container = blocks[#blocks]
+    assert(container and container.t == 'Div', 'Отсутствует native probes Div')
     assert(container.classes:includes('qrc-probes'), 'Потерян probes container')
     assert(container.attributes['hidden'] == '' and container.attributes['aria-hidden'] == 'true', 'Потеряны hidden/aria attributes')
     assert(container.attributes['data-qrc-namespace'] == 'book' and container.attributes['data-qrc-source'] == 'chapter.qmd', 'Потеряны namespace/source attributes')
+    ---@type table<string, boolean>
     local styles = {}
-    for _, row in ipairs(container.content) do
+    ---@type QrcBlock[]
+    local rows = container.content
+    for _, row in ipairs(rows) do
+      assert(row.t == 'Div', 'Отсутствует native probe Div')
       assert(row.classes:includes('qrc-probe') and row.attributes['data-qrc-id'] == 'sec-a', 'Потеряна target identity')
       local style = row.attributes['data-qrc-style']
       styles[style] = true
-      local reference = row.content[1].content[1]
+      ---@type QrcBlock[]
+      local content = row.content
+      local paragraph = content[1]
+      assert(paragraph and paragraph.t == 'Para', 'Отсутствует native probe Para')
+      ---@type QrcInline[]
+      local inlines = paragraph.content
+      local reference = inlines[1]
+      assert(reference, 'Отсутствует native reference')
       if style == 'default' then
         assert(row.attributes['data-qrc-title'] == 'Заголовок & тема', 'Потерян heading title')
         assert(reference.t == 'Link' and reference.target == '#sec-a' and pandoc.utils.stringify(reference.content) == 'Заголовок & тема', 'Потеряна native подпись probe')
@@ -57,7 +70,7 @@ return {{Pandoc=function(doc)
     end
     assert(styles.default and styles.number, 'Потерян один из native probe styles')
   end)
-  quarto = native_quarto
+  rawset(_G, 'quarto', native_quarto)
   assert(ok, failure)
   io.stderr:write('PASS native Attr map: QRC links/source-export/probes сохраняют refs, labels и hidden/data-*\n')
   return doc

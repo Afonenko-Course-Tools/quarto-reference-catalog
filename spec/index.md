@@ -17,6 +17,7 @@ vocabulary, architecture, reference и plan; `component` указывает вл
 | [Авторская конфигурация](../_extensions/reference-catalog/infrastructure/config.ts) | contract/schema | reference-catalog | current |
 | [Исполняемый контракт каталога](../_extensions/reference-catalog/infrastructure/catalog-validation.ts) | contract/schema | reference-catalog | current |
 | [Стили ссылок](../_extensions/reference-catalog/vocabulary/reference-styles.json) | vocabulary | reference-catalog | current |
+| [Проверка поддерживаемого кода](../docs/typechecking.md) | reference | reference-catalog | current |
 | [Архитектура](../docs/architecture.md) | architecture | reference-catalog | current |
 | [Диагностика](../docs/diagnostics.md) | reference | reference-catalog | current |
 | [Авторская модель Core](../../quarto-course/spec/index.md) | specification/index | course-core | current |

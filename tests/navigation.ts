@@ -1,10 +1,11 @@
+import { required } from "./support.ts";
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
 import { linkPages } from "../_extensions/reference-catalog/infrastructure/linker.ts";
 
 // Publication, not a particular course renderer, must install target opening.
 const html = '<html><body><details><summary>Answer</summary><div id="sol-answer">42</div></details></body></html>';
 const page = readPage("index.html", html);
-const linked = linkPages([page], "/* generic target navigation */").pages.get("index.html")!;
+const linked = required(linkPages([page], "/* generic target navigation */").pages.get("index.html"));
 if (!linked.includes('<script data-qrc-navigation>/* generic target navigation */</script>'))
   throw new Error("HTML pages must receive target navigation, not only Revealjs");
 if (!linked.includes('<div id="sol-answer">42</div>'))
@@ -12,7 +13,7 @@ if (!linked.includes('<div id="sol-answer">42</div>'))
 if (linked.match(/data-qrc-navigation/g)?.length !== 1)
   throw new Error("Install navigation exactly once per publication");
 
-const republished = linkPages([readPage("index.html", linked)], "/* updated navigation */").pages.get("index.html")!;
+const republished = required(linkPages([readPage("index.html", linked)], "/* updated navigation */").pages.get("index.html"));
 if (republished.match(/data-qrc-navigation/g)?.length !== 1 || !republished.includes("/* updated navigation */") || republished.includes("/* generic target navigation */"))
   throw new Error("Republishing must replace the owned script, not duplicate it");
 

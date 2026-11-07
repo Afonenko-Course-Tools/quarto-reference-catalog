@@ -1,3 +1,4 @@
+import { required } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { attr, content, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -14,7 +15,7 @@ try {
   assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), "External independent project lost lang ru");
   const source = "https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.2.0/examples/external/index.qmd";
   const actions = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
-  assert(actions.length === 1 && hasClass(actions[0], "toc-action"), "External HTML must have exactly one native source action to the correct QMD");
+  assert(actions.length === 1 && hasClass(required(actions[0]), "toc-action"), "External HTML must have exactly one native source action to the correct QMD");
   const external = nodes.filter(node => node.tagName === "a" && attr(node, "data-qrc-ref") === "docs:sec-inspect");
   assert(external.length === 3 && external.every(node => attr(node, "href")?.startsWith("https://quarto.org/docs/")), "External demo lost its published base-url contract");
   assert(external.some(node => content(node).includes("Выбранная подпись автора")), "External demo lost its authored caption");

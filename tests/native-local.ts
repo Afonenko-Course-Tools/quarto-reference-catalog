@@ -1,3 +1,5 @@
+import { required } from "./support.ts";
+import { readCatalog } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join } from "stdlib/path";
 import { attr, content, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
@@ -38,13 +40,7 @@ async function links() {
 try {
   await copy(join(repo, "_extensions"), join(root, "_extensions"));
   const fake = join(root, "native-refusal.sh");
-  await Deno.writeTextFile(fake, `#!/bin/sh
-case "$REFUSAL" in
-  known) printf '%s' '{"config":{}}' ;;
-  foreign) printf 'FOREIGN.QUARTO_ID: failure\\n' >&2; exit 17 ;;
-  *) printf '%s' 'invalid JSON' ;;
-esac
-`);
+  await Deno.copyFile(new URL("./fixtures/native-refusal.sh", import.meta.url), fake);
   await Deno.chmod(fake, 0o700);
   for (const mode of ["known", "foreign", "unknown"]) {
     const result = await new Deno.Command(quarto, { args: ["run", "_extensions/reference-catalog/entrypoints/post.ts"], cwd: root, env: { QUARTO: fake, REFUSAL: mode }, stdout: "piped", stderr: "piped" }).output();
@@ -56,12 +52,7 @@ esac
     else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${rawStderr}`);
   }
   const bootstrap = join(root, "unknown-process.ts");
-  await Deno.writeTextFile(bootstrap, `const NativeCommand = Deno.Command;
-Deno.Command = class extends NativeCommand {
-  output() { return Promise.reject(new TypeError("INTERNAL.STARTUP_INVARIANT")); }
-};
-await import("./_extensions/reference-catalog/entrypoints/post.ts");
-`);
+  await Deno.copyFile(new URL("./fixtures/unknown-process.ts", import.meta.url), bootstrap);
   const unknownProcess = await new Deno.Command(quarto, { args: ["run", bootstrap], cwd: root, env: { QUARTO: fake }, stdout: "piped", stderr: "piped" }).output();
   const rawUnknownStderr = new TextDecoder().decode(unknownProcess.stderr);
   const unknownStderr = plainStderr(rawUnknownStderr);
@@ -93,12 +84,12 @@ Known local target: @book:sec-current.
   await render("index.qmd");
   let nodes = await links();
   assert(nodes.length === 3, "Native selected render lost requests");
-  const external = nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!;
+  const external = required(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external"));
   assert(attr(external, "data-qrc-deferred") === "true" && content(external) === "practice:sec-external", "Native selected render lost the deferred external label");
-  const chapter = nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-later")!;
+  const chapter = required(nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-later"));
   assert(attr(chapter, "data-qrc-deferred") === "true" && content(chapter) === "Read the later chapter", "Missing same-namespace chapter facts were not deferred");
   assert(nodes.some(node => attr(node, "data-qrc-ref") === "book:sec-current" && attr(node, "href") === "index.html#sec-current"), "Known native local target was not resolved");
-  const partial = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog-local.json")));
+  const partial = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(Object.keys(partial.targets).join() === "book:sec-current", "Native selected render exported unavailable chapter facts");
 
   const context = { root, stage, quarto: "native-test", config: { "reference-catalog": { namespace: "book" } }, members: [{ namespace: "book", format: "html" }], outputs: ["_site/index.html"] };
@@ -118,8 +109,8 @@ Known local target: @book:sec-current.
   // A full render of this component still lacks other course namespaces.
   await render(".");
   nodes = await links();
-  assert(attr(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!, "data-qrc-deferred") === "true", "Native full component render incorrectly finalized the whole course");
-  assert(attr(nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-later")!, "href") === "later.html#sec-later", "Full component render did not resolve newly available chapter facts");
+  assert(attr(required(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")), "data-qrc-deferred") === "true", "Native full component render incorrectly finalized the whole course");
+  assert(attr(required(nodes.find(node => attr(node, "data-qrc-ref") === "book:sec-later")), "href") === "later.html#sec-later", "Full component render did not resolve newly available chapter facts");
 
   // Full finalization consumes current facts retained by the local hook.
   const imported = {
@@ -135,15 +126,15 @@ Known local target: @book:sec-current.
   } } };
   await publish({ ...current, scope: "local" });
   nodes = await links();
-  assert(content(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!) === "External section", "A subsequent invocation did not read newly available catalog facts");
-  imported.targets["practice:sec-external"].label = "Current external section";
-  imported.targets["practice:sec-external"].page = "current.html";
+  assert(content(required(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external"))) === "External section", "A subsequent invocation did not read newly available catalog facts");
+  required(imported.targets["practice:sec-external"]).label = "Current external section";
+  required(imported.targets["practice:sec-external"]).page = "current.html";
   await Deno.writeTextFile(join(root, "external.json"), JSON.stringify(imported));
   await publish({ ...current, scope: "full" });
-  const publicCatalog = JSON.parse(await Deno.readTextFile(join(stage, "reference-catalog.json")));
+  const publicCatalog = await readCatalog(join(stage, "reference-catalog.json"));
   assert(Object.keys(publicCatalog.targets).join() === "book:sec-current,book:sec-later", "Native default full export must publish current own chapters without imported targets");
   nodes = await links();
-  const finalExternal = nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external")!;
+  const finalExternal = required(nodes.find(node => attr(node, "data-qrc-ref") === "practice:sec-external"));
   assert(content(finalExternal) === "Current external section" && attr(finalExternal, "href") === "https://example.test/practice/current.html#sec-external", "Full finalization reused stale catalog bytes");
   assert(nodes.every(node => attr(node, "data-qrc-deferred") === undefined), "Full finalization retained deferred state");
   assert(nodes.some(node => attr(node, "data-qrc-ref") === "book:sec-current" && attr(node, "href") === "index.html#sec-current"), "Full finalization lost locally retained target facts");

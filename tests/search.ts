@@ -1,4 +1,8 @@
+import type { ParserOptions, TreeAdapterTypeMap } from "../_extensions/reference-catalog/types/parse5/dist/index.d.ts";
+import { required } from "./support.ts";
+import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
+// @deno-types="../_extensions/reference-catalog/types/parse5/dist/index.d.ts"
 import { Parser } from "../_extensions/reference-catalog/vendor/parse5/dist/index.js";
 import { updateSearch } from "../_extensions/reference-catalog/infrastructure/search.ts";
 import { readPage } from "../_extensions/reference-catalog/infrastructure/pages.ts";
@@ -9,11 +13,12 @@ function assert(value: unknown, message: string): asserts value {
 const root = await Deno.makeTempDir({ prefix: "qrc-search-" });
 const parse = Parser.parse;
 let parses = 0;
-Parser.parse = function (...args: Parameters<typeof parse>) {
+Parser.parse = function <T extends TreeAdapterTypeMap>(html: string, options?: ParserOptions<T>): T["document"] {
   parses++;
-  return parse.apply(this, args);
+  const bound = parse.bind(this);
+  return bound<T>(html, options);
 };
-const files = [join(root, "search.json"), join(root, "nested/search.json")];
+const files: [string, string] = [join(root, "search.json"), join(root, "nested/search.json")];
 async function writeRows() {
   await Deno.mkdir(join(root, "nested"), { recursive: true });
   await Deno.writeTextFile(
@@ -37,19 +42,20 @@ async function writeRows() {
 }
 try {
   await writeRows();
-  const pages = new Map([
+  const fixtures: [string, string][] = [
     [
       "index.html",
-      '<html><body><main>Final <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" hidden aria-hidden="true">omit retained target probes</div></main><main>later main</main></body></html>',
+      '<html><body><main><h1 id="sec-final" class="unnumbered">Final</h1> <a>linked caption</a><section id="same">first match</section><section id="same">later match</section><nav>omit nav</nav><script>omit script</script><span class="anchorjs-link">omit anchor</span><div class="qrc-probes" data-qrc-namespace="book" data-qrc-source="index.qmd" hidden aria-hidden="true"><div class="qrc-probe" data-qrc-id="sec-final" data-qrc-style="default" data-qrc-title="Final"><a class="qrc-anchor" href="#sec-final">Final</a></div><div class="qrc-probe" data-qrc-id="sec-final" data-qrc-style="number"><span class="qrc-unavailable"></span></div></div></main><main>later main</main></body></html>',
     ],
     [
       "nested/other.html",
       '<html><body><main><section id="encoded id">Other text</section><button>omit button</button><style>omit style</style></main></body></html>',
     ],
-  ].map(([path, html]) => [path, readPage(path, html)]));
+  ];
+  const pages = new Map(fixtures.map(([path, html]) => [path, readPage(path, html)]));
   await updateSearch(root, files, pages);
   assert(parses === 2, `Expected one final HTML parse per page, got ${parses}`);
-  const first = JSON.parse(await Deno.readTextFile(files[0])).map((
+  const first = (await readSearch(files[0])).map((
     row: { text: string },
   ) => row.text);
   assert(
@@ -66,7 +72,7 @@ try {
   );
   assert(
     JSON.stringify(
-      JSON.parse(await Deno.readTextFile(files[1])).map((
+      (await readSearch(files[1])).map((
         row: { text: string },
       ) => row.text),
     ) === '["first match","Other text"]',
@@ -80,7 +86,7 @@ try {
   await updateSearch(root, files, pages);
   assert(parses === 0, "Search reparsed already supplied current pages");
   assert(
-    JSON.parse(await Deno.readTextFile(files[0]))[1].text ===
+    required((await readSearch(files[0]))[1]).text ===
       "changed linked caption",
     "A later search operation retained stale linked HTML",
   );
