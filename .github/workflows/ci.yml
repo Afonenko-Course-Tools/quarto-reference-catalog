@@ -64,19 +64,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-course
-          ref: 946ad619830aa1affcbdaf4b5b447324e3d41002 # Core 9.0.0: exact source candidate
+          ref: 8aba3b47df161c98645f3fc268adefc2e96ef8d3 # Core 9.0.0: exact source candidate
           path: .ci/course-core
           persist-credentials: false
       - name: Проверить закреплённый Core
-        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "946ad619830aa1affcbdaf4b5b447324e3d41002"
+        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "8aba3b47df161c98645f3fc268adefc2e96ef8d3"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: b019ac08a5ab473a70e04589e1b125d977281373 # Site 5.2.0: production-stable companion, independent review/release pending
+          ref: 21abbbe40a66cbdc1f0185d09b9f6710e20f140b # Site 5.2.0: production-stable companion, independent review/release pending
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "b019ac08a5ab473a70e04589e1b125d977281373"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "21abbbe40a66cbdc1f0185d09b9f6710e20f140b"
       - name: Строгая проверка собственного Lua
         run: quarto run tools/check-types.ts --lua
       - name: ShellCheck и синтаксис каждого собственного shell-файла
