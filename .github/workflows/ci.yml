@@ -20,10 +20,10 @@ jobs:
     name: Проверка (${{ matrix.quarto }})
     runs-on: ubuntu-latest
     env:
-      XDG_CACHE_HOME: ${{ github.workspace }}/.ci/course-qrc-cache
+      XDG_CACHE_HOME: ${{ runner.temp }}/course-qrc-cache
       PERFORMANCE: ${{ github.workspace }}/.ci/performance
       COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/.ci/performance
-      LUA_LANGUAGE_SERVER: ${{ github.workspace }}/.ci/luals/bin/lua-language-server
+      LUA_LANGUAGE_SERVER: ${{ runner.temp }}/course-qrc-luals/bin/lua-language-server
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -53,7 +53,7 @@ jobs:
         run: |
           test "$(git -C "$PERFORMANCE" rev-parse HEAD)" = "bfbe23f819dfe4c7d5e5487f669c14d8e6c9846e"
           bash "$PERFORMANCE/tools/setup-mv-ci.sh" "$RUNNER_TEMP/course-gnu-mv" >> "$GITHUB_PATH"
-          bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$GITHUB_WORKSPACE/.ci/luals"
+          bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$RUNNER_TEMP/course-qrc-luals"
       - name: Установить закреплённый ShellCheck
         run: |
           tool_dir="$RUNNER_TEMP/shellcheck-0.11.0"
