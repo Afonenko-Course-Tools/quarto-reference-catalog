@@ -241,6 +241,10 @@
       "gate": "deno"
     },
     {
+      "path": "eslint.config.mjs",
+      "gate": "node-tool"
+    },
+    {
       "path": "examples/course/build-info.ts",
       "gate": "deno"
     },
@@ -467,6 +471,14 @@
     {
       "path": "tests/support.ts",
       "gate": "deno"
+    },
+    {
+      "path": "tools/check-quality-controls.mjs",
+      "gate": "node-tool"
+    },
+    {
+      "path": "tools/check-quality.mjs",
+      "gate": "node-tool"
     },
     {
       "path": "tools/check-types.ts",

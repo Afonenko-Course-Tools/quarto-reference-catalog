@@ -1,8 +1,9 @@
+import { fromFileUrl } from "stdlib/path";
 import {strict as assert} from 'node:assert';
 const root = await Deno.makeTempDir({prefix: 'reference-catalog-noenv-'});
 
 try {
-  const runner = new URL("./fixtures/restricted-parent.ts", import.meta.url).pathname;
+  const runner = fromFileUrl(new URL("./fixtures/restricted-parent.ts", import.meta.url));
   const failures: string[] = [];
   for (const mode of ['off', 'summary']) {
     const result = await new Deno.Command(Deno.execPath(), {
