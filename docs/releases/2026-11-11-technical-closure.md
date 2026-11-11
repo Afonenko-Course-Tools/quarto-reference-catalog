@@ -22,3 +22,25 @@ process fixtures преобразуется через `fromFileUrl`: кирил
 не превращает действительный файл в encoded несуществующий путь.
 Полный production quality gate проверяет все 26 собственных TS файлов и один
 browser JS, unsafe типы, structural budgets и зависимости без suppressions.
+
+Восьмишаговая фактическая Java/SP проверка выявила прежнюю cold/warm разницу в
+обоих refs: local находил retained sibling catalog и добавлял `rel=external`,
+full менял href на текущий внутренний, сохраняя устаревшую decoration. QRC теперь
+отмечает только собственный добавленный rel в local HTML, удаляет его при
+internal/full/deferred переходе и сохраняет авторские `external`, `noopener`,
+`author`. Текущий style заново определяет собственные class/CSS; замена своих
+script/style удаляет также ровно свой добавленный separator. Весь результат
+по-прежнему подготовлен до записи, нового параметра или JSON schema нет.
+
+Public producer→catalog→local→full regression проверяет actual retained catalog,
+rich labels, авторские rel, повторную обработку, исчезновение импорта и одинаковые
+cold/warm bytes на одной разметке. Старый frozen source на этой проверке
+отказывает по фактическому rel-контракту. Девять адресных suites, полный quality
+и независимая рецензия прошли. Две новые реальные SP сборки дали одинаковый полный
+DOM всех 33 HTML; 27 ZIP, catalog/search и остальные assets побайтно сохранены.
+
+Hosted отказ `native-local.ts` оказался прежним ожиданием: fixture выдавал
+некорректный JSON как будто неизвестное исключение. Проверка теперь ожидает
+адресный `QRC.CONFIG_INVALID` без native stack, сохраняя отдельный настоящий
+TypeError/stack sentinel. Исправленный suite прошёл на Quarto 1.11.5 и 1.12.1;
+production-код диагностики для этого не ослаблялся.
