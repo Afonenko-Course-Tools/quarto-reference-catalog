@@ -30,7 +30,7 @@ QRC владеет namespace/imports/exports, адресацией, local/full �
 Целевой Quarto — 1.11.5; исполняемые контракты локальные TypeScript.
 Target/Catalog/Import/Exports выводятся из фактических validators и projection импорта;
 отдельной JSON-схемы и внешнего schema validator нет.
-Текущий ref — кандидат **3.3.0**. Изменения main после выпущенного тега — **unreleased**.
+Изменения main после выпущенного тега — **unreleased**.
 Документация установленного выпуска читается из того же immutable tag, что и код.
 
 В 3.1.1 фасады наблюдения сохраняют ABI 1 и добавляют `attributes.extension_id`.
