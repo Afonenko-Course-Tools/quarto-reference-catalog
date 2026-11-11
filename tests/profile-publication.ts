@@ -1,4 +1,5 @@
 import { required } from "./support.ts";
+import { readSearch, record } from "./support.ts";
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { jsonValue } from "./support.ts";
 import { join } from "stdlib/path";
@@ -27,6 +28,7 @@ try {
   for (const view of ["student", "full"]) {
     const stage = join(root, view);
     await Deno.mkdir(stage);
+    await Deno.mkdir(join(stage, "book"));
     // A retained full page must never contribute facts to current student outputs.
     await Deno.writeTextFile(join(stage, "retained-full.html"), page(true));
     await Deno.writeTextFile(
@@ -40,6 +42,10 @@ try {
         { href: "retained-full.html", text: "RESTRICTED_BODY_SENTINEL" },
       ]),
     );
+    await Deno.writeTextFile(join(stage, "book/search.json"), JSON.stringify([
+      { href: "../current.html#exr-open", text: "old section", metadata: { audience: view } },
+      { href: "../retained-full.html", text: "RESTRICTED_BODY_SENTINEL" },
+    ]));
     const context = {
       root,
       stage,
@@ -47,7 +53,7 @@ try {
       config: {},
       members: [{ namespace: "bank", format: "html" }],
       outputs: [join(stage, "current.html")],
-      searchIndexes: [{ path: join(stage, "search.json") }],
+      searchIndexes: [{ path: join(stage, "search.json") }, { path: join(stage, "book/search.json"), mount: "book" }],
     };
     await publish(context);
     const text = await Deno.readTextFile(join(stage, "reference-catalog.json"));
@@ -80,6 +86,9 @@ try {
       !search.includes("retained-full.html"),
       "Search retained stale full output",
     );
+    const mounted = await readSearch(join(stage, "book/search.json"));
+    assert(mounted.length === 1 && mounted[0]?.href === "../current.html#exr-open" && mounted[0]?.text === "OPEN_BODY_SENTINEL", "Mounted search retained stale full output or lost current relative fragment");
+    assert(JSON.stringify(record(mounted[0]).metadata) === JSON.stringify({ audience: view }), "Mounted search lost profile metadata");
     if (view === "student") {
       assert(
         !text.includes("Restricted"),

@@ -1,3 +1,4 @@
+import { fromFileUrl } from "stdlib/path";
 import { jsonValue } from "./support.ts";
 import { strict as assert } from 'node:assert';
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -25,7 +26,7 @@ try {
     },
   }});
   const {quarto} = await import('../_extensions/reference-catalog/infrastructure/process.ts?context-test');
-  const args = ["run", "--no-config", "--no-lock", "--allow-env", new URL("./fixtures/performance-child.ts", import.meta.url).pathname];
+  const args = ["run", "--no-config", "--no-lock", "--allow-env", fromFileUrl(new URL("./fixtures/performance-child.ts", import.meta.url))];
   const env = {FUNCTIONAL: 'keep', QUARTO_PROFILE: 'student'};
   assert.deepEqual(jsonValue(await quarto(args, root, env)), [null, 'keep', 'inherited', 'student', Deno.pid]);
   const values = await Promise.all(['parent-a', 'parent-b'].map(parent => contexts.run(parent, async () =>

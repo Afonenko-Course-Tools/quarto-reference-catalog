@@ -20,10 +20,8 @@ jobs:
     name: Проверка (${{ matrix.quarto }})
     runs-on: ubuntu-latest
     env:
-      XDG_CACHE_HOME: ${{ github.workspace }}/.ci/course-qrc-cache
       PERFORMANCE: ${{ github.workspace }}/.ci/performance
       COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/.ci/performance
-      LUA_LANGUAGE_SERVER: ${{ github.workspace }}/.ci/luals/bin/lua-language-server
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -33,23 +31,38 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Настроить HTTPS зеркало Ubuntu
+        run: |
+          test -f /etc/apt/apt-mirrors.txt
+          test ! -L /etc/apt/apt-mirrors.txt
+          grep -Rq 'mirror+file:/etc/apt/apt-mirrors.txt' /etc/apt/sources.list.d
+          printf '%s\n' 'https://mirrors.edge.kernel.org/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
       - name: Подготовить доступный кеш Quarto
+        env:
+          XDG_CACHE_HOME: ${{ runner.temp }}/course-qrc-cache
+          LUA_LANGUAGE_SERVER: ${{ runner.temp }}/course-qrc-luals/bin/lua-language-server
         run: |
           mkdir -p -- "$XDG_CACHE_HOME"
           test -w "$XDG_CACHE_HOME"
+          printf 'XDG_CACHE_HOME=%s\n' "$XDG_CACHE_HOME" >> "$GITHUB_ENV"
+          printf 'LUA_LANGUAGE_SERVER=%s\n' "$LUA_LANGUAGE_SERVER" >> "$GITHUB_ENV"
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: v2.7.14
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
         with:
           version: ${{ matrix.quarto }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-course-performance
-          ref: 0781f03a11f461691d7ce116f2c53bb5d8af68d7
+          ref: bfbe23f819dfe4c7d5e5487f669c14d8e6c9846e
           path: .ci/performance
           persist-credentials: false
       - name: Проверить закреплённый Performance и установить LuaLS
         run: |
-          test "$(git -C "$PERFORMANCE" rev-parse HEAD)" = "0781f03a11f461691d7ce116f2c53bb5d8af68d7"
-          bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$GITHUB_WORKSPACE/.ci/luals"
+          test "$(git -C "$PERFORMANCE" rev-parse HEAD)" = "bfbe23f819dfe4c7d5e5487f669c14d8e6c9846e"
+          bash "$PERFORMANCE/tools/setup-mv-ci.sh" "$RUNNER_TEMP/course-gnu-mv" >> "$GITHUB_PATH"
+          bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$RUNNER_TEMP/course-qrc-luals"
       - name: Установить закреплённый ShellCheck
         run: |
           tool_dir="$RUNNER_TEMP/shellcheck-0.11.0"
@@ -64,19 +77,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-course
-          ref: 8aba3b47df161c98645f3fc268adefc2e96ef8d3 # Core 9.0.0: exact source candidate
+          ref: 5c2b551724471ff7637aad1068f22c5f7998a687 # Core 9.0.0: exact source candidate
           path: .ci/course-core
           persist-credentials: false
       - name: Проверить закреплённый Core
-        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "8aba3b47df161c98645f3fc268adefc2e96ef8d3"
+        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "5c2b551724471ff7637aad1068f22c5f7998a687"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 21abbbe40a66cbdc1f0185d09b9f6710e20f140b # Site 5.2.0: production-stable companion, independent review/release pending
+          ref: 63d6922074b1345a83f93449cd5a9fe9fbfeaab3 # Site 5.2.0: production-stable companion, independent review/release pending
           path: .ci/course-site
           persist-credentials: false
       - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "21abbbe40a66cbdc1f0185d09b9f6710e20f140b"
+        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "63d6922074b1345a83f93449cd5a9fe9fbfeaab3"
       - name: Строгая проверка собственного Lua
         run: quarto run tools/check-types.ts --lua
       - name: ShellCheck и синтаксис каждого собственного shell-файла
@@ -96,6 +109,12 @@ jobs:
           package-manager-cache: false
       - name: Установить зависимости статических проверок
         run: npm ci --ignore-scripts
+      - name: Полный production quality и отрицательные контроли
+        env:
+          CORE: ${{ github.workspace }}/.ci/course-core
+        run: |
+          npm run check-quality
+          npm run check-quality:controls
       - name: Строгие типы исходников, инструментов и проверок
         run: |
           quarto run tools/generate-parse5-types.ts --check

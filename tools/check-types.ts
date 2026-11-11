@@ -15,13 +15,14 @@ const files: { path: string; gate: string }[] = inventory.files.map((entry: unkn
   }
   return { path: entry.path, gate: entry.gate };
 });
-const listing = await new Deno.Command("git", { args: ["ls-files"], cwd: root, stdout: "piped", stderr: "piped" }).output();
+const listing = await new Deno.Command("git", { args: ["ls-files", "--cached", "--others", "--exclude-standard"], cwd: root, stdout: "piped", stderr: "piped" }).output();
 if (!listing.success) throw new Error(new TextDecoder().decode(listing.stderr));
 const code = new TextDecoder().decode(listing.stdout).trim().split("\n")
-  .filter(path => /\.(?:ts|js|cjs|lua|sh)$/.test(path) && !path.includes("/vendor/"));
+  .filter(path => /\.(?:ts|js|cjs|mjs|lua|sh)$/.test(path) && !path.includes("/vendor/"));
 function gateFor(path: string): string {
   if (["_extensions/reference-catalog/observability/bridge.ts", "_extensions/reference-catalog/observability/bridge.lua"].includes(path)) return "bridge-owner";
   if (path.endsWith(".lua")) return "lua";
+  if (path.endsWith(".mjs")) return "node-tool";
   if (path.endsWith(".cjs")) return "node";
   if (path.endsWith(".sh")) return "shell";
   if (path.endsWith(".js") || path === "typecheck/browser.d.ts") return "browser";
@@ -54,6 +55,13 @@ if (mode === "--lua") {
   const result = await new Deno.Command(Deno.execPath(), { args, cwd: root, stdout: "inherit", stderr: "inherit" }).spawn().status;
   Deno.exitCode = result.code;
   return;
+}
+if (mode === "--typescript") {
+  for (const entry of files.filter(entry => entry.gate === "node-tool")) {
+    const result = await new Deno.Command("node", { args: ["--check", join(root, entry.path)], cwd: root,
+      stdout: "inherit", stderr: "inherit" }).spawn().status;
+    if (!result.success) { Deno.exitCode = result.code; return; }
+  }
 }
 const selected = mode === "--typescript" ? "deno" : "browser";
 const targets = files.filter(entry => entry.gate === selected).map(entry => join(root, entry.path));

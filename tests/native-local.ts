@@ -20,7 +20,7 @@ async function rejects(action: () => Promise<unknown>, message: string) {
   throw new Error(`Expected rejection: ${message}`);
 }
 const repo = dirname(dirname(fromFileUrl(import.meta.url)));
-const root = await Deno.makeTempDir({ prefix: "qrc-native-local-" });
+const root = await Deno.realPath(await Deno.makeTempDir({ prefix: "qrc-native-local-" }));
 const stage = join(root, "_site");
 const quarto = Deno.env.get("QUARTO") || "quarto";
 async function render(target: string, extra: Record<string, string> = {}) {
@@ -42,14 +42,14 @@ try {
   const fake = join(root, "native-refusal.sh");
   await Deno.copyFile(new URL("./fixtures/native-refusal.sh", import.meta.url), fake);
   await Deno.chmod(fake, 0o700);
-  for (const mode of ["known", "foreign", "unknown"]) {
+  for (const mode of ["known", "foreign", "malformed"]) {
     const result = await new Deno.Command(quarto, { args: ["run", "_extensions/reference-catalog/entrypoints/post.ts"], cwd: root, env: { QUARTO: fake, REFUSAL: mode }, stdout: "piped", stderr: "piped" }).output();
     const rawStderr = new TextDecoder().decode(result.stderr);
     const stderr = plainStderr(rawStderr);
     assert(!result.success, `Hook accepted ${mode} refusal`);
     if (mode === "known") assert(stderr.split("QRC.CONFIG_INVALID").length === 2 && !stderr.includes("at main"), `Named error must print once without stack: ${rawStderr}`);
     else if (mode === "foreign") assert(stderr.split("FOREIGN.QUARTO_ID").length === 2 && stderr.includes("17") && !stderr.includes("at main"), `Foreign failure must retain native ID/exit once: ${rawStderr}`);
-    else assert(stderr.includes("SyntaxError") && stderr.includes("at main"), `Unknown exception must retain stack: ${rawStderr}`);
+    else assert(stderr.split("QRC.CONFIG_INVALID").length === 2 && stderr.includes(root) && stderr.includes("поле=inspect") && !stderr.includes("at main"), `Malformed inspect must retain named source/field once without a native stack: ${rawStderr}`);
   }
   const bootstrap = join(root, "unknown-process.ts");
   await Deno.copyFile(new URL("./fixtures/unknown-process.ts", import.meta.url), bootstrap);

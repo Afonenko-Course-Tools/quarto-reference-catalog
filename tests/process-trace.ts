@@ -1,4 +1,4 @@
-import { join } from "stdlib/path";
+import { fromFileUrl, join } from "stdlib/path";
 import { quarto } from "../_extensions/reference-catalog/infrastructure/process.ts";
 
 function assert(value: unknown, message: string): asserts value {
@@ -65,8 +65,8 @@ try {
   assert(failure instanceof Error && "tool" in failure && "exitCode" in failure && "stdout" in failure && "stderr" in failure && failure.name === "ExternalToolFailure" && failure.tool === fake && failure.exitCode === 23 && failure.stdout === "PRIVATE_STDOUT\n" && failure.stderr === "WARNING: PRIVATE_FAILURE\n" && failure.cause !== undefined, `Native failure lost tool/exit/streams/cause: ${failure}`);
   const probe = new URL("./fixtures/process-warning.ts", import.meta.url);
   const nativeQuarto = saved.get("QUARTO") || "quarto";
-  const visible = await new Deno.Command(nativeQuarto, { args: ["run", probe.pathname], cwd: root, stdout: "piped", stderr: "piped" }).output();
-  assert(visible.success && new TextDecoder().decode(visible.stderr).includes("WARNING: PRIVATE_WARNING"), "Successful native stderr was hidden");
+  const visible = await new Deno.Command(nativeQuarto, { args: ["run", fromFileUrl(probe)], cwd: root, stdout: "piped", stderr: "piped" }).output();
+  assert(visible.success && new TextDecoder().decode(visible.stderr).includes("WARNING: PRIVATE_WARNING"), "Successful native stderr was hidden: " + new TextDecoder().decode(visible.stderr) + new TextDecoder().decode(visible.stdout));
   Deno.env.set("COURSE_BUILD_TRACE", trace);
   assert(await outcome("success") === baseline[0], "Отключённые метрики изменили результат");
   let exists=false;try{await Deno.stat(trace);exists=true;}catch(error){if(!(error instanceof Deno.errors.NotFound))throw error;}
