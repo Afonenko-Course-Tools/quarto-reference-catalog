@@ -93,6 +93,28 @@ function referenceCaption(
     : caption;
   return { label, labelText, authoredChildren };
 }
+// В local импорт временно может обозначать цель будущей полной композиции.
+// Учитываем владение добавленным rel отдельно от авторских токенов.
+const generatedExternalRel = "data-qrc-generated-external-rel";
+function authoredRelations(node: LinkNode): Set<string> {
+  const tokens = new Set(
+    (attr(node, "rel") ?? "").split(/\s+/).filter(Boolean),
+  );
+  if (attr(node, generatedExternalRel) === "true") tokens.delete("external");
+  return tokens;
+}
+function deferredAttributes(node: LinkNode) {
+  let attributes = node.attrs.filter((a) =>
+    !["href", "data-qrc-deferred", generatedExternalRel].includes(a.name)
+  );
+  if (attr(node, generatedExternalRel) === "true") {
+    attributes = attributes.filter((a) => a.name !== "rel");
+    const rel = authoredRelations(node);
+    if (rel.size) attributes.push({ name: "rel", value: [...rel].join(" ") });
+  }
+  attributes.push({ name: "data-qrc-deferred", value: "true" });
+  return attributes;
+}
 function linkReference(
   context: {
     page: Page;
@@ -100,9 +122,10 @@ function linkReference(
     key: string;
     requestedStyle: ReturnType<typeof referenceStyle>;
     target: Target;
+    scope: LinkScope;
   },
 ) {
-  const { page, node, key, requestedStyle, target } = context;
+  const { page, node, key, requestedStyle, target, scope } = context;
   const style = requestedStyle === "default"
     ? target.defaultStyle ?? "default"
     : requestedStyle;
@@ -147,7 +170,9 @@ function linkReference(
   const classes = new Set(
     (attr(node, "class") ?? "").split(/\s+/).filter(Boolean),
   );
-  const rel = new Set((attr(node, "rel") ?? "").split(/\s+/).filter(Boolean));
+  classes.delete("qrc-external");
+  const rel = authoredRelations(node);
+  const generated = !!target.baseUrl && !rel.has("external");
   if (target.baseUrl) rel.add("external");
   if (style === "external") {
     classes.add("qrc-external");
@@ -157,12 +182,16 @@ function linkReference(
       }</span><span class="qrc-external-marker" aria-hidden="true"> ↗</span>`;
   }
   const attributes = node.attrs.filter((a) =>
-    !["href", "class", "rel", "data-qrc-deferred"].includes(a.name)
+    !["href", "class", "rel", "data-qrc-deferred", generatedExternalRel]
+      .includes(a.name)
   );
   if (classes.size) {
     attributes.push({ name: "class", value: [...classes].join(" ") });
   }
   if (rel.size) attributes.push({ name: "rel", value: [...rel].join(" ") });
+  if (scope === "local" && generated) {
+    attributes.push({ name: generatedExternalRel, value: "true" });
+  }
   const attrs = attributes.map((a) => `${a.name}="${escape(a.value)}"`).join(
     " ",
   );
@@ -193,6 +222,12 @@ function linkReference(
   }
   return { edit, externalStyle: style === "external" };
 }
+function removeGeneratedNode(page: Page, node: LinkNode): Edit {
+  const loc = location(node);
+  // Оба собственных insertion добавляют ровно один завершающий перевод строки.
+  const end = loc.endOffset + (page.html[loc.endOffset] === "\n" ? 1 : 0);
+  return { start: loc.startOffset, end, value: "" };
+}
 function finishPage(
   context: {
     page: Page;
@@ -216,11 +251,17 @@ function finishPage(
       }
     }
   }
-  if (
-    externalStyle && externalCss &&
-    !page.nodes.some((n) => attr(n, "data-qrc-external-style") !== undefined)
+  // Собственный стиль определяется текущими ссылками, а не предыдущим local проходом.
+  for (
+    const style of page.nodes.filter((node) =>
+      node.tagName === "style" &&
+      attr(node, "data-qrc-external-style") !== undefined
+    )
   ) {
-    const head = page.nodes.find((n) => n.tagName === "head")
+    edits.push(removeGeneratedNode(page, style));
+  }
+  if (externalStyle && externalCss) {
+    const head = page.nodes.find((node) => node.tagName === "head")
       ?.sourceCodeLocation?.endTag;
     if (head) {
       edits.push({
@@ -249,8 +290,7 @@ function finishPage(
         n.tagName === "script" && attr(n, "data-qrc-navigation") !== undefined
       )
     ) {
-      const loc = location(script);
-      edits.push({ start: loc.startOffset, end: loc.endOffset, value: "" });
+      edits.push(removeGeneratedNode(page, script));
     }
     edits.push({
       start: body.startOffset,
@@ -284,10 +324,7 @@ function linkPagesImpl(
       if (!key) continue;
       const requestedStyle = referenceStyle(node, page, key);
       if (scope === "local" && !targets.has(key)) {
-        const attributes = node.attrs.filter((a) =>
-          !["href", "data-qrc-deferred"].includes(a.name)
-        );
-        attributes.push({ name: "data-qrc-deferred", value: "true" });
+        const attributes = deferredAttributes(node);
         const attrs = attributes.map((a) => `${a.name}="${escape(a.value)}"`)
           .join(" ");
         const loc = location(node);
@@ -305,6 +342,7 @@ function linkPagesImpl(
         key,
         requestedStyle,
         target: resolve(targets, key, page.path),
+        scope,
       });
       edits.push(linked.edit);
       externalStyle ||= linked.externalStyle;
