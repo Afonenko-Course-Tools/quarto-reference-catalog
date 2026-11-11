@@ -6,7 +6,7 @@ status: current
 
 # Контракт каталога ссылок
 
-Текущий ref — **3.2.0** (unreleased); версия определяется descriptor того же ref.
+Текущий ref — **3.3.0** (unreleased); версия определяется descriptor того же ref.
 
 Авторская конфигурация `reference-catalog` содержит `namespace`, `imports`, `exports`, `publication`. Неизвестные поля отклоняются. Состав native проектов задаётся отдельно в корневом `subprojects: [paths]`.
 
