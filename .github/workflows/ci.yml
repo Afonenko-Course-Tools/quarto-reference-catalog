@@ -20,10 +20,8 @@ jobs:
     name: Проверка (${{ matrix.quarto }})
     runs-on: ubuntu-latest
     env:
-      XDG_CACHE_HOME: ${{ runner.temp }}/course-qrc-cache
       PERFORMANCE: ${{ github.workspace }}/.ci/performance
       COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/.ci/performance
-      LUA_LANGUAGE_SERVER: ${{ runner.temp }}/course-qrc-luals/bin/lua-language-server
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -34,9 +32,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Подготовить доступный кеш Quarto
+        env:
+          XDG_CACHE_HOME: ${{ runner.temp }}/course-qrc-cache
+          LUA_LANGUAGE_SERVER: ${{ runner.temp }}/course-qrc-luals/bin/lua-language-server
         run: |
           mkdir -p -- "$XDG_CACHE_HOME"
           test -w "$XDG_CACHE_HOME"
+          printf 'XDG_CACHE_HOME=%s\n' "$XDG_CACHE_HOME" >> "$GITHUB_ENV"
+          printf 'LUA_LANGUAGE_SERVER=%s\n' "$LUA_LANGUAGE_SERVER" >> "$GITHUB_ENV"
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: v2.7.14
