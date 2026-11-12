@@ -2,7 +2,7 @@
 
 Действующие правила: [индекс спецификаций](spec/index.md) и [контракт QRC](docs/contract.md).
 Проверки сопровождающего кода описаны в [регламенте типизации](docs/typechecking.md).
-Текущий ref — кандидат **3.2.0**. Версия определяется descriptor; контракт
+Версия определяется descriptor; контракт
 и документация выпуска читаются из того же тега, что и код. Изменения main после выпущенного тега —
 **unreleased**. Минимум — Quarto 1.11.5. Контракты каталога и конфигурации проверяются исполняемым TypeScript.
 
@@ -10,15 +10,15 @@ QRC собирает цели из готовых HTML и Reveal-презент�
 
 ## Установка
 
-До выпуска установите полный локальный checkout кандидата:
+Установите выбранный опубликованный выпуск штатным Quarto:
 
 ```sh
-quarto add /absolute/path/to/quarto-reference-catalog --no-prompt
+quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.3.0
 ```
 
-После публикации нового тега установка из GitHub выполняется командой
-`quarto add Afonenko-Course-Tools/quarto-reference-catalog@v3.2.0`. Наличие тега
-и готовность установленного проекта проверяются отдельно.
+Для разработки можно установить полный локальный checkout через
+`quarto add /absolute/path/to/quarto-reference-catalog --no-prompt`.
+Готовность установленной композиции проверяется сборкой проекта.
 
 Команды установки из GitHub создают каталоги `_extensions/Afonenko-Course-Tools/…`; пути обработчиков ниже учитывают это пространство имён. Локальная установка из checkout может создавать короткие пути `_extensions/reference-catalog/…` и `_extensions/course-site/…`; такие пути используются в локальных тестах и примерах и должны соответствовать фактическим установленным каталогам.
 
@@ -191,12 +191,11 @@ quarto run tests/portal.ts
 quarto run tests/portal-configured.ts
 ```
 
-Интеграционные `tests/composition.ts` и `tests/example.ts` используют соседний
-checkout `../quarto-project-publish`; путь можно задать через `COURSE_SITE_REPO`.
-Точный контрольный commit Publisher задаётся [CI](.github/workflows/ci.yml)
-того же Git ref. Кандидат QRC 3.2.0 сохраняет ABI 1, контекст документов/процессов
-и публичную адресацию. Реальный CI и установленный состав проверяются отдельно;
-результаты прежних матриц не являются проверкой новой связки.
+Интеграционные `tests/composition.ts` и `tests/example.ts` используют прямой
+Git submodule `tests/dependencies/quarto-project-publish`; путь задаётся через
+`COURSE_SITE_REPO`. Перед проверками выполните `git submodule update --init`
+без `--recursive`: Site здесь служит fixture, а не runtime зависимостью QRC.
+Фактические HEAD фиксирует журнал CI; отдельной матрицы SHA или версий нет.
 
 Стили ссылок определяются только в `_extensions/reference-catalog/vocabulary/reference-styles.json`. Команда `quarto run tools/generate-vocabulary.ts` создаёт статические проекции TypeScript (с литеральным типом) и Lua. Их актуальность проверяет `tests/boundaries.ts`; отдельная проверка — `quarto run tools/generate-vocabulary.ts --check`.
 
@@ -252,11 +251,30 @@ overrides, native inheritance и разрешения без полного чт
 Общий runtime не добавляется; полного
 семантического покрытия функций QRC эта разметка не заявляет.
 
-## Подготовка выпуска 3.2.0
+## Подготовка выпуска 3.3.0
 
-Текущий кандидат добавляет подтверждённый контекст наблюдения одного документа
-и исправляет передачу контекста родителя дочерней команде. Публичный Body resolver,
+Текущий кандидат переносит выбор исходников интеграционных проверок в native
+Git submodules и удаляет неиспользуемую описательную декларацию `contract.json`
+из корня репозитория. Публичный Body resolver,
 алгоритмы ссылок, авторская конфигурация и JSON-схема каталога сохраняются.
-До фактической публикации `v3.2.0` проверяйте кандидат целой установкой локального
+До фактической публикации `v3.3.0` проверяйте кандидат целой установкой локального
 checkout; команда с тегом выше применяется после публикации. ABI остаётся 1.
 Полная проверка установленной матрицы и CI итогового HEAD выполняются отдельно.
+
+## Исходники для разработки
+
+Прямые submodules в `tests/dependencies` фиксируют исходники tooling и интеграционных
+fixtures. Инициализируйте только этот уровень:
+
+```sh
+git submodule update --init
+export PERFORMANCE="$PWD/tests/dependencies/quarto-course-performance"
+export COURSE_PERFORMANCE_SOURCE="$PERFORMANCE"
+export CORE="$PWD/tests/dependencies/quarto-course"
+export COURSE_SITE_REPO="$PWD/tests/dependencies/quarto-project-publish"
+```
+
+Gitlink — единственный selector редакции исходников; CI читает фактические HEAD
+для evidence. Эти fixtures не входят в runtime пакет. Установку расширений в
+проект выполняет штатный `quarto add` из выбранного checkout. Для отдельной
+интеграционной проверки можно явно задать другие исходные каталоги через env.

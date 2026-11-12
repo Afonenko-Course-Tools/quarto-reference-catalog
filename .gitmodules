@@ -1,0 +1,9 @@
+[submodule "quarto-course-performance"]
+	path = tests/dependencies/quarto-course-performance
+	url = https://github.com/Afonenko-Course-Tools/quarto-course-performance.git
+[submodule "quarto-course"]
+	path = tests/dependencies/quarto-course
+	url = https://github.com/Afonenko-Course-Tools/quarto-course.git
+[submodule "quarto-project-publish"]
+	path = tests/dependencies/quarto-project-publish
+	url = https://github.com/Afonenko-Course-Tools/quarto-project-publish.git

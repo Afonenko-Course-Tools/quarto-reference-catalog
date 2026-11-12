@@ -20,8 +20,8 @@ jobs:
     name: Проверка (${{ matrix.quarto }})
     runs-on: ubuntu-latest
     env:
-      PERFORMANCE: ${{ github.workspace }}/.ci/performance
-      COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/.ci/performance
+      PERFORMANCE: ${{ github.workspace }}/tests/dependencies/quarto-course-performance
+      COURSE_PERFORMANCE_SOURCE: ${{ github.workspace }}/tests/dependencies/quarto-course-performance
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -37,6 +37,10 @@ jobs:
           test ! -L /etc/apt/apt-mirrors.txt
           grep -Rq 'mirror+file:/etc/apt/apt-mirrors.txt' /etc/apt/sources.list.d
           printf '%s\n' 'https://mirrors.edge.kernel.org/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt
+      - name: Подготовить прямые исходники интеграционных проверок
+        run: |
+          git submodule update --init
+          git submodule foreach 'printf "%s " "$sm_path"; git rev-parse HEAD'
       - name: Подготовить доступный кеш Quarto
         env:
           XDG_CACHE_HOME: ${{ runner.temp }}/course-qrc-cache
@@ -52,15 +56,8 @@ jobs:
       - uses: quarto-dev/quarto-actions/setup@8a96df13519ee81fd526f2dfca5962811136661b # v2.2.0
         with:
           version: ${{ matrix.quarto }}
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: Afonenko-Course-Tools/quarto-course-performance
-          ref: bfbe23f819dfe4c7d5e5487f669c14d8e6c9846e
-          path: .ci/performance
-          persist-credentials: false
-      - name: Проверить закреплённый Performance и установить LuaLS
+      - name: Установить LuaLS из исходников Performance
         run: |
-          test "$(git -C "$PERFORMANCE" rev-parse HEAD)" = "bfbe23f819dfe4c7d5e5487f669c14d8e6c9846e"
           bash "$PERFORMANCE/tools/setup-mv-ci.sh" "$RUNNER_TEMP/course-gnu-mv" >> "$GITHUB_PATH"
           bash "$PERFORMANCE/tools/setup-lua-ci.sh" "$RUNNER_TEMP/course-qrc-luals"
       - name: Установить закреплённый ShellCheck
@@ -74,22 +71,6 @@ jobs:
           tar -xJf "$tool_dir/archive.tar.xz" --directory "$tool_dir" --strip-components=1
           "$tool_dir/shellcheck" --version
           printf '%s\n' "$tool_dir" >> "$GITHUB_PATH"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: Afonenko-Course-Tools/quarto-course
-          ref: 5c2b551724471ff7637aad1068f22c5f7998a687 # Core 9.0.0: exact source candidate
-          path: .ci/course-core
-          persist-credentials: false
-      - name: Проверить закреплённый Core
-        run: test "$(git -C .ci/course-core rev-parse HEAD)" = "5c2b551724471ff7637aad1068f22c5f7998a687"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          repository: Afonenko-Course-Tools/quarto-project-publish
-          ref: 63d6922074b1345a83f93449cd5a9fe9fbfeaab3 # Site 5.2.0: production-stable companion, independent review/release pending
-          path: .ci/course-site
-          persist-credentials: false
-      - name: Проверить закреплённый Site
-        run: test "$(git -C .ci/course-site rev-parse HEAD)" = "63d6922074b1345a83f93449cd5a9fe9fbfeaab3"
       - name: Строгая проверка собственного Lua
         run: quarto run tools/check-types.ts --lua
       - name: ShellCheck и синтаксис каждого собственного shell-файла
@@ -111,7 +92,7 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Полный production quality и отрицательные контроли
         env:
-          CORE: ${{ github.workspace }}/.ci/course-core
+          CORE: ${{ github.workspace }}/tests/dependencies/quarto-course
         run: |
           npm run check-quality
           npm run check-quality:controls
@@ -129,8 +110,8 @@ jobs:
           quarto pandoc --lua-filter tests/metadata-order.lua --to plain < /dev/null
       - name: Путь к native композиции
         run: |
-          echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/.ci/course-site" >> "$GITHUB_ENV"
-          echo "CORE=$GITHUB_WORKSPACE/.ci/course-core" >> "$GITHUB_ENV"
+          echo "COURSE_SITE_REPO=$GITHUB_WORKSPACE/tests/dependencies/quarto-project-publish" >> "$GITHUB_ENV"
+          echo "CORE=$GITHUB_WORKSPACE/tests/dependencies/quarto-course" >> "$GITHUB_ENV"
       - name: Версии инструментов
         run: |
           quarto --version
