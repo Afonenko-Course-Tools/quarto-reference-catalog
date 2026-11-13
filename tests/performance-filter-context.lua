@@ -33,12 +33,14 @@ return {
     Pandoc = function(doc)
       -- Это native Pandoc unit: Quarto namespace создаётся тестом целиком.
       local native_quarto = quarto
-      local mock = { doc = {
-        input_file = "one.qmd",
-        is_format = function()
-          return false
-        end,
-      } }
+      local mock = {
+        doc = {
+          input_file = "one.qmd",
+          is_format = function()
+            return false
+          end,
+        },
+      }
       rawset(_G, "quarto", mock)
       local ok, failure = pcall(function()
         requests[1].Meta(pandoc.Meta({}))

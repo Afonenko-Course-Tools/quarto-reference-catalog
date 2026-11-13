@@ -41,21 +41,15 @@ local function finish(doc)
       rows:insert(pandoc.Div({ pandoc.Para({ ref }) }, pandoc.Attr("", { "qrc-probe" }, attrs)))
     end
   end
-  doc.blocks:insert(
-    pandoc.Div(
-      rows,
-      pandoc.Attr(
-        "",
-        { "qrc-probes" },
-        {
-          ["hidden"] = "",
-          ["aria-hidden"] = "true",
-          ["data-qrc-namespace"] = ns,
-          ["data-qrc-source"] = quarto.doc.input_file,
-        }
-      )
-    )
-  )
+  doc.blocks:insert(pandoc.Div(
+    rows,
+    pandoc.Attr("", { "qrc-probes" }, {
+      ["hidden"] = "",
+      ["aria-hidden"] = "true",
+      ["data-qrc-namespace"] = ns,
+      ["data-qrc-source"] = quarto.doc.input_file,
+    })
+  ))
   return doc
 end
 ---@param handler string

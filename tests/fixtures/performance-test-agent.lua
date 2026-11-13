@@ -22,18 +22,14 @@ local function wrap(spec, fn)
     return fn(...)
   end
 end
-rawset(
-  _G,
-  "__course_performance_agent_v1",
-  {
-    abiVersion = 1,
-    metrics = {
-      wrap_sync = wrap,
-      wrap_walk = wrap,
-      child_env = function(base)
-        return base
-      end,
-    },
-  }
-)
+rawset(_G, "__course_performance_agent_v1", {
+  abiVersion = 1,
+  metrics = {
+    wrap_sync = wrap,
+    wrap_walk = wrap,
+    child_env = function(base)
+      return base
+    end,
+  },
+})
 return {}
