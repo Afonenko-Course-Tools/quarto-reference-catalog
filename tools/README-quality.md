@@ -74,3 +74,8 @@ Dependency-cruiser проверяет разрешаемый статическ�
 и неизвестное поле нового workflow. Отсутствующий инструмент также даёт ошибку.
 Эти controls временно создают файлы в checkout и требуют последовательного запуска
 с остальными source gates; `finally` удаляет входы.
+
+TOML проверяется Taplo из npm devDependencies; controls дополнительно проверяют
+новый собственный каталог `dependencies` и блокировку warning YAML. Общая
+[среда Arch Linux](https://github.com/Afonenko-Course-Tools/quarto-course/blob/main/docs/development-arch.md)
+описывает установку CLI штатными средствами системы.

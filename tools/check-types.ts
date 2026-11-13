@@ -20,8 +20,7 @@ async function main(): Promise<void> {
     .split("\0")
     .filter(
       (path) =>
-        /\.(?:ts|js|cjs|mjs|lua|sh)$/.test(path) &&
-        !/(^|\/)(vendor|node_modules|dependencies)(\/|$)/.test(path),
+        /\.(?:ts|js|cjs|mjs|lua|sh)$/.test(path) && !/(^|\/)(vendor|node_modules)(\/|$)/.test(path),
     );
   function gateFor(path: string): string {
     if (
