@@ -6,12 +6,7 @@ assert(
   typeof api.bindConditionLinks === "function",
   "B1 RED: QRC не привязывает ссылки публичного condition",
 );
-const target = (
-  namespace: string,
-  id: string,
-  page: string,
-  fragment = id,
-) => ({
+const target = (namespace: string, id: string, page: string, fragment = id) => ({
   namespace,
   id,
   page,
@@ -42,10 +37,12 @@ const condition = {
 const destination = {
   catalog,
   baseUrl: "https://pages.example.test/course/",
-  importedTargets: [{
-    ...target("os", "sec-memory", "chapters/memory.html"),
-    baseUrl: "https://pages.example.test/os/",
-  }],
+  importedTargets: [
+    {
+      ...target("os", "sec-memory", "chapters/memory.html"),
+      baseUrl: "https://pages.example.test/os/",
+    },
+  ],
   references: {
     "theory:sec-types": { key: "theory:sec-types", style: "title" },
     "os:sec-memory": { key: "os:sec-memory", style: "external" },
@@ -62,29 +59,22 @@ assert(
   "QRC угадал output вместо явного конечного адреса",
 );
 assert(
-  links["starter.zip"] ===
-    "https://pages.example.test/course/_downloads/exr-demo-starter.zip",
+  links["starter.zip"] === "https://pages.example.test/course/_downloads/exr-demo-starter.zip",
   "Self-download требует хеш ZIP или потерял publication base",
 );
 assert(
-  links["theory:sec-types"] ===
-    "https://pages.example.test/course/theory/types.html#sec-types",
+  links["theory:sec-types"] === "https://pages.example.test/course/theory/types.html#sec-types",
   "Потерян каталог назначения",
 );
 assert(
-  links["os:sec-memory"] ===
-    "https://pages.example.test/os/chapters/memory.html#sec-memory",
+  links["os:sec-memory"] === "https://pages.example.test/os/chapters/memory.html#sec-memory",
   "Импорт получил базу текущего курса",
 );
 assert(
-  links["https://docs.example.test/help?q=1#guide"] ===
-    "https://docs.example.test/help?q=1#guide",
+  links["https://docs.example.test/help?q=1#guide"] === "https://docs.example.test/help?q=1#guide",
   "Изменена внешняя ссылка",
 );
-assert(
-  !Object.hasOwn(links, "#details"),
-  "Локальный anchor должен проверять Core по полному телу",
-);
+assert(!Object.hasOwn(links, "#details"), "Локальный anchor должен проверять Core по полному телу");
 function refused(use: () => unknown, marker: string) {
   let error = "";
   try {
@@ -98,11 +88,7 @@ function refused(use: () => unknown, marker: string) {
   );
 }
 refused(
-  () =>
-    api.bindConditionLinks(
-      { ...condition, links: ["missing.qmd"] },
-      destination,
-    ),
+  () => api.bindConditionLinks({ ...condition, links: ["missing.qmd"] }, destination),
   "QRC.REFERENCE_INVALID",
 );
 refused(

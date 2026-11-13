@@ -3,11 +3,7 @@ import { readSearch } from "./support.ts";
 import { readCatalog } from "./support.ts";
 import { join } from "stdlib/path";
 import { publishReferenceCatalog as publish } from "../_extensions/reference-catalog/public.ts";
-import {
-  attr,
-  elements,
-  parseHtml,
-} from "../_extensions/reference-catalog/infrastructure/html.ts";
+import { attr, elements, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
 
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
@@ -33,28 +29,26 @@ try {
   await Deno.writeTextFile(join(stage, "stale.html"), stale);
   const completeCatalog =
     '{"schema":"quarto-reference-catalog","generator":{"quarto":"prior"},"targets":{}}\n';
-  await Deno.writeTextFile(
-    join(stage, "reference-catalog.json"),
-    completeCatalog,
-  );
+  await Deno.writeTextFile(join(stage, "reference-catalog.json"), completeCatalog);
   await Deno.writeTextFile(
     join(stage, "search.json"),
-    JSON.stringify([{ href: "current.html", text: "old current" }, {
-      href: "stale.html",
-      text: "keep unrelated",
-    }]),
+    JSON.stringify([
+      { href: "current.html", text: "old current" },
+      {
+        href: "stale.html",
+        text: "keep unrelated",
+      },
+    ]),
   );
   // A global stage scan would assemble a duplicate target and block this edit.
   await publish(context);
-  const defaultCatalog = await readCatalog(
-    join(stage, "reference-catalog-local.json"),
-  );
+  const defaultCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(
     Object.keys(defaultCatalog.targets).join() === "book:sec-current",
     "Local catalog without exports must publish current own targets",
   );
   assert(
-    await Deno.readTextFile(join(stage, "stale.html")) === stale,
+    (await Deno.readTextFile(join(stage, "stale.html"))) === stale,
     "A selected local render rewrote an unrelated retained page",
   );
   assert(
@@ -65,14 +59,12 @@ try {
   );
   const rows = await readSearch(join(stage, "search.json"));
   assert(
-    required(rows[0]).text ===
-        "Current heading Current caption practice:sec-missing" &&
+    required(rows[0]).text === "Current heading Current caption practice:sec-missing" &&
       required(rows[1]).text === "keep unrelated",
     "Local search read unrelated pages or retained probes",
   );
   assert(
-    await Deno.readTextFile(join(stage, "reference-catalog.json")) ===
-      completeCatalog,
+    (await Deno.readTextFile(join(stage, "reference-catalog.json"))) === completeCatalog,
     "Local linking replaced the prior complete public catalog with partial facts",
   );
 
@@ -83,16 +75,13 @@ try {
     },
   };
   await publish(selectedExports);
-  const localCatalog = await readCatalog(
-    join(stage, "reference-catalog-local.json"),
-  );
+  const localCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(
     Object.keys(localCatalog.targets).join() === "book:sec-current",
     "Local export did not restrict itself to current available targets",
   );
   assert(
-    await Deno.readTextFile(join(stage, "reference-catalog.json")) ===
-      completeCatalog,
+    (await Deno.readTextFile(join(stage, "reference-catalog.json"))) === completeCatalog,
     "Local selected exports replaced the complete catalog",
   );
 
@@ -100,9 +89,7 @@ try {
     ...context,
     config: { "reference-catalog": { exports: {} } },
   });
-  const disabledCatalog = await readCatalog(
-    join(stage, "reference-catalog-local.json"),
-  );
+  const disabledCatalog = await readCatalog(join(stage, "reference-catalog-local.json"));
   assert(
     Object.keys(disabledCatalog.targets).length === 0,
     "Explicit empty exports must disable local export",
@@ -113,7 +100,7 @@ try {
   await Deno.writeTextFile(join(stage, "malformed.html"), malformed);
   await publish({ ...context, outputs: [join(stage, "current.html")] });
   assert(
-    await Deno.readTextFile(join(stage, "malformed.html")) === malformed,
+    (await Deno.readTextFile(join(stage, "malformed.html"))) === malformed,
     "Local linking touched unrelated malformed retained HTML",
   );
 
@@ -132,10 +119,7 @@ try {
   } catch (error) {
     missingExportRejected = String(error).includes("sec-later");
   }
-  assert(
-    missingExportRejected,
-    "Full export silently omitted an unavailable declared target",
-  );
+  assert(missingExportRejected, "Full export silently omitted an unavailable declared target");
   // Реальный public local→full: retained sibling catalog не делает внутреннюю ссылку внешней.
   const promotion = join(root, "promotion"),
     importedFile = join(root, "sibling.json");
@@ -189,10 +173,7 @@ try {
     outputs: [retainedTarget],
     scope: "local",
   });
-  await Deno.copyFile(
-    join(retained, "reference-catalog-local.json"),
-    importedFile,
-  );
+  await Deno.copyFile(join(retained, "reference-catalog-local.json"), importedFile);
   await Deno.writeTextFile(firstPath, incoming);
   await Deno.writeTextFile(targetPath, target);
   await publish(local);
@@ -200,9 +181,7 @@ try {
   const intermediate = await Deno.readTextFile(firstPath);
   await publish(complete);
   const warmFull = await Deno.readTextFile(firstPath);
-  const linked = elements(parseHtml(warmFull)).filter((node) =>
-    node.tagName === "a"
-  );
+  const linked = elements(parseHtml(warmFull)).filter((node) => node.tagName === "a");
   assert(
     attr(required(linked[0]), "rel") === "author" &&
       attr(required(linked[1]), "rel") === "external noopener",
@@ -231,8 +210,9 @@ try {
   await Deno.remove(importedFile);
   await Deno.writeTextFile(firstPath, intermediate);
   await publish(local);
-  const deferred = elements(parseHtml(await Deno.readTextFile(firstPath)))
-    .filter((node) => node.tagName === "a");
+  const deferred = elements(parseHtml(await Deno.readTextFile(firstPath))).filter(
+    (node) => node.tagName === "a",
+  );
   assert(
     attr(required(deferred[0]), "rel") === "author" &&
       attr(required(deferred[0]), "href") === undefined,
@@ -243,7 +223,7 @@ try {
   await publish(local);
   await publish(complete);
   assert(
-    await Deno.readTextFile(firstPath) === warmFull,
+    (await Deno.readTextFile(firstPath)) === warmFull,
     "Cold/warm retained catalog меняет итоговые HTML bytes на одной разметке",
   );
   console.log(

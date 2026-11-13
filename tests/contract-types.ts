@@ -2,22 +2,17 @@ import * as Public from "../_extensions/reference-catalog/public.ts";
 void Public;
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 import { parseImports } from "../_extensions/reference-catalog/infrastructure/import-config.ts";
-import type {
-  Catalog,
-  Import,
-  Target,
-} from "../_extensions/reference-catalog/domain/model.ts";
-type NotAny<T> = 0 extends (1 & T) ? never : true;
+import type { Catalog, Import, Target } from "../_extensions/reference-catalog/domain/model.ts";
+type NotAny<T> = 0 extends 1 & T ? never : true;
 const catalog = validateImportedCatalog({}, "compile-only");
-const checked: NotAny<typeof catalog.targets[string]> = true;
+const checked: NotAny<(typeof catalog.targets)[string]> = true;
 const candidate = catalog.targets["book:sec-a"];
 if (!candidate) throw new Error("Нет compile-only target");
 const target: Target = candidate;
 const entry = parseImports({}, "/owner", [])[0];
 if (!entry) throw new Error("Нет compile-only import");
 const imported: Import = entry;
-const consumer = (value: Catalog) =>
-  value.targets["book:sec-a"]?.number.toUpperCase();
+const consumer = (value: Catalog) => value.targets["book:sec-a"]?.number.toUpperCase();
 target.page.toUpperCase();
 target.labelHtml.toUpperCase();
 target.number.toUpperCase();

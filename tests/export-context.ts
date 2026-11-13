@@ -15,8 +15,7 @@ async function run(args: string[]) {
   }).output();
   assert(
     result.success,
-    new TextDecoder().decode(result.stdout) +
-      new TextDecoder().decode(result.stderr),
+    new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr),
   );
 }
 try {
@@ -31,11 +30,16 @@ try {
   function walk(value: unknown) {
     if (!value || typeof value !== "object") return;
     if (
-      !Array.isArray(value) && "t" in value && value.t === "Span" &&
-      "c" in value && Array.isArray(value.c) && Array.isArray(value.c[0]) &&
-      Array.isArray(value.c[0][2]) && value.c[0][2].some((pair: unknown) =>
-        Array.isArray(pair) && pair[0] === "data-qrc-ref")
-    ) markers.push(record(value));
+      !Array.isArray(value) &&
+      "t" in value &&
+      value.t === "Span" &&
+      "c" in value &&
+      Array.isArray(value.c) &&
+      Array.isArray(value.c[0]) &&
+      Array.isArray(value.c[0][2]) &&
+      value.c[0][2].some((pair: unknown) => Array.isArray(pair) && pair[0] === "data-qrc-ref")
+    )
+      markers.push(record(value));
     for (const item of Object.values(value)) {
       if (Array.isArray(item)) item.forEach(walk);
       else if (typeof item === "object") walk(item);
@@ -54,17 +58,27 @@ try {
     markers.some((span) => JSON.stringify(span).includes("other:exr-second")),
     "reference identity was lost",
   );
-  assert(
-    !JSON.stringify(document).includes('"t":"Link"'),
-    "export inserted a fake QRC href",
+  assert(!JSON.stringify(document).includes('"t":"Link"'), "export inserted a fake QRC href");
+  await Deno.writeTextFile(
+    join(root, "invalid.qmd"),
+    '---\nfilters: [reference-catalog]\nreference-catalog: {namespace: bank}\ncourse-export-context: true\n---\n\n{{< xref other sec-target style="invalid" >}}\n',
   );
-  await Deno.writeTextFile(join(root, "invalid.qmd"), '---\nfilters: [reference-catalog]\nreference-catalog: {namespace: bank}\ncourse-export-context: true\n---\n\n{{< xref other sec-target style="invalid" >}}\n');
-  const invalid = await new Deno.Command(quarto, { args: ["render", "invalid.qmd", "--to", "json"], cwd: root, stdout: "piped", stderr: "piped" }).output();
+  const invalid = await new Deno.Command(quarto, {
+    args: ["render", "invalid.qmd", "--to", "json"],
+    cwd: root,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
   const refusal = new TextDecoder().decode(invalid.stderr);
-  assert(!invalid.success && refusal.includes("QRC.REFERENCE_INVALID") && refusal.includes("other:sec-target") && refusal.includes("invalid.qmd") && refusal.includes("style"), `Native reference diagnostics lost source/target/style: ${refusal}`);
-  console.log(
-    "PASS explicit source export captures neutral QRC AST markers without fake links",
+  assert(
+    !invalid.success &&
+      refusal.includes("QRC.REFERENCE_INVALID") &&
+      refusal.includes("other:sec-target") &&
+      refusal.includes("invalid.qmd") &&
+      refusal.includes("style"),
+    `Native reference diagnostics lost source/target/style: ${refusal}`,
   );
+  console.log("PASS explicit source export captures neutral QRC AST markers without fake links");
 } finally {
   await Deno.remove(root, { recursive: true });
 }
