@@ -88,7 +88,7 @@ jobs:
           sudo apt-get install --yes luarocks
           pipx install yamllint==1.38.0
           luarocks --local install luacheck 1.2.0
-          cargo install stylua --version 2.6.0 --locked
+          cargo install stylua --version 2.6.0 --locked --features lua54
           go install mvdan.cc/sh/v3/cmd/shfmt@v3.14.1
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
           printf '%s\n' "$HOME/.local/bin" "$HOME/.luarocks/bin" "$HOME/.cargo/bin" "$HOME/go/bin" >> "$GITHUB_PATH"
