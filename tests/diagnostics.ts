@@ -1,7 +1,4 @@
-import {
-  assemble,
-  resolve,
-} from "../_extensions/reference-catalog/domain/catalog.ts";
+import { assemble, resolve } from "../_extensions/reference-catalog/domain/catalog.ts";
 import { exportedTargets } from "../_extensions/reference-catalog/domain/exports.ts";
 import { catalogConfig } from "../_extensions/reference-catalog/infrastructure/config.ts";
 import { parseImports } from "../_extensions/reference-catalog/infrastructure/import-config.ts";
@@ -17,24 +14,18 @@ import {
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
-async function rejects(
-  action: () => unknown,
-  code: string,
-  fragments: string[],
-) {
+async function rejects(action: () => unknown, code: string, fragments: string[]) {
   try {
     await action();
   } catch (error) {
     assert(
-      error instanceof Error && error.name === "ExtensionDiagnostic" &&
+      error instanceof Error &&
+        error.name === "ExtensionDiagnostic" &&
         ("code" in error && error.code) === code,
       `Expected ${code}, got ${error}`,
     );
     for (const fragment of fragments) {
-      assert(
-        error.message.includes(fragment),
-        `Missing context ${fragment}: ${error.message}`,
-      );
+      assert(error.message.includes(fragment), `Missing context ${fragment}: ${error.message}`);
     }
     return error;
   }
@@ -59,23 +50,20 @@ const target = {
   numberHtml: "",
   number: "",
 };
-for (
-  const inspection of [
-    null,
-    [],
-    {},
-    { config: [] },
-    { config: {} },
-    { config: { "reference-catalog": null } },
-    { config: { "reference-catalog": { namespace: "" } } },
-    { config: { "reference-catalog": { namespace: 1 } } },
-  ]
-) {
-  await rejects(
-    () => postConfiguration(inspection, "/selected-post"),
-    "QRC.CONFIG_INVALID",
-    ["источник=/selected-post", "поле=reference-catalog.namespace"],
-  );
+for (const inspection of [
+  null,
+  [],
+  {},
+  { config: [] },
+  { config: {} },
+  { config: { "reference-catalog": null } },
+  { config: { "reference-catalog": { namespace: "" } } },
+  { config: { "reference-catalog": { namespace: 1 } } },
+]) {
+  await rejects(() => postConfiguration(inspection, "/selected-post"), "QRC.CONFIG_INVALID", [
+    "источник=/selected-post",
+    "поле=reference-catalog.namespace",
+  ]);
 }
 const inspected = {
   config: {
@@ -94,15 +82,12 @@ assert(
   "Post сузил или скопировал дополнительные Native config keys",
 );
 assert(
-  postConfiguration(
-    { config: { "reference-catalog": { namespace: " " } } },
-    "/selected-post",
-  ).namespace === " ",
+  postConfiguration({ config: { "reference-catalog": { namespace: " " } } }, "/selected-post")
+    .namespace === " ",
   "Post добавил новый namespace pattern gate",
 );
 assert(
-  postOutputDirectory(post.config, undefined, "/selected-post") ===
-    "native-site",
+  postOutputDirectory(post.config, undefined, "/selected-post") === "native-site",
   "Post потерял Native output-dir",
 );
 assert(
@@ -110,26 +95,23 @@ assert(
   "ENV output-dir потерял precedence",
 );
 assert(
-  postOutputDirectory(
-    { project: { "output-dir": "" } },
-    undefined,
-    "/selected-post",
-  ) === "",
+  postOutputDirectory({ project: { "output-dir": "" } }, undefined, "/selected-post") === "",
   "Пустой Native output-dir заменён default",
 );
 assert(
-  postOutputDirectory(
-    { project: { "output-dir": false } },
-    "",
-    "/selected-post",
-  ) === "",
+  postOutputDirectory({ project: { "output-dir": false } }, "", "/selected-post") === "",
   "Пустой ENV override не должен проверять перекрытый malformed Native output-dir",
 );
-for (
-  const config of [{}, { project: null }, { project: false }, { project: [] }, {
+for (const config of [
+  {},
+  { project: null },
+  { project: false },
+  { project: [] },
+  {
     project: {},
-  }, { project: { "output-dir": null } }]
-) {
+  },
+  { project: { "output-dir": null } },
+]) {
   assert(
     postOutputDirectory(config, undefined, "/selected-post") === "_site",
     "Post изменил nullish fallback output-dir",
@@ -137,26 +119,18 @@ for (
 }
 for (const output of [false, 0, {}, []]) {
   await rejects(
-    () =>
-      postOutputDirectory(
-        { project: { "output-dir": output } },
-        undefined,
-        "/selected-post",
-      ),
+    () => postOutputDirectory({ project: { "output-dir": output } }, undefined, "/selected-post"),
     "QRC.CONFIG_INVALID",
     ["источник=/selected-post", "поле=project.output-dir"],
   );
 }
-await rejects(
-  () => catalogConfig({ unknown: true }, "/tmp", ["book"]),
-  "QRC.CONFIG_INVALID",
-  ["reference-catalog.unknown"],
-);
-await rejects(
-  () => parseImports([], "/selected-component", []),
-  "QRC.IMPORT_INVALID",
-  ["источник=/selected-component", "поле=reference-catalog.imports"],
-);
+await rejects(() => catalogConfig({ unknown: true }, "/tmp", ["book"]), "QRC.CONFIG_INVALID", [
+  "reference-catalog.unknown",
+]);
+await rejects(() => parseImports([], "/selected-component", []), "QRC.IMPORT_INVALID", [
+  "источник=/selected-component",
+  "поле=reference-catalog.imports",
+]);
 await rejects(
   () =>
     parseImports(
@@ -205,32 +179,30 @@ const invalidUrl = await rejects(
   "QRC.IMPORT_INVALID",
   ["https://[", "ID=external", "поле=source"],
 );
-assert(
-  invalidUrl.cause instanceof Error,
-  "Invalid source URL lost the parser cause",
-);
+assert(invalidUrl.cause instanceof Error, "Invalid source URL lost the parser cause");
 await rejects(
   () => assemble([target, { ...target, page: "second.html" }]),
   "QRC.TARGET_DUPLICATE",
   ["book:sec-one", "first.html", "second.html", "связано"],
 );
-await rejects(
-  () => resolve(new Map(), "book:sec-absent", "chapter.html"),
-  "QRC.TARGET_UNKNOWN",
-  ["book:sec-absent", "chapter.html"],
-);
-await rejects(
-  () => exportedTargets([target], { book: ["sec-absent"] }),
-  "QRC.TARGET_UNKNOWN",
-  ["book:sec-absent", "exports.book"],
-);
+await rejects(() => resolve(new Map(), "book:sec-absent", "chapter.html"), "QRC.TARGET_UNKNOWN", [
+  "book:sec-absent",
+  "chapter.html",
+]);
+await rejects(() => exportedTargets([target], { book: ["sec-absent"] }), "QRC.TARGET_UNKNOWN", [
+  "book:sec-absent",
+  "exports.book",
+]);
 await rejects(
   () =>
-    validateImportedCatalog({
-      schema: "quarto-reference-catalog",
-      generator: { quarto: "test" },
-      targets: { "book:sec-one": { ...target, page: "../escape.html" } },
-    }, "chosen.json"),
+    validateImportedCatalog(
+      {
+        schema: "quarto-reference-catalog",
+        generator: { quarto: "test" },
+        targets: { "book:sec-one": { ...target, page: "../escape.html" } },
+      },
+      "chosen.json",
+    ),
   "QRC.IMPORT_INVALID",
   ["chosen.json", "book:sec-one", "поле=page"],
 );
@@ -246,10 +218,7 @@ await rejects(
 await rejects(
   () =>
     linkPages(
-      [readPage(
-        "request.html",
-        '<a data-qrc-ref="book:sec-one" data-qrc-style="bad">Ссылка</a>',
-      )],
+      [readPage("request.html", '<a data-qrc-ref="book:sec-one" data-qrc-style="bad">Ссылка</a>')],
       "",
       [],
       "",

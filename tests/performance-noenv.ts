@@ -1,26 +1,43 @@
 import { fromFileUrl } from "stdlib/path";
-import {strict as assert} from 'node:assert';
-const root = await Deno.makeTempDir({prefix: 'reference-catalog-noenv-'});
+import { strict as assert } from "node:assert";
+const root = await Deno.makeTempDir({ prefix: "reference-catalog-noenv-" });
 
 try {
   const runner = fromFileUrl(new URL("./fixtures/restricted-parent.ts", import.meta.url));
   const failures: string[] = [];
-  for (const mode of ['off', 'summary']) {
+  for (const mode of ["off", "summary"]) {
     const result = await new Deno.Command(Deno.execPath(), {
-      args: ['run', '--no-config', '--no-lock', '--no-npm', '--no-prompt',
-        '--allow-read', '--allow-run=/bin/sh', '--allow-env=QUARTO,QRC_QUARTO,COURSE_PERF_MODE', runner],
+      args: [
+        "run",
+        "--no-config",
+        "--no-lock",
+        "--no-npm",
+        "--no-prompt",
+        "--allow-read",
+        "--allow-run=/bin/sh",
+        "--allow-env=QUARTO,QRC_QUARTO,COURSE_PERF_MODE",
+        runner,
+      ],
       cwd: root,
-      env: {QUARTO: '/bin/sh', COURSE_PERF_MODE: mode, FUNCTIONAL_INHERITED: 'inherited',
-        COURSE_PERF_PARENT_SPAN_ID: 'native-parent'},
-      stdout: 'piped', stderr: 'piped',
+      env: {
+        QUARTO: "/bin/sh",
+        COURSE_PERF_MODE: mode,
+        FUNCTIONAL_INHERITED: "inherited",
+        COURSE_PERF_PARENT_SPAN_ID: "native-parent",
+      },
+      stdout: "piped",
+      stderr: "piped",
     }).output();
-    const out = new TextDecoder().decode(result.stdout), err = new TextDecoder().decode(result.stderr);
-    if (result.code !== 0 || out.trim() !== 'inherited|override|student|native-parent') {
+    const out = new TextDecoder().decode(result.stdout),
+      err = new TextDecoder().decode(result.stderr);
+    if (result.code !== 0 || out.trim() !== "inherited|override|student|native-parent") {
       failures.push(`${mode}: exit=${result.code}\n${out}${err}`);
     }
   }
-  assert.deepEqual(failures, [], 'off/missing agent не должны требовать полного env permission');
-  console.log('PASS restricted Deno parent: off/missing agent, inherited+explicit functional env без полного env permission');
+  assert.deepEqual(failures, [], "off/missing agent не должны требовать полного env permission");
+  console.log(
+    "PASS restricted Deno parent: off/missing agent, inherited+explicit functional env без полного env permission",
+  );
 } finally {
-  await Deno.remove(root, {recursive: true});
+  await Deno.remove(root, { recursive: true });
 }

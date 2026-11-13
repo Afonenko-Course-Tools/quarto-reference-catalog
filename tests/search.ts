@@ -1,4 +1,7 @@
-import type { ParserOptions, TreeAdapterTypeMap } from "../_extensions/reference-catalog/types/parse5/dist/index.d.ts";
+import type {
+  ParserOptions,
+  TreeAdapterTypeMap,
+} from "../_extensions/reference-catalog/types/parse5/dist/index.d.ts";
 import { required } from "./support.ts";
 import { readSearch } from "./support.ts";
 import { join } from "stdlib/path";
@@ -13,7 +16,10 @@ function assert(value: unknown, message: string): asserts value {
 const root = await Deno.makeTempDir({ prefix: "qrc-search-" });
 const parse = Parser.parse;
 let parses = 0;
-Parser.parse = function <T extends TreeAdapterTypeMap>(html: string, options?: ParserOptions<T>): T["document"] {
+Parser.parse = function <T extends TreeAdapterTypeMap>(
+  html: string,
+  options?: ParserOptions<T>,
+): T["document"] {
   parses++;
   const bound = parse.bind(this);
   return bound<T>(html, options);
@@ -34,10 +40,13 @@ async function writeRows() {
   );
   await Deno.writeTextFile(
     files[1],
-    JSON.stringify([{ href: "../index.html#same", text: "old" }, {
-      href: "other.html",
-      text: "old",
-    }]),
+    JSON.stringify([
+      { href: "../index.html#same", text: "old" },
+      {
+        href: "other.html",
+        text: "old",
+      },
+    ]),
   );
 }
 try {
@@ -55,9 +64,7 @@ try {
   const pages = new Map(fixtures.map(([path, html]) => [path, readPage(path, html)]));
   await updateSearch(root, files, pages);
   assert(parses === 2, `Expected one final HTML parse per page, got ${parses}`);
-  const first = (await readSearch(files[0])).map((
-    row: { text: string },
-  ) => row.text);
+  const first = (await readSearch(files[0])).map((row: { text: string }) => row.text);
   assert(
     JSON.stringify(first) ===
       JSON.stringify([
@@ -71,23 +78,22 @@ try {
     "Search changed first-match, final HTML, exclusion or missing-target semantics",
   );
   assert(
-    JSON.stringify(
-      (await readSearch(files[1])).map((
-        row: { text: string },
-      ) => row.text),
-    ) === '["first match","Other text"]',
+    JSON.stringify((await readSearch(files[1])).map((row: { text: string }) => row.text)) ===
+      '["first match","Other text"]',
     "Search lost index-relative URLs",
   );
   pages.set(
     "index.html",
-    readPage("index.html", '<html><body><main><section id="same">changed linked caption</section></main></body></html>'),
+    readPage(
+      "index.html",
+      '<html><body><main><section id="same">changed linked caption</section></main></body></html>',
+    ),
   );
   parses = 0;
   await updateSearch(root, files, pages);
   assert(parses === 0, "Search reparsed already supplied current pages");
   assert(
-    required((await readSearch(files[0]))[1]).text ===
-      "changed linked caption",
+    required((await readSearch(files[0]))[1]).text === "changed linked caption",
     "A later search operation retained stale linked HTML",
   );
   console.log(
