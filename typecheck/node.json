@@ -13,5 +13,7 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true
   },
-  "files": ["browser.d.ts", "../tests/browser.cjs"]
+  "files": ["browser.d.ts"],
+  "include": ["../**/*.cjs", "../**/*.mjs"],
+  "exclude": ["../node_modules", "../tests/dependencies", "../_extensions/reference-catalog/vendor"]
 }

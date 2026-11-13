@@ -10,10 +10,13 @@ import { ESLint } from "eslint";
 import { scope } from "../eslint.config.mjs";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 process.chdir(root);
+/** @param {string} bin @param {string[]} args */
 const run = (bin, args) =>
   execFileSync(bin, args, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
 const temporary = mkdtempSync(join(tmpdir(), "course-quality-"));
 try {
+  const prefix = scope[0];
+  if (!prefix) throw Error("Quality scope пуст");
   const tracked = run("git", [
     "ls-files",
     "--cached",
@@ -25,7 +28,7 @@ try {
     .filter(
       (file) =>
         scope.some((prefix) => file.startsWith(prefix)) &&
-        /\.(?:ts|js|cjs)$/.test(file) &&
+        /\.(?:ts|js|cjs|mjs)$/.test(file) &&
         !/(^|\/)(vendor|node_modules|generated|_generated)(\/|$)/.test(file) &&
         existsSync(file),
     )
@@ -44,15 +47,16 @@ try {
   if (!files.length)
     throw Error("Quality scope пуст: проверка без собственного production-кода запрещена");
   const denoConfig = JSON.parse(
-    readFileSync(scope[0].startsWith("src/") ? "deno.json" : "typecheck/deno.json", "utf8"),
+    readFileSync(prefix.startsWith("src/") ? "deno.json" : "typecheck/deno.json", "utf8"),
   );
   if (denoConfig.compilerOptions?.strict !== true) throw Error("Quality gate требует strict: true");
   const imports = { ...(denoConfig.imports ?? {}) };
-  if (!scope[0].startsWith("src/")) {
+  if (!prefix.startsWith("src/")) {
     const share = run(process.env.QUARTO ?? "quarto", ["--paths"])
       .trim()
       .split("\n")
       .at(-1);
+    if (!share) throw Error("Quarto не сообщил share path");
     const quarto = JSON.parse(readFileSync(join(share, "deno_std/run_import_map.json"), "utf8"));
     for (const name of ["stdlib/path", "stdlib/fs"])
       imports[name] = quarto.imports[name].replace("jsr:/", "jsr:");
@@ -66,14 +70,16 @@ try {
     ).href;
     const providers = new Map();
     const namespaces = new Set();
-    for (const [name, variable, repo] of [
+    /** @type {[string, string, string][]} */
+    const providerSources = [
       ["course-core", "CORE", "quarto-course"],
       ["course-navigation", "CORE", "quarto-course"],
       ["course-prairielearn", "PL", "quarto-course-prairielearn"],
       ["reference-catalog", "QRC", "quarto-reference-catalog"],
       ["project-download", "DOWNLOAD", "quarto-project-download"],
       ["course-site", "SITE", "quarto-project-publish"],
-    ]) {
+    ];
+    for (const [name, variable, repo] of providerSources) {
       const source = process.env[variable] ?? join(siblings, repo);
       const extension = [
         join(source, "_extensions", name),
@@ -103,6 +109,8 @@ try {
     entry,
     files.map((file) => `import ${JSON.stringify(pathToFileURL(file).href)};`).join("\n"),
   );
+  /** @typedef {{specifier: string, local?: string, error?: unknown, mediaType?: string, dependencies?: {specifier: string, type?: {specifier: string}, code?: {specifier: string}}[]}} GraphModule */
+  /** @type {{modules: GraphModule[], redirects: Record<string, string>}} */
   const graph = JSON.parse(
     run("deno", ["info", "--no-lock", "--config", configPath, "--json", entry]),
   );
@@ -135,8 +143,8 @@ try {
     names.map((name) => {
       const dep = byFile.get(containing)?.dependencies?.find((item) => item.specifier === name);
       let url = dep?.type?.specifier ?? dep?.code?.specifier;
-      while (graph.redirects[url]) url = graph.redirects[url];
-      const module = byUrl.get(url);
+      while (url && graph.redirects[url]) url = graph.redirects[url];
+      const module = url ? byUrl.get(url) : undefined;
       return module?.local
         ? {
             resolvedFileName: module.local,
@@ -203,7 +211,9 @@ try {
       strict: true,
       typescript: ts.version,
       eslint: ESLint.version,
-      typescriptESLint: tseslint.parser.meta.version,
+      typescriptESLint: JSON.parse(
+        readFileSync(join(root, "node_modules/typescript-eslint/package.json"), "utf8"),
+      ).version,
       graphModules: graph.modules.length,
     };
   }
@@ -218,8 +228,8 @@ try {
   );
   if (!process.exitCode) console.log(JSON.stringify(receipt));
 } catch (error) {
-  if (error.stdout) console.error(String(error.stdout));
-  console.error(error.message);
+  if (error instanceof Error && "stdout" in error) console.error(String(error.stdout));
+  console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 } finally {
   rmSync(temporary, { recursive: true, force: true });

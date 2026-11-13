@@ -108,7 +108,8 @@ function M.equations(block)
   for _, el in ipairs(content) do
     if el.t == "Math" and el.mathtype == "DisplayMath" then
       pending = true
-    elseif pending and (el.t == "Space" or el.t == "SoftBreak") then
+    elseif pending and (el.t == "Space" or el.t == "SoftBreak") then -- luacheck: ignore 542
+      -- Пробелы между выключной формулой и меткой сохраняют pending.
     elseif pending and el.t == "Str" then
       local id = el.text:match("^{#(eq%-[^}%s]+)")
       if id then

@@ -1,9 +1,9 @@
 import tseslint from "typescript-eslint";
 export const scope = ["_extensions/reference-catalog/"];
-export const structuralScope = scope.map((prefix) => prefix + "**/*.{ts,js,cjs}");
+export const structuralScope = scope.map((prefix) => prefix + "**/*.{ts,js,cjs,mjs}");
 export default [
   {
-    files: scope.map((prefix) => prefix + "**/*.{ts,js,cjs}"),
+    files: scope.map((prefix) => prefix + "**/*.{ts,js,cjs,mjs}"),
     ignores: ["**/vendor/**", "**/node_modules/**", "**/generated/**", "**/_generated/**"],
     languageOptions: { parser: tseslint.parser },
     plugins: { "@typescript-eslint": tseslint.plugin },

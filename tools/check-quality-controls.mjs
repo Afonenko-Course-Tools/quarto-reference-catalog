@@ -1,28 +1,24 @@
 // Проверяет правила штатной командой на новых production-файлах; исходники всегда удаляются.
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { scope } from "../eslint.config.mjs";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
+/** @type {string[]} */
 const files = [];
 function run() {
-  try {
-    return {
-      status: 0,
-      output: execFileSync(
-        process.execPath,
-        ["tools/check-quality.mjs", ...process.argv.slice(2)],
-        { cwd: root, encoding: "utf8", stdio: "pipe", maxBuffer: 32 * 1024 * 1024 },
-      ),
-    };
-  } catch (error) {
-    return {
-      status: error.status ?? 1,
-      output: String(error.stdout ?? "") + String(error.stderr ?? ""),
-    };
-  }
+  const result = spawnSync(
+    process.execPath,
+    ["tools/check-quality.mjs", ...process.argv.slice(2)],
+    { cwd: root, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
+  );
+  return {
+    status: result.status ?? 1,
+    output: String(result.stdout ?? "") + String(result.stderr ?? ""),
+  };
 }
+/** @param {string} path @param {string} source */
 function put(path, source) {
   const file = join(root, path);
   if (existsSync(file)) throw Error("Контрольный путь уже занят: " + file);
@@ -32,6 +28,7 @@ function put(path, source) {
 function clean() {
   for (const file of files.splice(0)) unlinkSync(file);
 }
+/** @type {[string, string][]} */
 const cases = [
   ["no-explicit-any", "export const explicit: any = 1;"],
   ["ban-ts-comment", "// @ts-ignore\nexport const ignored = 1;"],
@@ -85,6 +82,19 @@ try {
     if (result.status === 0 || !expected.test(result.output))
       throw Error("Контроль не обнаружен: " + rule + "\n" + result.output);
     console.log(JSON.stringify({ control: rule, status: "rejected" }));
+  }
+  for (const extension of ["js", "cjs", "mjs"]) {
+    put(scope[0] + "__quality_negative." + extension, "export const unsafe = JSON.parse('{}');");
+    const result = run();
+    clean();
+    if (result.status === 0 || !result.output.includes("no-unsafe-assignment"))
+      throw Error("Новый JS-файл не проверен: " + extension + "\n" + result.output);
+    console.log(
+      JSON.stringify({
+        control: extension + " discovery/no-unsafe-assignment",
+        status: "rejected",
+      }),
+    );
   }
   put(
     scope[0] + "__quality_cycle_a.ts",

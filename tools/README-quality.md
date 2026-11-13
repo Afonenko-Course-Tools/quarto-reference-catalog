@@ -9,7 +9,7 @@ npm run check-quality:controls
 ```
 
 `scope` в `eslint.config.mjs` задаёт production-каталоги. Все существующие и
-новые tracked/untracked `.ts`, `.js`, `.cjs` обнаруживаются автоматически.
+новые tracked/untracked `.ts`, `.js`, `.cjs`, `.mjs` обнаруживаются автоматически.
 Vendor, node_modules, generated и _generated не входят в собственный код.
 Пустой scope и `strict: false` запрещены. Структурные правила действуют на весь
 собственный production-код: `complexity <= 30`, `max-depth <= 5`, `max-params <= 5`.
@@ -34,7 +34,8 @@ graph, `deno types`, Quarto import map и фактических публичн�
 JavaScript проверяется отдельной строгой `allowJs/checkJs` программой с
 действующим `typecheck/javascript.json` либо `typecheck/browser.json` и настоящими
 DOM/Node declarations. Deno globals в браузерный JS не подмешиваются. Структурные
-и typed правила одинаково действуют на обнаруженный собственный JS. PL
+и typed правила одинаково действуют на обнаруженный собственный JS. Отдельные
+отрицательные controls создают новые `.js`, `.cjs`, `.mjs` с unsafe assignment. PL
 `application/native-validators.js` — standalone AJV artifact генератора; его
 воспроизводимость и потребляющий декларации API проверяются существующими
 контрактами generated validators, а не линтером минифицированного output.
@@ -60,3 +61,16 @@ Dependency-cruiser проверяет разрешаемый статическ�
 Эту команду нельзя запускать одновременно с другим source gate того же checkout.
 В CI она обязательна после положительного gate. Итоговый JSON положительного
 входа сообщает TS/JS/structural counts и реальные версии parser/ESLint/compiler.
+
+Форматирование и семантика остальных форматов описаны в
+[проверке поддерживаемого кода](../docs/typechecking.md).
+`npm run check:formats` блокирует неправильный стиль и предупреждения native CLI;
+`npm run format` применяет форматирование, `npm run check:generated` проверяет
+канонические проекции. Проверки берут новые файлы автоматически, без baseline.
+
+`npm run check:formats:controls` принимает новые корректные файлы каждого формата,
+затем отклоняет malformed JSON, неправильный стиль TS, неизвестный Lua global,
+неинициализированную shell-переменную, неизвестное CSS-свойство, повтор YAML-ключа
+и неизвестное поле нового workflow. Отсутствующий инструмент также даёт ошибку.
+Эти controls временно создают файлы в checkout и требуют последовательного запуска
+с остальными source gates; `finally` удаляет входы.
