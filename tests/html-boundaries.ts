@@ -13,14 +13,28 @@ for (const [attribute, text] of [
   ["href", valid.replace('href="#sec-a"', "")],
 ] satisfies [string, string][]) {
   try {
-    assert.throws(() => readPage(path, text), (error: unknown) => {
-      return error instanceof Error && error.name === "ExtensionDiagnostic" &&
-        "code" in error && error.code === "QRC.OUTPUT_INVALID" &&
-        error.message.includes(path) && error.message.includes(attribute);
-    }, `Непроверенная граница HTML: ${attribute}`);
-  } catch (error) { failures.push(String(error)); }
+    assert.throws(
+      () => readPage(path, text),
+      (error: unknown) => {
+        return (
+          error instanceof Error &&
+          error.name === "ExtensionDiagnostic" &&
+          "code" in error &&
+          error.code === "QRC.OUTPUT_INVALID" &&
+          error.message.includes(path) &&
+          error.message.includes(attribute)
+        );
+      },
+      `Непроверенная граница HTML: ${attribute}`,
+    );
+  } catch (error) {
+    failures.push(String(error));
+  }
 }
-const page = readPage(path, '<html><body><a data-qrc-ref="os:sec-a" data-qrc-style="external">Ссылка</a></body></html>');
+const page = readPage(
+  path,
+  '<html><body><a data-qrc-ref="os:sec-a" data-qrc-style="external">Ссылка</a></body></html>',
+);
 const own = readPage(path, valid).targets[0];
 assert(own);
 linkPages([page], "", [{ ...own, namespace: "os", baseUrl: "https://example.test/" }]);
@@ -31,7 +45,13 @@ function parents(node: Node): void {
     parents(child);
   }
 }
-try { parents(page.root); } catch (error) { failures.push(String(error)); }
+try {
+  parents(page.root);
+} catch (error) {
+  failures.push(String(error));
+}
 assert.deepEqual(failures, []);
 assert.equal(readPage(path, valid).targets.length, 1);
-console.log("Пройдено: обязательные native HTML metadata и связи дерева parse5 проверяются до модели каталога");
+console.log(
+  "Пройдено: обязательные native HTML metadata и связи дерева parse5 проверяются до модели каталога",
+);

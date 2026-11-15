@@ -1,7 +1,12 @@
 import { required } from "./support.ts";
 import { copy } from "stdlib/fs";
 import { dirname, fromFileUrl, join, resolve } from "stdlib/path";
-import { attr, elements, hasClass, parseHtml } from "../_extensions/reference-catalog/infrastructure/html.ts";
+import {
+  attr,
+  elements,
+  hasClass,
+  parseHtml,
+} from "../_extensions/reference-catalog/infrastructure/html.ts";
 import type { Catalog } from "../_extensions/reference-catalog/domain/model.ts";
 import { validateImportedCatalog } from "../_extensions/reference-catalog/infrastructure/catalog-validation.ts";
 
@@ -13,16 +18,22 @@ function assert(value: unknown, message: string): asserts value {
 }
 async function run(executable: string, args: string[], expectedError?: string, cwd = root) {
   const result = await new Deno.Command(executable, {
-    args, cwd, stdout: "piped", stderr: "piped",
+    args,
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
   }).output();
   const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
-  assert(expectedError ? !result.success && output.includes(expectedError) : result.success, output);
+  assert(
+    expectedError ? !result.success && output.includes(expectedError) : result.success,
+    output,
+  );
 }
 async function files(directory: string): Promise<string[]> {
   const result: string[] = [];
   for await (const entry of Deno.readDir(directory)) {
     const path = join(directory, entry.name);
-    if (entry.isDirectory) result.push(...await files(path));
+    if (entry.isDirectory) result.push(...(await files(path)));
     else if (entry.isFile) result.push(path);
   }
   return result;
@@ -32,14 +43,25 @@ try {
   await copy(join(repo, "examples/course"), root, { overwrite: true });
   // Exercise the actual installation command with the extension under test.
   await run(quarto, ["add", repo, "--no-prompt"]);
-  await run(quarto, ["add", Deno.env.get("COURSE_SITE_REPO") ?? join(repo, "../quarto-project-publish"), "--no-prompt"]);
-  for (const member of ["book", "lectures", "practice"]) await run(quarto, ["add", repo, "--no-prompt"], undefined, join(root, member));
-  for (const project of [root, ...["book", "lectures", "practice"].map(member => join(root, member))]) {
+  await run(quarto, [
+    "add",
+    Deno.env.get("COURSE_SITE_REPO") ?? join(repo, "../quarto-project-publish"),
+    "--no-prompt",
+  ]);
+  for (const member of ["book", "lectures", "practice"])
+    await run(quarto, ["add", repo, "--no-prompt"], undefined, join(root, member));
+  for (const project of [
+    root,
+    ...["book", "lectures", "practice"].map((member) => join(root, member)),
+  ]) {
     await Deno.mkdir(join(project, "_extensions/Afonenko-Course-Tools"), { recursive: true });
     for (const extension of ["reference-catalog", "course-site"]) {
       const old = join(project, "_extensions", extension);
-      try { await Deno.rename(old, join(project, "_extensions/Afonenko-Course-Tools", extension)); }
-      catch (error) { if (!(error instanceof Deno.errors.NotFound)) throw error; }
+      try {
+        await Deno.rename(old, join(project, "_extensions/Afonenko-Course-Tools", extension));
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+      }
     }
   }
   await run(quarto, ["render", "--fail-if-warnings"]);
@@ -47,37 +69,66 @@ try {
   const catalogPath = join(output, "reference-catalog.json");
   // Тот же исполняемый контракт, который принимает каталог в runtime.
   const catalog: Catalog = validateImportedCatalog(
-    JSON.parse(await Deno.readTextFile(catalogPath)), catalogPath,
+    JSON.parse(await Deno.readTextFile(catalogPath)),
+    catalogPath,
   );
-  for (const key of ["book:sec-objects", "book:fig-demo", "lectures:sec-memory", "practice:exr-demo"])
+  for (const key of [
+    "book:sec-objects",
+    "book:fig-demo",
+    "lectures:sec-memory",
+    "practice:exr-demo",
+  ])
     assert(catalog.targets[key], `Missing example target: ${key}`);
   assert((await Deno.stat(join(output, "index.html"))).isFile, "Native landing page is missing");
-  assert((await Deno.stat(join(output, "book/index.html"))).isFile, "Mounted native book is missing");
+  assert(
+    (await Deno.stat(join(output, "book/index.html"))).isFile,
+    "Mounted native book is missing",
+  );
   // Each native project must own the media it renders; a root resource can
   // accidentally hide a broken child-relative URL in the composed output.
   for (const stage of [join(root, "lectures/_site"), join(output, "lectures")]) {
     const page = join(stage, "01/lecture-memory.html");
-    const image = elements(parseHtml(await Deno.readTextFile(page))).find(node =>
-      node.tagName === "img" && (attr(node, "src") ?? attr(node, "data-src"))?.endsWith("dot.svg")
+    const image = elements(parseHtml(await Deno.readTextFile(page))).find(
+      (node) =>
+        node.tagName === "img" &&
+        (attr(node, "src") ?? attr(node, "data-src"))?.endsWith("dot.svg"),
     );
     assert(image, `Missing lecture demonstration image: ${page}`);
     const source = attr(image, "src") ?? attr(image, "data-src");
     assert(source, `Missing image source: ${page}`);
     const target = resolve(dirname(page), source);
-    assert(target.startsWith(stage + "/"), `Lecture image escapes its native project output: ${target}`);
+    assert(
+      target.startsWith(stage + "/"),
+      `Lecture image escapes its native project output: ${target}`,
+    );
     assert((await Deno.stat(target)).isFile, `Missing native lecture resource: ${target}`);
   }
 
   const pages = new Map<string, Set<string>>();
   let links = 0;
-  for (const path of (await files(output)).filter(path => path.endsWith(".html"))) {
+  for (const path of (await files(output)).filter((path) => path.endsWith(".html"))) {
     const nodes = elements(parseHtml(await Deno.readTextFile(path)));
-    const document = ["index.html", "book/index.html", "book/topics/objects.html", "book/appendix.html", "lectures/01/lecture-memory.html", "practice/01/tasks.html"].includes(path.slice(output.length + 1));
+    const document = [
+      "index.html",
+      "book/index.html",
+      "book/topics/objects.html",
+      "book/appendix.html",
+      "lectures/01/lecture-memory.html",
+      "practice/01/tasks.html",
+    ].includes(path.slice(output.length + 1));
     if (document) {
-      assert(nodes.some(node => node.tagName === "html" && attr(node, "lang") === "ru"), `Independent native project lost lang ru: ${path}`);
-      const qmd = path.slice(output.length + 1).replace(/\.html$/, ".qmd").replace("lectures/01/lecture-memory.qmd", "lectures/01/memory.qmd");
+      assert(
+        nodes.some((node) => node.tagName === "html" && attr(node, "lang") === "ru"),
+        `Independent native project lost lang ru: ${path}`,
+      );
+      const qmd = path
+        .slice(output.length + 1)
+        .replace(/\.html$/, ".qmd")
+        .replace("lectures/01/lecture-memory.qmd", "lectures/01/memory.qmd");
       const source = `https://github.com/Afonenko-Course-Tools/quarto-reference-catalog/blob/v3.2.0/examples/course/${qmd}`;
-      const sourceLinks = nodes.filter(node => node.tagName === "a" && attr(node, "href") === source);
+      const sourceLinks = nodes.filter(
+        (node) => node.tagName === "a" && attr(node, "href") === source,
+      );
       // Native Quarto renders one desktop action and a hidden mobile counterpart.
       // Count authored duplicates separately from that native responsive placement.
       const mobile = (node: (typeof sourceLinks)[number]) => {
@@ -88,22 +139,52 @@ try {
         }
         return false;
       };
-      assert(sourceLinks.length >= 1 && sourceLinks.length <= 2 && sourceLinks.filter(node => !mobile(node)).length === 1, `Expected one source QMD action plus optional native mobile counterpart: ${path}; got ${sourceLinks.length}`);
-      if (!qmd.startsWith("lectures/") && !qmd.startsWith("practice/")) assert(required(sourceLinks[0]).attrs.some(attribute => attribute.name === "class" && attribute.value.split(/\s+/).includes("toc-action")), `HTML source link is not a native action: ${path}`);
+      assert(
+        sourceLinks.length >= 1 &&
+          sourceLinks.length <= 2 &&
+          sourceLinks.filter((node) => !mobile(node)).length === 1,
+        `Expected one source QMD action plus optional native mobile counterpart: ${path}; got ${sourceLinks.length}`,
+      );
+      if (!qmd.startsWith("lectures/") && !qmd.startsWith("practice/"))
+        assert(
+          required(sourceLinks[0]).attrs.some(
+            (attribute) =>
+              attribute.name === "class" && attribute.value.split(/\s+/).includes("toc-action"),
+          ),
+          `HTML source link is not a native action: ${path}`,
+        );
     }
-    if (document) assert(nodes.some(node => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined), `Missing target navigation: ${path}`);
-    pages.set(path, new Set(nodes.map(node => attr(node, "id")).filter((id): id is string => !!id)));
-    for (const node of nodes) for (const name of ["href", "src", "data-src"]) {
-      const raw = attr(node, name);
-      if (!raw || /^(?:[A-Za-z][A-Za-z0-9+.-]*:|\/\/|#)/.test(raw)) continue;
-      const url = decodeURIComponent((raw.split(/[?#]/)[0] ?? ""));
-      if (!url) continue;
-      assert(!url.startsWith("/"), `Root-relative URL breaks project Pages: ${raw}`);
-      const target = resolve(dirname(path), url);
-      try { await Deno.stat(target); }
-      catch { throw new Error(`Broken local link ${raw} in ${path}; current HTML: ${(await files(output)).filter(file => file.endsWith(".html")).map(file => file.slice(output.length + 1)).join(", ")}`); }
-      links++;
-    }
+    if (document)
+      assert(
+        nodes.some(
+          (node) => node.tagName === "script" && attr(node, "data-qrc-navigation") !== undefined,
+        ),
+        `Missing target navigation: ${path}`,
+      );
+    pages.set(
+      path,
+      new Set(nodes.map((node) => attr(node, "id")).filter((id): id is string => !!id)),
+    );
+    for (const node of nodes)
+      for (const name of ["href", "src", "data-src"]) {
+        const raw = attr(node, name);
+        if (!raw || /^(?:[A-Za-z][A-Za-z0-9+.-]*:|\/\/|#)/.test(raw)) continue;
+        const url = decodeURIComponent(raw.split(/[?#]/)[0] ?? "");
+        if (!url) continue;
+        assert(!url.startsWith("/"), `Root-relative URL breaks project Pages: ${raw}`);
+        const target = resolve(dirname(path), url);
+        try {
+          await Deno.stat(target);
+        } catch {
+          throw new Error(
+            `Broken local link ${raw} in ${path}; current HTML: ${(await files(output))
+              .filter((file) => file.endsWith(".html"))
+              .map((file) => file.slice(output.length + 1))
+              .join(", ")}`,
+          );
+        }
+        links++;
+      }
   }
   for (const [key, target] of Object.entries(catalog.targets)) {
     const ids = pages.get(join(output, target.page));
@@ -112,11 +193,18 @@ try {
   }
   // A success-only test could miss an accidentally disabled schema check.
   let invalid: unknown;
-  try { validateImportedCatalog({ ...catalog, schema: "invalid" }, catalogPath); }
-  catch (error) { invalid = error; }
-  assert(String(invalid).includes("QRC.IMPORT_INVALID") && String(invalid).includes("schema"),
-    "Исполняемый контракт обязан отклонить неверную схему каталога");
-  console.log(`PASS example: installed local extension, HTML + Revealjs, TS catalog contract, ${links} local links and all catalog anchors`);
+  try {
+    validateImportedCatalog({ ...catalog, schema: "invalid" }, catalogPath);
+  } catch (error) {
+    invalid = error;
+  }
+  assert(
+    String(invalid).includes("QRC.IMPORT_INVALID") && String(invalid).includes("schema"),
+    "Исполняемый контракт обязан отклонить неверную схему каталога",
+  );
+  console.log(
+    `PASS example: installed local extension, HTML + Revealjs, TS catalog contract, ${links} local links and all catalog anchors`,
+  );
 } finally {
   await Deno.remove(root, { recursive: true });
 }

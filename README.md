@@ -263,6 +263,9 @@ checkout; команда с тегом выше применяется посл�
 
 ## Исходники для разработки
 
+Общая установка CLI и проверка среды описаны в
+[руководстве для Arch Linux](https://github.com/Afonenko-Course-Tools/quarto-course/blob/main/docs/development-arch.md).
+
 Прямые submodules в `tests/dependencies` фиксируют исходники tooling и интеграционных
 fixtures. Инициализируйте только этот уровень:
 

@@ -5,4 +5,7 @@ Deno.Command = class extends NativeCommand {
     return Promise.reject(new TypeError("INTERNAL.STARTUP_INVARIANT"));
   }
 };
-await import(new URL("./_extensions/reference-catalog/entrypoints/post.ts", pathToFileURL(Deno.cwd() + "/")).href);
+await import(
+  new URL("./_extensions/reference-catalog/entrypoints/post.ts", pathToFileURL(Deno.cwd() + "/"))
+    .href
+);

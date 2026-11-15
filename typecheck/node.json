@@ -7,20 +7,13 @@
     "target": "ES2023",
     "module": "Node16",
     "moduleResolution": "Node16",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true
   },
-  "files": [
-    "browser.d.ts",
-    "../tests/browser.cjs"
-  ]
+  "files": ["browser.d.ts"],
+  "include": ["../**/*.cjs", "../**/*.mjs"],
+  "exclude": ["../node_modules", "../tests/dependencies", "../_extensions/reference-catalog/vendor"]
 }

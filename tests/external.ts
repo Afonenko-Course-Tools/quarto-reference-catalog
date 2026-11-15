@@ -5,7 +5,14 @@ import { dirname, fromFileUrl, join } from "stdlib/path";
 import type { Catalog } from "../_extensions/reference-catalog/domain/model.ts";
 import { exportedTargets } from "../_extensions/reference-catalog/domain/exports.ts";
 import { parseExports } from "../_extensions/reference-catalog/infrastructure/export-config.ts";
-import { attr, elements, hasClass, parseHtml, type Element, type Node } from "../_extensions/reference-catalog/infrastructure/html.ts";
+import {
+  attr,
+  elements,
+  hasClass,
+  parseHtml,
+  type Element,
+  type Node,
+} from "../_extensions/reference-catalog/infrastructure/html.ts";
 import { importTargets } from "../_extensions/reference-catalog/infrastructure/imports.ts";
 import { publish } from "../_extensions/reference-catalog/infrastructure/publish.ts";
 
@@ -26,22 +33,44 @@ async function write(workspace: string, path: string, value: string) {
 }
 async function render(workspace: string, expectedError?: string, outputDir?: string) {
   const result = await new Deno.Command(quarto, {
-    args: ["render", "--fail-if-warnings", ...(outputDir ? ["--output-dir", outputDir] : [])], cwd: workspace,
-    env: { QUARTO: quarto }, stdout: "piped", stderr: "piped",
+    args: ["render", "--fail-if-warnings", ...(outputDir ? ["--output-dir", outputDir] : [])],
+    cwd: workspace,
+    env: { QUARTO: quarto },
+    stdout: "piped",
+    stderr: "piped",
   }).output();
   const output = new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr);
-  assert(expectedError ? !result.success && output.includes(expectedError) : result.success,
-    `${workspace}: ${expectedError ? `expected failure containing ${expectedError}\n` : ""}${output}`);
+  assert(
+    expectedError ? !result.success && output.includes(expectedError) : result.success,
+    `${workspace}: ${expectedError ? `expected failure containing ${expectedError}\n` : ""}${output}`,
+  );
   if (expectedError) return;
   // A standalone native hook is local; exporting a public catalog is explicit full work.
-  const inspected = await new Deno.Command(quarto, { args: ["inspect", workspace], cwd: workspace, stdout: "piped", stderr: "piped" }).output();
+  const inspected = await new Deno.Command(quarto, {
+    args: ["inspect", workspace],
+    cwd: workspace,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
   assert(inspected.success, new TextDecoder().decode(inspected.stderr));
-  await publish({ root: workspace, stage: join(workspace, outputDir ?? "_site"), quarto: "native-integration", config: record(record(jsonValue(new TextDecoder().decode(inspected.stdout))).config), members: [{ namespace: "book", format: "html" }], scope: "full", outputs: strings(jsonValue(await Deno.readTextFile(join(workspace, "current-outputs.json")))) });
+  await publish({
+    root: workspace,
+    stage: join(workspace, outputDir ?? "_site"),
+    quarto: "native-integration",
+    config: record(record(jsonValue(new TextDecoder().decode(inspected.stdout))).config),
+    members: [{ namespace: "book", format: "html" }],
+    scope: "full",
+    outputs: strings(jsonValue(await Deno.readTextFile(join(workspace, "current-outputs.json")))),
+  });
 }
 async function rejects(action: () => unknown | Promise<unknown>, message: string) {
-  try { await action(); }
-  catch (error) {
-    assert(error instanceof Error && error.message.includes(message), `Expected ${message}, got ${error}`);
+  try {
+    await action();
+  } catch (error) {
+    assert(
+      error instanceof Error && error.message.includes(message),
+      `Expected ${message}, got ${error}`,
+    );
     return;
   }
   throw new Error(`Expected an error containing ${message}`);
@@ -49,8 +78,14 @@ async function rejects(action: () => unknown | Promise<unknown>, message: string
 async function initialize(workspace: string) {
   await Deno.mkdir(workspace, { recursive: true });
   await copy(join(repo, "_extensions"), join(workspace, "_extensions"));
-  await Deno.copyFile(new URL("./fixtures/capture-outputs.ts", import.meta.url), join(workspace, "capture.ts"));
-  await write(workspace, "_quarto.yml", `project:
+  await Deno.copyFile(
+    new URL("./fixtures/capture-outputs.ts", import.meta.url),
+    join(workspace, "capture.ts"),
+  );
+  await write(
+    workspace,
+    "_quarto.yml",
+    `project:
   type: website
   output-dir: _site
   render: [index.qmd]
@@ -58,7 +93,8 @@ format:
   html:
     number-sections: true
 lang: ru
-`);
+`,
+  );
 }
 function config(extra: string) {
   return `project:
@@ -84,7 +120,12 @@ async function page(workspace: string, name = "index.html"): Promise<Element[]> 
   return elements(parseHtml(await Deno.readTextFile(join(workspace, "_site", name))));
 }
 function link(nodes: Element[], key: string, style: string = "default"): Element {
-  const node = nodes.find(item => item.tagName === "a" && attr(item, "data-qrc-ref") === key && attr(item, "data-qrc-style") === style);
+  const node = nodes.find(
+    (item) =>
+      item.tagName === "a" &&
+      attr(item, "data-qrc-ref") === key &&
+      attr(item, "data-qrc-style") === style,
+  );
   assert(node, `Missing ${style} link ${key}`);
   return node;
 }
@@ -97,7 +138,10 @@ function content(node: Node): string {
 try {
   await initialize(os);
   await initialize(java);
-  await write(os, "_quarto.yml", `project:
+  await write(
+    os,
+    "_quarto.yml",
+    `project:
   type: book
   output-dir: _book
 book:
@@ -105,13 +149,25 @@ book:
   chapters: [index.qmd, memory.qmd]
 format: html
 lang: ru
-`);
-  await write(os, "_quarto.yml", config(`  publication: {title: "Операционные системы"}
+`,
+  );
+  await write(
+    os,
+    "_quarto.yml",
+    config(`  publication: {title: "Операционные системы"}
   exports:
     book: [sec-memory, sec-addressing]
-`));
-  await write(os, "index.qmd", "# Введение {.unnumbered}\n\nМатериалы курса операционных систем.\n");
-  await write(os, "memory.qmd", `# Управление памятью {#sec-memory}
+`),
+  );
+  await write(
+    os,
+    "index.qmd",
+    "# Введение {.unnumbered}\n\nМатериалы курса операционных систем.\n",
+  );
+  await write(
+    os,
+    "memory.qmd",
+    `# Управление памятью {#sec-memory}
 
 См. @book:sec-implementation.
 
@@ -122,26 +178,46 @@ lang: ru
 ## Детали реализации {#sec-implementation}
 
 Этот раздел доступен внутри курса, но не входит в его внешний каталог.
-`);
+`,
+  );
   await render(os);
   const published = await catalog(os);
-  assert(published.schema === "quarto-reference-catalog", "Публикация должна использовать текущую схему без номера версии");
-  assert(published.publication?.title === "Операционные системы", "Publication title missing from exported catalog");
-  assert(Object.keys(published.targets).sort().join() === "book:sec-addressing,book:sec-memory", "Explicit exports must contain only the selected own targets");
+  assert(
+    published.schema === "quarto-reference-catalog",
+    "Публикация должна использовать текущую схему без номера версии",
+  );
+  assert(
+    published.publication?.title === "Операционные системы",
+    "Publication title missing from exported catalog",
+  );
+  assert(
+    Object.keys(published.targets).sort().join() === "book:sec-addressing,book:sec-memory",
+    "Explicit exports must contain only the selected own targets",
+  );
   const memory = required(published.targets["book:sec-memory"]);
-  assert(memory.title === "Управление памятью", `Heading title includes numbering or is missing: ${memory.title}`);
-  assert(required(published.targets["book:sec-addressing"]).title === "Обзор адресации", "Ordinary section title is missing or includes numbering");
+  assert(
+    memory.title === "Управление памятью",
+    `Heading title includes numbering or is missing: ${memory.title}`,
+  );
+  assert(
+    required(published.targets["book:sec-addressing"]).title === "Обзор адресации",
+    "Ordinary section title is missing or includes numbering",
+  );
   assert(memory.number.length > 0, "Fixture must contain a numbered heading");
   const privateLink = link(await page(os, "memory.html"), "book:sec-implementation");
-  assert(attr(privateLink, "href")?.endsWith("#sec-implementation"), "Non-exported own targets must remain available for internal links");
+  assert(
+    attr(privateLink, "href")?.endsWith("#sec-implementation"),
+    "Non-exported own targets must remain available for internal links",
+  );
 
   let requests = 0;
   function expectRequests(expected: number) {
     assert(requests === expected, `Expected ${expected} total HTTP source reads, got ${requests}`);
   }
   let remoteCatalog = JSON.stringify(published);
-  const httpServer = Deno.serve({ hostname: "127.0.0.1", port: 0, onListen() {} }, request => {
-    if (new URL(request.url).pathname !== "/catalog/reference.json") return new Response("Not found", { status: 404 });
+  const httpServer = Deno.serve({ hostname: "127.0.0.1", port: 0, onListen() {} }, (request) => {
+    if (new URL(request.url).pathname !== "/catalog/reference.json")
+      return new Response("Not found", { status: 404 });
     requests++;
     return new Response(remoteCatalog, { headers: { "content-type": "application/json" } });
   });
@@ -169,7 +245,10 @@ lang: ru
       base-url: https://example.test/OS/
 `);
   await write(java, "_quarto.yml", javaConfig);
-  await write(java, "index.qmd", `# Java {#sec-memory}
+  await write(
+    java,
+    "index.qmd",
+    `# Java {#sec-memory}
 
 Собственная цель с тем же ID: @book:sec-memory.
 
@@ -188,51 +267,123 @@ lang: ru
 Штатная подпись из локального каталога: @os-native:sec-memory.
 
 Авторский текст: {{< xref os sec-memory "Читать о памяти" style="external" >}}.
-`);
+`,
+  );
   await render(java);
   expectRequests(2); // One source read in each of the native local and explicit full finalizers.
   let nodes = await page(java);
   const defaultLink = link(nodes, "os:sec-memory");
   const ownLink = link(nodes, "book:sec-memory");
-  assert(attr(ownLink, "href") === "index.html#sec-memory" && !hasClass(ownLink, "qrc-external"), "An imported target must not replace an own target with the same ID");
-  assert(content(defaultLink) === "Управление памятью — Операционные системы", `Wrong external label: ${content(defaultLink)}`);
-  assert(hasClass(defaultLink, "qrc-external"), "External reference is missing its presentation class");
-  assert(nodes.filter(node => node.tagName === "style" && attr(node, "data-qrc-external-style") !== undefined).length === 1, "External link CSS must be included once per page");
-  assert(attr(defaultLink, "href") === "https://example.test/OS/memory.html#sec-memory", "Catalog location must not replace the configured publication base URL");
-  assert(content(link(nodes, "os:sec-memory", "title")) === "Управление памятью", "Explicit title style must override the import default");
-  assert(content(link(nodes, "os:sec-addressing", "title")) === "Обзор адресации", "Title style must resolve ordinary book sections");
-  assert(content(link(nodes, "os:sec-memory", "number")) === memory.number, "Explicit number style must override the import default");
-  assert(content(link(nodes, "os:sec-memory", "external")) === "Читать о памяти — Операционные системы", "External styling must preserve author-supplied title text");
-  assert(content(link(nodes, "os-local:sec-memory")) === content(defaultLink), "A sibling file source must resolve like an HTTP source");
-  assert(content(link(nodes, "os-native:sec-memory")) === memory.label, "Локальный импорт без style сохраняет штатную подпись Quarto");
+  assert(
+    attr(ownLink, "href") === "index.html#sec-memory" && !hasClass(ownLink, "qrc-external"),
+    "An imported target must not replace an own target with the same ID",
+  );
+  assert(
+    content(defaultLink) === "Управление памятью — Операционные системы",
+    `Wrong external label: ${content(defaultLink)}`,
+  );
+  assert(
+    hasClass(defaultLink, "qrc-external"),
+    "External reference is missing its presentation class",
+  );
+  assert(
+    nodes.filter(
+      (node) => node.tagName === "style" && attr(node, "data-qrc-external-style") !== undefined,
+    ).length === 1,
+    "External link CSS must be included once per page",
+  );
+  assert(
+    attr(defaultLink, "href") === "https://example.test/OS/memory.html#sec-memory",
+    "Catalog location must not replace the configured publication base URL",
+  );
+  assert(
+    content(link(nodes, "os:sec-memory", "title")) === "Управление памятью",
+    "Explicit title style must override the import default",
+  );
+  assert(
+    content(link(nodes, "os:sec-addressing", "title")) === "Обзор адресации",
+    "Title style must resolve ordinary book sections",
+  );
+  assert(
+    content(link(nodes, "os:sec-memory", "number")) === memory.number,
+    "Explicit number style must override the import default",
+  );
+  assert(
+    content(link(nodes, "os:sec-memory", "external")) === "Читать о памяти — Операционные системы",
+    "External styling must preserve author-supplied title text",
+  );
+  assert(
+    content(link(nodes, "os-local:sec-memory")) === content(defaultLink),
+    "A sibling file source must resolve like an HTTP source",
+  );
+  assert(
+    content(link(nodes, "os-native:sec-memory")) === memory.label,
+    "Локальный импорт без style сохраняет штатную подпись Quarto",
+  );
   const javaCatalog = await catalog(java);
-  assert(Object.keys(javaCatalog.targets).join() === "book:sec-memory", "Default export must contain own targets without reexporting imported aliases");
-  assert(required(javaCatalog.targets["book:sec-memory"]).page === "index.html" && required(javaCatalog.targets["book:sec-memory"]).title === "Java", "Default export replaced own target with an imported target of the same ID");
+  assert(
+    Object.keys(javaCatalog.targets).join() === "book:sec-memory",
+    "Default export must contain own targets without reexporting imported aliases",
+  );
+  assert(
+    required(javaCatalog.targets["book:sec-memory"]).page === "index.html" &&
+      required(javaCatalog.targets["book:sec-memory"]).title === "Java",
+    "Default export replaced own target with an imported target of the same ID",
+  );
 
   // Each build chooses a fresh snapshot; repeated references and aliases within it share that snapshot.
   remoteCatalog = JSON.stringify({ ...published, publication: { title: "ОС: новая редакция" } });
   await render(java);
   expectRequests(4);
   nodes = await page(java);
-  assert(content(link(nodes, "os:sec-memory")) === "Управление памятью — ОС: новая редакция", "A new build reused an old external catalog");
-  assert(content(link(nodes, "os-second:sec-memory")) === content(link(nodes, "os:sec-memory")), "Aliases disagree on their build snapshot");
+  assert(
+    content(link(nodes, "os:sec-memory")) === "Управление памятью — ОС: новая редакция",
+    "A new build reused an old external catalog",
+  );
+  assert(
+    content(link(nodes, "os-second:sec-memory")) === content(link(nodes, "os:sec-memory")),
+    "Aliases disagree on their build snapshot",
+  );
 
   const own = Object.values(published.targets);
-  assert(Object.keys(exportedTargets(own, {})).length === 0, "Empty exports must publish no targets");
-  assert(Object.keys(exportedTargets(own, { book: "*" })).sort().join() === "book:sec-addressing,book:sec-memory", "Wildcard must select own namespace targets");
+  assert(
+    Object.keys(exportedTargets(own, {})).length === 0,
+    "Empty exports must publish no targets",
+  );
+  assert(
+    Object.keys(exportedTargets(own, { book: "*" }))
+      .sort()
+      .join() === "book:sec-addressing,book:sec-memory",
+    "Wildcard must select own namespace targets",
+  );
   await rejects(() => exportedTargets(own, { book: ["sec-missing"] }), "sec-missing");
   await rejects(() => parseExports({ os: "*" }, ["book"]), "os");
-  await rejects(() => importTargets([{
-    namespace: "missing", source: join(os, "_site/reference-catalog.json"),
-    sourceNamespace: "not-exported", baseUrl: "https://example.test/OS/",
-  }]), "not-exported");
+  await rejects(
+    () =>
+      importTargets([
+        {
+          namespace: "missing",
+          source: join(os, "_site/reference-catalog.json"),
+          sourceNamespace: "not-exported",
+          baseUrl: "https://example.test/OS/",
+        },
+      ]),
+    "not-exported",
+  );
 
   await render(java, undefined, "_alternate");
-  assert((await Deno.readTextFile(join(java, "_alternate/index.html"))).includes("https://example.test/OS/memory.html#sec-memory"), "Самостоятельный QRC проигнорировал CLI output-dir");
+  assert(
+    (await Deno.readTextFile(join(java, "_alternate/index.html"))).includes(
+      "https://example.test/OS/memory.html#sec-memory",
+    ),
+    "Самостоятельный QRC проигнорировал CLI output-dir",
+  );
   await write(java, "_quarto.yml", javaConfig + "  version: 1\n");
   await render(java, "неизвестное свойство reference-catalog.version");
 
-  console.log("PASS external catalogs: selective own exports, HTTP and sibling files, штатные подписи локального импорта, external/title/number styles, one fetch per finalizer, fresh catalog facts, no reexports, invalid export/import rejection");
+  console.log(
+    "PASS external catalogs: selective own exports, HTTP and sibling files, штатные подписи локального импорта, external/title/number styles, one fetch per finalizer, fresh catalog facts, no reexports, invalid export/import rejection",
+  );
 } finally {
   if (server) await server.shutdown();
   await Deno.remove(root, { recursive: true });

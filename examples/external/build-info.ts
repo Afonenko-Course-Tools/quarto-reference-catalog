@@ -18,8 +18,8 @@ Deno.writeTextFileSync(
     {
       producer: "Afonenko-Course-Tools/quarto-reference-catalog",
       commit: Deno.env.get("DEMO_SOURCE_COMMIT") || run(["rev-parse", "HEAD"]),
-      sourceDirty: Deno.env.get("DEMO_SOURCE_DIRTY") === "true" ||
-        run(["status", "--porcelain"]).length > 0,
+      sourceDirty:
+        Deno.env.get("DEMO_SOURCE_DIRTY") === "true" || run(["status", "--porcelain"]).length > 0,
       dependencies: {
         ...{ "quarto-reference-catalog": "v3.2.0" },
         quarto: new TextDecoder().decode(version.stdout).trim(),

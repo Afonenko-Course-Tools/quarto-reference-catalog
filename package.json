@@ -5,14 +5,29 @@
     "test:browser": "node tests/browser.cjs",
     "check:node": "tsc --project typecheck/node.json",
     "check-quality": "node tools/check-quality.mjs",
-    "check-quality:controls": "node tools/check-quality-controls.mjs"
+    "check-quality:controls": "node tools/check-quality-controls.mjs",
+    "check:formats": "node tools/check-formats.mjs",
+    "format": "node tools/check-formats.mjs write",
+    "check:generated": "quarto run tools/generate-vocabulary.ts --check && quarto run tools/generate-parse5-types.ts --check",
+    "check:formats:controls": "node tools/check-format-controls.mjs"
   },
   "devDependencies": {
-    "playwright": "1.64.1",
     "@types/node": "26.6.6",
-    "typescript": "6.0.3",
     "dependency-cruiser": "18.7.2",
-    "eslint": "^9.39.1",
-    "typescript-eslint": "^8.72.2"
+    "eslint": "^10.14.0",
+    "playwright": "1.64.1",
+    "prettier": "^3.8.1",
+    "stylelint": "^18.0.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.2",
+    "@taplo/cli": "0.7.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
+    "eslint": {
+      "minimatch": "^11.0.8"
+    }
   }
 }

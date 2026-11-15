@@ -39,12 +39,7 @@ const context = {
   portal,
   outputs: [join(stage, "index.html"), join(stage, "book/index.html")],
 };
-async function render(
-  input: string,
-  namespace: string,
-  output: string,
-  portalMetadata = false,
-) {
+async function render(input: string, namespace: string, output: string, portalMetadata = false) {
   await Deno.writeTextFile(
     join(root, input),
     `# ${namespace} {#sec-${namespace === "site" ? "portal" : namespace}}\n\n@${
@@ -52,27 +47,16 @@ async function render(
     }\n`,
   );
   const metadata = { "reference-catalog": { namespace }, filters: ["reference-catalog"] };
-  await Deno.writeTextFile(
-    join(root, "metadata.json"),
-    JSON.stringify(metadata),
-  );
+  await Deno.writeTextFile(join(root, "metadata.json"), JSON.stringify(metadata));
   const result = await new Deno.Command(quarto, {
-    args: [
-      "render",
-      input,
-      "--metadata-file",
-      "metadata.json",
-      "--output-dir",
-      output,
-    ],
+    args: ["render", input, "--metadata-file", "metadata.json", "--output-dir", output],
     cwd: root,
     stdout: "piped",
     stderr: "piped",
   }).output();
   assert(
     result.success,
-    new TextDecoder().decode(result.stdout) +
-      new TextDecoder().decode(result.stderr),
+    new TextDecoder().decode(result.stdout) + new TextDecoder().decode(result.stderr),
   );
 }
 async function resetStage() {
@@ -81,10 +65,7 @@ async function resetStage() {
   });
   await Deno.mkdir(join(stage, "book"), { recursive: true });
   await copy(join(root, "portal-output/index.html"), join(stage, "index.html"));
-  await copy(
-    join(root, "book-output/book.html"),
-    join(stage, "book/index.html"),
-  );
+  await copy(join(root, "book-output/book.html"), join(stage, "book/index.html"));
 }
 const withConfig = (raw: unknown) => ({
   ...context,
@@ -110,31 +91,27 @@ try {
     "Portal target must retain its native root placement",
   );
   const html = await Deno.readTextFile(join(stage, "index.html"));
-  assert(
-    html.includes('href="book/index.html#sec-book"'),
-    "Portal must link to the member target",
-  );
+  assert(html.includes('href="book/index.html#sec-book"'), "Portal must link to the member target");
   assert(
     (await Deno.readTextFile(join(stage, "book/index.html"))).includes(
       'href="../index.html#sec-portal"',
     ),
     "Member must link back to the root portal target",
   );
-  await Deno.writeTextFile(
-    join(root, "producer.json"),
-    JSON.stringify(catalog),
-  );
+  await Deno.writeTextFile(join(root, "producer.json"), JSON.stringify(catalog));
   await resetStage();
-  await publish(withConfig({
-    namespace: "site",
-    imports: {
-      os: {
-        source: "producer.json",
-        namespace: "book",
-        "base-url": "https://example.org/producer/",
+  await publish(
+    withConfig({
+      namespace: "site",
+      imports: {
+        os: {
+          source: "producer.json",
+          namespace: "book",
+          "base-url": "https://example.org/producer/",
+        },
       },
-    },
-  }));
+    }),
+  );
   const imported = await readCatalog(join(stage, "reference-catalog.json"));
   assert(
     Object.keys(imported.targets).join() === "book:sec-book,site:sec-portal",
@@ -142,13 +119,10 @@ try {
   );
   await resetStage();
   const initial = await Deno.readTextFile(join(stage, "index.html"));
-  await rejects(
-    () => {
-      const { portal: _portal, ...withoutPortal } = context;
-      return publish(withoutPortal);
-    },
-    "не относится к локальному проекту: site",
-  );
+  await rejects(() => {
+    const { portal: _portal, ...withoutPortal } = context;
+    return publish(withoutPortal);
+  }, "не относится к локальному проекту: site");
   for (const namespace of [undefined, null, "", "bad:namespace", 42]) {
     await rejects(
       () => publish(withConfig({ namespace })),
@@ -185,10 +159,7 @@ try {
   );
   // Arbitrary stage pages never grant another local namespace for export.
   await render("unknown.qmd", "unknown", "unknown-output");
-  await copy(
-    join(root, "unknown-output/unknown.html"),
-    join(stage, "unknown.html"),
-  );
+  await copy(join(root, "unknown-output/unknown.html"), join(stage, "unknown.html"));
   await rejects(
     () => publish(withConfig({ namespace: "site", exports: { unknown: "*" } })),
     "не относится к локальному проекту: unknown",
@@ -205,7 +176,7 @@ try {
     "экспортируемая цель отсутствует в публикации: site:sec-unpublished",
   );
   assert(
-    await Deno.readTextFile(join(stage, "index.html")) === initial,
+    (await Deno.readTextFile(join(stage, "index.html"))) === initial,
     "Rejected publication must preserve the root HTML",
   );
   console.log(

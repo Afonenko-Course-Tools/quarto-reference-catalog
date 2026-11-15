@@ -28,10 +28,9 @@ async function check(root: string) {
 try {
   const imports: Record<string, string> = {};
   for (const key of ["stdlib/path", "stdlib/fs"]) {
-    imports[key] = import.meta.resolve(key).replace(
-      /^https:\/\/jsr\.io\/@std\/(path|fs)\/([^/]+)\/mod\.ts$/,
-      "jsr:@std/$1@$2",
-    );
+    imports[key] = import.meta
+      .resolve(key)
+      .replace(/^https:\/\/jsr\.io\/@std\/(path|fs)\/([^/]+)\/mod\.ts$/, "jsr:@std/$1@$2");
   }
   await Deno.writeTextFile(map, JSON.stringify({ imports }));
   const current = await check(root);
@@ -46,10 +45,7 @@ try {
     join(root, "tests/contract-types.ts"),
     join(scratch, "tests/contract-types.ts"),
   );
-  const file = join(
-    scratch,
-    "_extensions/reference-catalog/infrastructure/catalog-validation.ts",
-  );
+  const file = join(scratch, "_extensions/reference-catalog/infrastructure/catalog-validation.ts");
   let source = await Deno.readTextFile(file);
   const needle = 'typeof number !== "string"';
   if (!source.includes(needle)) throw Error("Drift probe устарел");
@@ -58,12 +54,11 @@ try {
   const drift = await check(scratch),
     diagnostic = new TextDecoder().decode(drift.stderr);
   if (
-    drift.success || !diagnostic.includes("contract-types.ts") ||
+    drift.success ||
+    !diagnostic.includes("contract-types.ts") ||
     !diagnostic.includes("number")
   ) {
-    throw Error(
-      "Реальный runtime drift не обнаружен consumer typecheck: " + diagnostic,
-    );
+    throw Error("Реальный runtime drift не обнаружен consumer typecheck: " + diagnostic);
   }
   console.log(
     JSON.stringify({

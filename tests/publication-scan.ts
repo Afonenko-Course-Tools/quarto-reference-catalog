@@ -30,10 +30,7 @@ const context = {
 };
 try {
   await Deno.mkdir(join(stage, "nested"), { recursive: true });
-  await Deno.writeTextFile(
-    join(stage, "index.html"),
-    html("First final caption"),
-  );
+  await Deno.writeTextFile(join(stage, "index.html"), html("First final caption"));
   await Deno.writeTextFile(
     join(stage, "nested/search.json"),
     JSON.stringify([{ href: "../index.html", text: "old" }]),
@@ -44,23 +41,17 @@ try {
     `Explicit publication scanned stage directories: ${JSON.stringify([...visits])}`,
   );
   assert(
-    required((await readSearch(join(stage, "nested/search.json")))[0])
-      .text === "Heading First final caption",
+    required((await readSearch(join(stage, "nested/search.json")))[0]).text ===
+      "Heading First final caption",
     "Publication lost search text",
   );
   visits.clear();
-  await Deno.writeTextFile(
-    join(stage, "index.html"),
-    html("Changed final caption"),
-  );
+  await Deno.writeTextFile(join(stage, "index.html"), html("Changed final caption"));
   await publish(context);
+  assert(visits.size === 0, "Later publication scanned its retained stage");
   assert(
-    visits.size === 0,
-    "Later publication scanned its retained stage",
-  );
-  assert(
-    required((await readSearch(join(stage, "nested/search.json")))[0])
-      .text === "Heading Changed final caption",
+    required((await readSearch(join(stage, "nested/search.json")))[0]).text ===
+      "Heading Changed final caption",
     "Later publication reused old stage HTML",
   );
   await Deno.symlink(join(stage, "index.html"), join(stage, "linked.html"));
